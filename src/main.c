@@ -17,7 +17,7 @@ void printBoard(char board[19][19])
     printf("\e[30;43m ");
     for (i = 0; i < 19; ++i)
         printf("  %c ", 'A' + i);
-    printf(" \e[0m\n");
+    printf("  \e[0m\n");
     for (i = 0; i < 37; ++i)
     {
         for (j = 0; j < 19; ++j)
@@ -31,7 +31,7 @@ void printBoard(char board[19][19])
                         printf("  ");
                     printf(" \u2502");
                     if (j == 18)
-                        printf("  \e[0m\n");
+                        printf("   \e[0m\n");
                     else
                         printf("  ");
                 }
@@ -43,7 +43,7 @@ void printBoard(char board[19][19])
                             printf("19 \e[30;43m\u250c\u2500\u2500");
                             break;
                         case 18:
-                            printf("\u2500\u2510  \e[0m\n");
+                            printf("\u2500\u2510 19\e[0m\n");
                             break;
                         default:
                             printf("\u2500\u252c\u2500\u2500");
@@ -58,7 +58,7 @@ void printBoard(char board[19][19])
                             printf(" 1\e[30;43m \u2514\u2500\u2500");
                             break;
                         case 18:
-                            printf("\u2500\u2518  \e[0m\n");
+                            printf("\u2500\u2518  1\e[0m\n");
                             i++;
                             break;
                         default:
@@ -75,7 +75,7 @@ void printBoard(char board[19][19])
                             printf("%2d \e[30;43m\u251c\u2500\u2500", 19 - (i/2));
                             break;
                         case 18:
-                            printf("\u2500\u2524  \e[0m\n");
+                            printf("\u2500\u2524 %2d\e[0m\n", 19 - (i/2));
                             break;
                         default:
                             printf("\u2500");
@@ -97,7 +97,7 @@ void printBoard(char board[19][19])
                     printf("\e[97;43m");
                 printf("\u2588\u2588\u2588");
                 if (j == 18)
-                    printf("\e[30;43m \e[0m\n");
+                    printf("\e[30;43m%2d\e[0m\n", 19 - (i/2));
                 else
                     printf("\e[30;43m\u2500");
             }
@@ -105,8 +105,8 @@ void printBoard(char board[19][19])
     }
     printf("\e[30;43m ");
     for (i = 0; i < 19; ++i)
-        printf("    ");
-    printf(" \e[0m\n");
+        printf("  %c ", 'A' + i);
+    printf("  \e[0m\n");
 }
 
 int main()
