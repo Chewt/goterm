@@ -16,6 +16,12 @@ int main()
         char input[256];
         if (!fgets(input, 256, stdin))
             exit(-1);
+        if (!strcmp(input, "undo\n"))
+        {
+            UndoHistory(&goban);
+            PrintBoard(&goban);
+            continue;
+        }
         char col = input[0];
         int row = input[1] - '0';
         int i;

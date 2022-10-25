@@ -3,6 +3,23 @@
 #include "go.h"
 #include "stack.h"
 
+Goban history[500];
+int h_counter = 0;
+
+void AddHistory(Goban* goban)
+{
+    //history[h_counter] = *goban;
+    memcpy(history + h_counter, goban, sizeof(Goban));
+    h_counter++;
+}
+
+void UndoHistory(Goban* goban)
+{
+    h_counter--;
+    memcpy(goban, history + h_counter, sizeof(Goban));
+    //*goban = history[h_counter];
+}
+
 void ResetGoban(Goban* goban)
 {
     ClearBoard(goban);
@@ -18,7 +35,6 @@ void ClearBoard(Goban* goban)
         for (j = 0; j < 19; ++j)
         {
             goban->board[i][j] = ' ';
-            goban->koref[i][j] = ' ';
         }
 }
 
@@ -142,6 +158,31 @@ int SearchGroup(Goban* goban, Point start, char searched[19][19])
     return (liberties) ? 0 : seenSize;
 }
 
+int IsEqual(Goban* a, Goban* b)
+{
+    int i, j;
+    for (i = 0; i < 19; ++i)
+    {
+        for (j = 0; j < 19; ++j)
+        {
+            if (a->board[i][j] != b->board[i][j])
+                return 0;
+        }
+    }
+    return 1;
+}
+
+int IsRepeat(Goban* goban)
+{
+    if (h_counter == 0)
+        return 0;
+    int i;
+    for (i = 0; i < h_counter; ++i)
+        if (IsEqual(goban, history + i))
+            return 1;
+    return 0;
+}
+
 int ValidateMove(Goban* goban, Point move)
 {
     Goban tempgoban;
@@ -171,10 +212,11 @@ int ValidateMove(Goban* goban, Point move)
             }
         }
     }
-    if (!HasLiberties(&tempgoban, move))
+    if (!HasLiberties(&tempgoban, move) || IsRepeat(&tempgoban))
         return 0;
     else
     {
+        AddHistory(goban);
         memcpy(goban, &tempgoban, sizeof(Goban));
         return 1;
     }

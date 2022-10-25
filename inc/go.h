@@ -20,6 +20,8 @@ typedef struct
 
 void ResetGoban(Goban* goban);
 void ClearBoard(Goban* goban);
+void AddHistory(Goban* goban);
+void UndoHistory(Goban* goban);
 
 int ValidateMove(Goban* goban, Point move);
 
