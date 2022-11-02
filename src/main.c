@@ -3,52 +3,22 @@
 #include <string.h>
 #include <time.h>
 #include "go.h"
+#include "commands.h"
 
 int main()
 {
     srand(time(NULL));
     Goban goban;
     ResetGoban(&goban);
-    PrintBoard(&goban);
     goban.color = 'b';
-    while (1)
+    int running = 1;
+    while (running)
     {
-        char input[256];
+        PrintBoard(&goban);
+        char input[COMMAND_LENGTH];
         if (!fgets(input, 256, stdin))
             exit(-1);
-        if (!strcmp(input, "undo\n"))
-        {
-            UndoHistory(&goban);
-            PrintBoard(&goban);
-            continue;
-        }
-        char col = input[0];
-        int row = input[1] - '0';
-        int i;
-        for (i = 2; i < 256; ++i)
-        {
-            if (input[i] == '\n')
-                break;
-            row *= 10;
-            row += input[i] - '0';
-        }
-        if (col >= 'A' && col <= 'S')
-            col += 32;
-        if (col >= 'a' && col <= 's')
-            col -= 'a';
-        else
-        {
-            printf("Invalid move\n");
-            continue;
-        }
-        if (row >= 1 && row <= 19)
-            row = 19 - row;
-        Point p;
-        p.row = row;
-        p.col = col;
-        if (!ValidateMove(&goban, p))
-            printf("Invalid Move\n");
-        PrintBoard(&goban);
+        running = ProcessCommand(&goban, input);
     }
     return 0;
 }

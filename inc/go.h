@@ -10,7 +10,6 @@ typedef struct
 typedef struct
 {
     char board[19][19];
-    char koref[19][19];
     Point lastmove;
     char hasko;
     char color;
@@ -18,11 +17,18 @@ typedef struct
     int bpris;
 } Goban;
 
+typedef struct
+{
+    Point p;
+    char color;
+} Move;
+
 void ResetGoban(Goban* goban);
 void ClearBoard(Goban* goban);
 void AddHistory(Goban* goban);
 void UndoHistory(Goban* goban);
 
+int ValidateInput(Point* p, char input[256]);
 int ValidateMove(Goban* goban, Point move);
 
 /* Prints the goban to the screen */

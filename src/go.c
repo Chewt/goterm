@@ -6,6 +6,37 @@
 Goban history[500];
 int h_counter = 0;
 
+int ValidateInput(Point* p, char input[256])
+{
+    char col = input[0];
+    int row = input[1] - '0';
+    int i;
+    for (i = 2; i < 256; ++i)
+    {
+        if (input[i] == '\n')
+            break;
+        row *= 10;
+        row += input[i] - '0';
+    }
+    if (col >= 'A' && col <= 'S')
+        col += 32;
+    if (col >= 'a' && col <= 's')
+        col -= 'a';
+    else
+    {
+        return 0;
+    }
+    if (row >= 1 && row <= 19)
+        row = 19 - row;
+    else
+    {
+        return 0;
+    }
+    p->row = row;
+    p->col = col;
+    return 1;
+}
+
 void AddHistory(Goban* goban)
 {
     //history[h_counter] = *goban;
@@ -15,8 +46,11 @@ void AddHistory(Goban* goban)
 
 void UndoHistory(Goban* goban)
 {
-    h_counter--;
-    memcpy(goban, history + h_counter, sizeof(Goban));
+    if (h_counter > 0)
+    {
+        h_counter--;
+        memcpy(goban, history + h_counter, sizeof(Goban));
+    }
     //*goban = history[h_counter];
 }
 
@@ -26,6 +60,7 @@ void ResetGoban(Goban* goban)
     goban->hasko = 0;
     goban->wpris = 0;
     goban->bpris = 0;
+    h_counter = 0;
 }
 
 void ClearBoard(Goban* goban)
@@ -183,6 +218,7 @@ int IsRepeat(Goban* goban)
     return 0;
 }
 
+/* Validates a move, and if it is valid makes the move*/
 int ValidateMove(Goban* goban, Point move)
 {
     Goban tempgoban;
@@ -228,7 +264,7 @@ void PrintBoard(Goban* goban)
     printf("\e[30;43m ");
     for (i = 0; i < 19; ++i)
         printf("  %c ", 'A' + i);
-    printf("  \e[0m\n");
+    printf("  \e[0m B: %d\n", goban->bpris);
     for (i = 0; i < 37; ++i)
     {
         for (j = 0; j < 19; ++j)
@@ -254,7 +290,7 @@ void PrintBoard(Goban* goban)
                             printf("19 \e[30;43m\u250c\u2500\u2500");
                             break;
                         case 18:
-                            printf("\u2500\u2510 19\e[0m\n");
+                            printf("\u2500\u2510 19\e[0m W: %d\n", goban->wpris);
                             break;
                         default:
                             printf("\u2500\u252c\u2500\u2500");
@@ -308,7 +344,12 @@ void PrintBoard(Goban* goban)
                     printf("\e[97;43m");
                 printf("\u2588\u2588\u2588");
                 if (j == 18)
-                    printf("\e[30;43m%2d\e[0m\n", 19 - (i/2));
+                {
+                    printf("\e[30;43m%2d\e[0m ", 19 - (i/2));
+                    if (i == 0)
+                        printf("W: %d", goban->wpris);
+                    printf("\n");
+                }
                 else
                     printf("\e[30;43m\u2500");
             }
