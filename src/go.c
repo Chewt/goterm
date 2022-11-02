@@ -3,10 +3,15 @@
 #include "go.h"
 #include "stack.h"
 
+char coords[] = {
+    'A', 'B', 'C', 'D', 'E', 'F',
+    'G', 'H', 'J', 'K', 'L', 'M',
+    'N', 'O', 'P', 'Q', 'R', 'S', 'T'};
+
 Goban history[500];
 int h_counter = 0;
 
-int ValidateInput(Point* p, char input[256])
+int ValidateInput(Goban* goban, Point* p, char input[256])
 {
     char col = input[0];
     int row = input[1] - '0';
@@ -18,16 +23,18 @@ int ValidateInput(Point* p, char input[256])
         row *= 10;
         row += input[i] - '0';
     }
-    if (col >= 'A' && col <= 'S')
+    if (col >= 'A' && col <= 'T')
         col += 32;
-    if (col >= 'a' && col <= 's')
+    if (col >= 'a' && col <= 'h')
         col -= 'a';
+    else if (col > 'i' && col <= 't')
+        col -= 'a' + 1;
     else
     {
         return 0;
     }
-    if (row >= 1 && row <= 19)
-        row = 19 - row;
+    if (row >= 1 && row <= goban->size)
+        row = goban->size - row;
     else
     {
         return 0;
@@ -52,12 +59,18 @@ void UndoHistory(Goban* goban)
     }
 }
 
+int HistorySize()
+{
+    return h_counter;
+}
+
 void ResetGoban(Goban* goban)
 {
     ClearBoard(goban);
     goban->wpris = 0;
     goban->bpris = 0;
     goban->color = 'b';
+    goban->size = 19;
     h_counter = 0;
 }
 
@@ -139,7 +152,7 @@ int SearchGroup(Goban* goban, Point start, char searched[19][19])
             else if (goban->board[currentPoint.row - 1][currentPoint.col] == ' ')
                 liberties++;
         }
-        if (currentPoint.row < 18)
+        if (currentPoint.row < goban->size - 1)
         {
             tempPoint.row = currentPoint.row + 1;
             tempPoint.col = currentPoint.col;
@@ -163,7 +176,7 @@ int SearchGroup(Goban* goban, Point start, char searched[19][19])
             else if (goban->board[currentPoint.row][currentPoint.col - 1] == ' ')
                 liberties++;
         }
-        if (currentPoint.col < 18)
+        if (currentPoint.col < goban->size - 1)
         {
             tempPoint.row = currentPoint.row;
             tempPoint.col = currentPoint.col + 1;
@@ -219,6 +232,8 @@ int IsRepeat(Goban* goban)
 /* Validates a move, and if it is valid makes the move*/
 int ValidateMove(Goban* goban, Point move)
 {
+    if (goban->board[move.row][move.col] != ' ')
+        return 0;
     Goban tempgoban;
     memcpy(&tempgoban, goban, sizeof(Goban));
     tempgoban.board[move.row][move.col] = goban->color;
@@ -230,9 +245,9 @@ int ValidateMove(Goban* goban, Point move)
     char search[19][19];
     memset(search, 0, 361);
     int i, j;
-    for (i = 0; i < 19; ++i)
+    for (i = 0; i < goban->size; ++i)
     {
-        for (j = 0; j < 19; ++j)
+        for (j = 0; j < goban->size; ++j)
         {
             if (search[i][j] == 'x')
                 continue;
@@ -263,12 +278,12 @@ void PrintBoard(Goban* goban)
 {
     int i, j;
     printf("\e[30;43m ");
-    for (i = 0; i < 19; ++i)
-        printf("  %c ", 'A' + i);
+    for (i = 0; i < goban->size; ++i)
+        printf("  %c ", coords[i]);
     printf("  \e[0m B: %d\n", goban->bpris);
-    for (i = 0; i < 37; ++i)
+    for (i = 0; i < (2 * goban->size) - 1; ++i)
     {
-        for (j = 0; j < 19; ++j)
+        for (j = 0; j < goban->size; ++j)
         {
             printf("\e[30;43m");
             if (goban->board[i/2][j] == ' ' || (i & 0x1))
@@ -278,75 +293,82 @@ void PrintBoard(Goban* goban)
                     if (j == 0)
                         printf("  ");
                     printf(" \u2502");
-                    if (j == 18)
+                    if (j == goban->size - 1)
                         printf("   \e[0m\n");
                     else
                         printf("  ");
                 }
                 else if (i == 0)
                 {
-                    switch (j)
+                    if (j == 0){
+                        printf("%2d \e[30;43m\u250c\u2500\u2500",
+                                goban->size);
+                    }
+                    else if (j == goban->size - 1){
+                        printf("\u2500\u2510 %2d\e[0m W: %d\n", goban->size,
+                                goban->wpris);
+                    }
+                    else
                     {
-                        case 0:
-                            printf("19 \e[30;43m\u250c\u2500\u2500");
-                            break;
-                        case 18:
-                            printf("\u2500\u2510 19\e[0m W: %d\n", goban->wpris);
-                            break;
-                        default:
-                            printf("\u2500\u252c\u2500\u2500");
-                            break;
+                        printf("\u2500\u252c\u2500\u2500");
                     }
                 }
-                else if (i == 36)
+                else if (i == (2 * goban->size) - 2)
                 {
-                    switch (j)
+                    if (j == 0) {
+
+                        printf(" 1\e[30;43m \u2514\u2500\u2500");
+                    }
+                    else if (j == goban->size - 1)
                     {
-                        case 0:
-                            printf(" 1\e[30;43m \u2514\u2500\u2500");
-                            break;
-                        case 18:
-                            printf("\u2500\u2518  1\e[0m\n");
-                            i++;
-                            break;
-                        default:
-                            printf("\u2500\u2534\u2500\u2500");
-                            break;
+                        printf("\u2500\u2518  1\e[0m\n");
+                        i++;
+                    }
+                    else
+                    {
+                        printf("\u2500\u2534\u2500\u2500");
                     }
                 }
                 else
                 {
-                    switch (j)
+                    if (j == 0)
                     {
-
-                        case 0:
-                            printf("%2d \e[30;43m\u251c\u2500\u2500", 19 - (i/2));
-                            break;
-                        case 18:
-                            printf("\u2500\u2524 %2d\e[0m\n", 19 - (i/2));
-                            break;
-                        default:
-                            printf("\u2500");
-                            if ((i == 6 || i == 18 || i == 30) 
-                              && (j == 3 || j == 9 || j == 15))
-                                printf("\u254b");
-                            else
-                                printf("\u253c");
-                            printf("\u2500\u2500");
-                            break;
+                      printf("%2d \e[30;43m\u251c\u2500\u2500",
+                             goban->size - (i / 2));
+                    }
+                    else if (j == goban->size - 1)
+                    {
+                        printf("\u2500\u2524 %2d\e[0m\n", goban->size - (i/2));
+                    }
+                    else
+                    {
+                        printf("\u2500");
+                        if (goban->size == 19 &&
+                            (i == 6 || i == 18 || i == 30) &&
+                            (j == 3 || j == 9 || j == 15))
+                          printf("\u254b");
+                        else if (goban->size == 9 && 
+                                (i == 4 || i == 12) &&
+                                (j == 2 || j == 6))
+                          printf("\u254b");
+                        else printf("\u253c");
+                        printf("\u2500\u2500");
                     }
                 }
             }
             else
             {
                 if (j == 0)
-                    printf("%2d", 19 - (i/2));
+                    printf("%2d", goban->size - (i/2));
                 if (goban->board[i/2][j] == 'w')
                     printf("\e[97;43m");
-                printf("\u2588\u2588\u2588");
-                if (j == 18)
+                printf("\u2588\u2588");
+                if (goban->lastmove.p.col == j && goban->lastmove.p.row == i/2)
+                    printf("\e[36m");
+                printf("\u2588");
+                if (j == goban->size - 1)
                 {
-                    printf("\e[30;43m%2d\e[0m ", 19 - (i/2));
+                    printf("\e[30;43m%2d\e[0m ", goban->size - (i/2));
                     if (i == 0)
                         printf("W: %d", goban->wpris);
                     printf("\n");
@@ -357,7 +379,7 @@ void PrintBoard(Goban* goban)
         }
     }
     printf("\e[30;43m ");
-    for (i = 0; i < 19; ++i)
-        printf("  %c ", 'A' + i);
+    for (i = 0; i < goban->size; ++i)
+        printf("  %c ", coords[i]);
     printf("  \e[0m\n");
 }

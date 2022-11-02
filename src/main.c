@@ -15,6 +15,11 @@ int main(int argc, char** argv)
     {
         StartEngine(&e, argv[1]);
         printf("%s %s\n", e.name, e.version);
+        char** response = AllocateResponse();
+        SendClearBoard(e.write, 1);
+        int n_resp = GetResponse(e.read, response, 1);
+        CleanResponse(response);
+        FreeResponse(response);
     }
     srand(time(NULL));
     Goban goban;
@@ -24,13 +29,20 @@ int main(int argc, char** argv)
     while (running)
     {
         PrintBoard(&goban);
-        if (e.pid > 0 && goban.color == 'w') {
+        if (e.pid >= 0 && goban.color == 'w') {
             int n_resp = 0;
-
             char** response = AllocateResponse();
-            SendClearBoard(e.write, 1);
-            n_resp = GetResponse(e.read, response, 1);
-            CleanResponse(response);
+
+            if (HistorySize() == 1)
+            {
+                SendClearBoard(e.write, 1);
+                n_resp = GetResponse(e.read, response, 1);
+                CleanResponse(response);
+                SendBoardsize(e.write, 2, goban.size);
+                n_resp = GetResponse(e.read, response, 2);
+                CleanResponse(response);
+                printf("here\n");
+            }
 
             SendPlay(e.write, 2, goban.lastmove);
             n_resp = GetResponse(e.read, response, 2);
@@ -38,6 +50,7 @@ int main(int argc, char** argv)
 
             SendGenmove(e.write, 3, goban.color);
             n_resp = GetResponse(e.read, response, 3);
+            printf("%s\n", response[0]);
             running = ProcessCommand(&goban, response[0]);
 
             CleanResponse(response);

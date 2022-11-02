@@ -16,6 +16,7 @@ typedef struct
 typedef struct
 {
     char board[19][19];
+    int size;
     Move lastmove;
     char color;
     int wpris;
@@ -26,8 +27,9 @@ void ResetGoban(Goban* goban);
 void ClearBoard(Goban* goban);
 void AddHistory(Goban* goban);
 void UndoHistory(Goban* goban);
+int HistorySize();
 
-int ValidateInput(Point* p, char input[256]);
+int ValidateInput(Goban* goban, Point* p, char input[256]);
 int ValidateMove(Goban* goban, Point move);
 
 /* Prints the goban to the screen */

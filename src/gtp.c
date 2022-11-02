@@ -57,7 +57,7 @@ char* GetMessage(int fd)
         }
     }while((lastTwo[0] != '\n') && (lastTwo[1] != '\n'));
     int temp;
-    read(fd, &temp, 1);
+    temp = read(fd, &temp, 1);
     char* buffer = malloc(bytes_read);
     int i;
     for (i = 0; i < bytes_read; ++i)
@@ -81,7 +81,10 @@ void CleanResponse(char** resp)
     int i;
     for (i = 0; i < 256; ++i) {
         if (resp[i])
+        {
             free(resp[i]);
+            resp[i] = NULL;
+        }
     }
 }
 
@@ -186,40 +189,47 @@ void SendName(int fd, int id)
 {
     char message[256];
     sprintf(message, "%d name\n", id);
-    write(fd, message, strlen(message));
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
 }
 
 void SendVersion(int fd, int id)
 {
     char message[256];
     sprintf(message, "%d version\n", id);
-    write(fd, message, strlen(message));
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
 }
 
 void SendClearBoard(int fd, int id)
 {
     char message[256];
     sprintf(message, "%d clear_board\n", id);
-    write(fd, message, strlen(message));
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
 }
 
 void SendBoardsize(int fd, int id, int size)
 {
     char message[256];
-    sprintf(message, "%d clear_board %d\n", id, size);
-    write(fd, message, strlen(message));
+    sprintf(message, "%d boardsize %d\n", id, size);
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
 }
 
 void SendGenmove(int fd, int id, char color)
 {
     char message[256];
     sprintf(message, "%d genmove %c\n", id, color);
-    write(fd, message, strlen(message));
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
 }
 
 void SendPlay(int fd, int id, Move move)
 {
     char message [256];
-    sprintf(message, "%d play %c %c%c\n", id, move.color, 'A' + move.p.col, '1' + move.p.row);
-    write(fd, message, strlen(message));
+    sprintf(message, "%d play %c %c%c\n", id, move.color, 'A' + move.p.col,
+            '1' + move.p.row);
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
 }
