@@ -93,7 +93,6 @@ void FreeResponse(char** resp)
 int GetResponse(int fd, char** resp, int id)
 {
     char* message = GetMessage(fd);
-    //printf("%s\n", message);
     int terms = 0;
     if (ValidateResponse(message, id))
     {
@@ -108,12 +107,10 @@ int GetResponse(int fd, char** resp, int id)
             token = strtok_r(NULL, " ", &save_ptr);
             terms++;
         }
-        //printf("here\n");
         int i;
         for (i = 0; i < terms; ++i) {
             resp[i] = malloc(strlen(temp[i]) + 1);
             memcpy(resp[i], temp[i], strlen(temp[i]) + 1);
-            //printf("%s\n", resp[i]);
         }
     }
     free(message);
@@ -140,25 +137,27 @@ void StartEngine(Engine* engine, char* engine_exc)
         engine->pid = child_pid;
 
         SendName(CONTROLLER_WRITE, 1);
-        char** message = malloc(sizeof(char*) * 100);
-        int n_terms = GetResponse(CONTROLLER_READ, message, 1);
-        memcpy(engine->name, message[0], strlen(message[0]) + 1);
-        int bytes = strlen(message[0]);
+        char** response = AllocateResponse();
+        int n_terms = GetResponse(CONTROLLER_READ, response, 1);
+        int bytes;
+        if (n_terms)
+        {
+            memcpy(engine->name, response[0], strlen(response[0]) + 1);
+            bytes = strlen(response[0]);
+        }
         int i;
         for (i = 1; i < n_terms; ++i) {
-            sprintf(engine->name + bytes, " %s", message[i]);
-            bytes += strlen(message[i]);
+            sprintf(engine->name + bytes, " %s", response[i]);
+            bytes += strlen(response[i]);
         }
-        for (i = 0; i < n_terms; ++i)
-            free(message[i]);
+        CleanResponse(response);
 
         SendVersion(CONTROLLER_WRITE, 1);
-        n_terms = GetResponse(CONTROLLER_READ, message, 1);
+        n_terms = GetResponse(CONTROLLER_READ, response, 1);
         if (n_terms)
-            memcpy(engine->version, message[0], strlen(message[0]) + 1);
-        for (i = 0; i < n_terms; ++i)
-            free(message[i]);
-        free(message);
+            memcpy(engine->version, response[0], strlen(response[0]) + 1);
+        CleanResponse(response);
+        FreeResponse(response);
     }
     else
     {
@@ -179,13 +178,6 @@ void StartEngine(Engine* engine, char* engine_exc)
             token = strtok_r(NULL, " ", &save_ptr);
             ++i;
         }
-        //int n;
-        //printf("%d\n", i);
-        //for (n = 0; n < i; ++n) {
-            //printf("%s\n", args[n]);
-            //if (args[n] == NULL)
-                //printf("It's null\n");
-        //}
         execvp(args[0], args);
     }
 }
