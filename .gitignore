@@ -1,3 +1,4 @@
 .ccls*
 obj/**
 goterm
+vgcore*

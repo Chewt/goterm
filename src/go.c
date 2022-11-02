@@ -13,7 +13,7 @@ int ValidateInput(Point* p, char input[256])
     int i;
     for (i = 2; i < 256; ++i)
     {
-        if (input[i] == '\n')
+        if (input[i] == '\n' || input[i] == '\0')
             break;
         row *= 10;
         row += input[i] - '0';
@@ -39,7 +39,6 @@ int ValidateInput(Point* p, char input[256])
 
 void AddHistory(Goban* goban)
 {
-    //history[h_counter] = *goban;
     memcpy(history + h_counter, goban, sizeof(Goban));
     h_counter++;
 }
@@ -51,15 +50,14 @@ void UndoHistory(Goban* goban)
         h_counter--;
         memcpy(goban, history + h_counter, sizeof(Goban));
     }
-    //*goban = history[h_counter];
 }
 
 void ResetGoban(Goban* goban)
 {
     ClearBoard(goban);
-    goban->hasko = 0;
     goban->wpris = 0;
     goban->bpris = 0;
+    goban->color = 'b';
     h_counter = 0;
 }
 
@@ -224,7 +222,10 @@ int ValidateMove(Goban* goban, Point move)
     Goban tempgoban;
     memcpy(&tempgoban, goban, sizeof(Goban));
     tempgoban.board[move.row][move.col] = goban->color;
-    tempgoban.lastmove = move;
+    Move m;
+    m.color = goban->color;
+    m.p = move;
+    tempgoban.lastmove = m;
     tempgoban.color = (tempgoban.color == 'b') ? 'w' : 'b';
     char search[19][19];
     memset(search, 0, 361);

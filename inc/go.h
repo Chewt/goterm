@@ -9,19 +9,18 @@ typedef struct
 
 typedef struct
 {
+    Point p;
+    char color;
+} Move;
+
+typedef struct
+{
     char board[19][19];
-    Point lastmove;
-    char hasko;
+    Move lastmove;
     char color;
     int wpris;
     int bpris;
 } Goban;
-
-typedef struct
-{
-    Point p;
-    char color;
-} Move;
 
 void ResetGoban(Goban* goban);
 void ClearBoard(Goban* goban);

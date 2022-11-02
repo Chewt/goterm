@@ -14,6 +14,12 @@ typedef struct
     int read;
 } Engine;
 
+void StartEngine(Engine* engine, char* engine_exc);
+
+char** AllocateResponse();
+void CleanResponse(char** resp);
+void FreeResponse(char** resp);
+int GetResponse(int fd, char** reps, int id);
 
 void SendProtocolVersion(int fd, int id);
 void SendName(int fd, int id);
@@ -25,6 +31,6 @@ void SendBoardsize(int fd, int id, int size);
 void SendClearBoard(int fd, int id);
 void SendKomi(int fd, int id, float new_komi);
 void SendPlay(int fd, int id, Move move);
-Point SendGenmove(int fd, int id, char color);
+void SendGenmove(int fd, int id, char color);
 
 #endif /* end of include guard: GTP_H */
