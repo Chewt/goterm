@@ -24,6 +24,7 @@ int main(int argc, char** argv)
     srand(time(NULL));
     Goban goban;
     ResetGoban(&goban);
+    goban.size = 19;
     goban.color = 'b';
     int running = 1;
     while (running)

@@ -70,7 +70,6 @@ void ResetGoban(Goban* goban)
     goban->wpris = 0;
     goban->bpris = 0;
     goban->color = 'b';
-    goban->size = 19;
     h_counter = 0;
 }
 
@@ -264,7 +263,7 @@ int ValidateMove(Goban* goban, Point move)
             }
         }
     }
-    if (!HasLiberties(&tempgoban, move) || IsRepeat(&tempgoban))
+    if (SearchGroup(&tempgoban, move, search) || IsRepeat(&tempgoban))
         return 0;
     else
     {
