@@ -32,3 +32,11 @@ $(UNIDEPS):
 clean: 
 	rm -rf $(OBJDIR)/*.o $(TARGET)
 
+.PHONY: install
+install:
+	@sudo cp $(TARGET) /usr/bin/$(TARGET)
+
+.PHONY: uninstall
+uninstall:
+	@sudo rm -f /usr/bin/$(TARGET)
+
