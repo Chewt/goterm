@@ -6,7 +6,9 @@
 #include "go.h"
 #include "commands.h"
 #include "gtp.h"
-struct flags { char* e_path; int size; };
+
+
+struct flags { char* e_path; int size; int g; };
 static int parse_opt (int key, char *arg, struct argp_state *state)
 {
     struct flags *flags = state->input;
@@ -17,12 +19,17 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
             break;
         case 's':
             flags->size = atoi(arg);
+            break;
+        case 'g':
+            flags->g = 1;
+            break;
     }
     return 0;
 }
 
 int main(int argc, char** argv)
 {
+    char gnugo[32] = "gnugo --mode gtp";
     srand(time(NULL));
     Goban goban;
     ResetGoban(&goban);
@@ -31,16 +38,21 @@ int main(int argc, char** argv)
     struct flags flags;
     flags.e_path = NULL;
     flags.size = 19;
+    flags.g = 0;
     
     struct argp_option options[] =
     {
-        { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use gnugo you can use -e \"gnugo --mode gtp\""},
-        { "size", 's', "NUM", 0, "Size of the goboard. Default is 19"},
+        { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use GNUgo you can use -e \"gnugo --mode gtp\"."},
+        { "size", 's', "NUM", 0, "Size of the goboard. Default is 19."},
+        { "gnugo", 'g', 0, 0, "Play against GNUgo. Functionally identical to the example given for -e."},
         { 0 }
     };
     struct argp argp = { options, parse_opt };
     int r = argp_parse(&argp, argc, argv, 0, 0, &flags);
     goban.size = flags.size;
+
+    if (flags.g == 1)
+        flags.e_path = gnugo;
 
     Engine e;
     e.pid = -1;
