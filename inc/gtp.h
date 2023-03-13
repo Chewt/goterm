@@ -30,7 +30,7 @@ void SendQuit(int fd, int id);
 void SendBoardsize(int fd, int id, int size);
 void SendClearBoard(int fd, int id);
 void SendKomi(int fd, int id, float new_komi);
-void SendPlay(int fd, int id, Move move);
+void SendPlay(int fd, int id, Move move, int size);
 void SendGenmove(int fd, int id, char color);
 
 #endif /* end of include guard: GTP_H */

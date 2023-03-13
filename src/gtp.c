@@ -225,11 +225,15 @@ void SendGenmove(int fd, int id, char color)
         fprintf(stderr, "error writing command to engine");
 }
 
-void SendPlay(int fd, int id, Move move)
+void SendPlay(int fd, int id, Move move, int size)
 {
+    char* letters = "ABCDEFGHJKLMNOPQRST";
     char message [256];
-    sprintf(message, "%d play %c %c%c\n", id, move.color, 'A' + move.p.col,
-            '1' + move.p.row);
+    if ((move.p.row == -1) && (move.p.col == -1))
+        sprintf(message, "%d play %c pass\n", id, move.color);
+    else
+        sprintf(message, "%d play %c %c%d\n", id, move.color, letters[move.p.col],
+                size - move.p.row);
     if (write(fd, message, strlen(message)) < 0)
         fprintf(stderr, "error writing command to engine");
 }

@@ -2,18 +2,42 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <argp.h>
 #include "go.h"
 #include "commands.h"
 #include "gtp.h"
-
+struct flags { char* e_path; };
+static int parse_opt (int key, char *arg, struct argp_state *state)
+{
+    struct flags *flags = state->input;
+    switch (key)
+    {
+        case 'e': 
+            flags->e_path = arg;
+            break;
+    }
+    return 0;
+}
 
 int main(int argc, char** argv)
 {
+    struct flags flags;
+    flags.e_path = NULL;
+
+    
+    struct argp_option options[] =
+    {
+        { "engine", 'e', "PATH", 0, "Show a dot on the screen"},
+        { 0 }
+    };
+    struct argp argp = { options, parse_opt };
+    int r = argp_parse(&argp, argc, argv, 0, 0, &flags);
+
     Engine e;
     e.pid = -1;
-    if (argc > 1)
+    if (flags.e_path)
     {
-        StartEngine(&e, argv[1]);
+        StartEngine(&e, flags.e_path);
         printf("%s %s\n", e.name, e.version);
         char** response = AllocateResponse();
         SendClearBoard(e.write, 1);
@@ -42,10 +66,9 @@ int main(int argc, char** argv)
                 SendBoardsize(e.write, 2, goban.size);
                 n_resp = GetResponse(e.read, response, 2);
                 CleanResponse(response);
-                printf("here\n");
             }
 
-            SendPlay(e.write, 2, goban.lastmove);
+            SendPlay(e.write, 2, goban.lastmove, goban.size);
             n_resp = GetResponse(e.read, response, 2);
             CleanResponse(response);
 
