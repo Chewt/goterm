@@ -8,7 +8,7 @@ char* to_lowercase(char* s)
 {
     if (!s)
         return NULL;
-    char* ns = malloc(strlen(s));
+    char* ns = malloc(strlen(s) + 1);
     int pos = 0;
     char c;
     while((c = s[pos]) != '\0')
@@ -44,6 +44,8 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     }
     else if (!strcmp(token, "exit\n"))
     {
+        if (lowercase_token)
+            free(lowercase_token);
         return 0;
     }
     else if (!strcmp(token, "size"))
@@ -52,6 +54,8 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         if (!token)
         {
             printf("Invalid Input\n");
+            if (lowercase_token)
+                free(lowercase_token);
             return 1;
         }
         ResetGoban(goban);
@@ -59,7 +63,14 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     }
     else if (!strcmp(lowercase_token, "pass"))
     {
+
         AddHistory(goban);
+        if (goban->lastmove.p.row == -1 && goban->lastmove.p.col == -1)
+        {
+            if (lowercase_token)
+                free(lowercase_token);
+            return 2;
+        }
         goban->lastmove.color = goban->color;
         goban->lastmove.p.row = -1;
         goban->lastmove.p.col = -1;
@@ -71,6 +82,8 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         if (!ValidateInput(goban, &p, token))
         {
             printf("Invalid Input: %s\n", token);
+            if (lowercase_token)
+                free(lowercase_token);
             return 1;
         }
         if (!ValidateMove(goban, p))

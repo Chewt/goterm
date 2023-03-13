@@ -33,10 +33,10 @@ clean:
 	rm -rf $(OBJDIR)/*.o $(TARGET)
 
 .PHONY: install
-install:
+install: all
 	@sudo cp $(TARGET) /usr/bin/$(TARGET)
 
 .PHONY: uninstall
-uninstall:
+uninstall: 
 	@sudo rm -f /usr/bin/$(TARGET)
 

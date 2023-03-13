@@ -6,7 +6,7 @@
 #include "go.h"
 #include "commands.h"
 #include "gtp.h"
-struct flags { char* e_path; };
+struct flags { char* e_path; int size; };
 static int parse_opt (int key, char *arg, struct argp_state *state)
 {
     struct flags *flags = state->input;
@@ -15,23 +15,32 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
         case 'e': 
             flags->e_path = arg;
             break;
+        case 's':
+            flags->size = atoi(arg);
     }
     return 0;
 }
 
 int main(int argc, char** argv)
 {
+    srand(time(NULL));
+    Goban goban;
+    ResetGoban(&goban);
+    goban.color = 'b';
+
     struct flags flags;
     flags.e_path = NULL;
-
+    flags.size = 19;
     
     struct argp_option options[] =
     {
-        { "engine", 'e', "PATH", 0, "Show a dot on the screen"},
+        { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use gnugo you can use -e \"gnugo --mode gtp\""},
+        { "size", 's', "NUM", 0, "Size of the goboard. Default is 19"},
         { 0 }
     };
     struct argp argp = { options, parse_opt };
     int r = argp_parse(&argp, argc, argv, 0, 0, &flags);
+    goban.size = flags.size;
 
     Engine e;
     e.pid = -1;
@@ -45,14 +54,24 @@ int main(int argc, char** argv)
         CleanResponse(response);
         FreeResponse(response);
     }
-    srand(time(NULL));
-    Goban goban;
-    ResetGoban(&goban);
-    goban.size = 19;
-    goban.color = 'b';
     int running = 1;
     while (running)
     {
+        if (running == 2)
+        {
+            char resp[256];
+            printf("Game Over!\nPlay again?[y/N]");
+            if (fgets(resp, 256, stdin) == NULL)
+                break;
+            if (resp[0] == 'y' || resp[0] == 'Y')
+            {
+                running = 1;
+                ResetGoban(&goban);
+                continue;
+            }
+            else 
+                break;
+        }
         PrintBoard(&goban);
         if (e.pid >= 0 && goban.color == 'w') {
             int n_resp = 0;

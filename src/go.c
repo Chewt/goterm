@@ -70,6 +70,9 @@ void ResetGoban(Goban* goban)
     goban->wpris = 0;
     goban->bpris = 0;
     goban->color = 'b';
+    goban->lastmove.color = 'b';
+    goban->lastmove.p.col = 0;
+    goban->lastmove.p.row = 0;
     h_counter = 0;
 }
 
