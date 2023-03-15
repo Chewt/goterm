@@ -237,3 +237,12 @@ void SendPlay(int fd, int id, Move move, int size)
     if (write(fd, message, strlen(message)) < 0)
         fprintf(stderr, "error writing command to engine");
 }
+
+
+void SendFinalScore(int fd, int id)
+{
+    char message[256];
+    sprintf(message, "%d final_score\n", id);
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
+}

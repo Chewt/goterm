@@ -71,6 +71,16 @@ int main(int argc, char** argv)
     {
         if (running == 2)
         {
+            if (e.pid >= 0)
+            {
+                int n_resp = 0;
+                char** response = AllocateResponse();
+                SendFinalScore(e.write, 1);
+                n_resp = GetResponse(e.read, response, 1);
+                printf("Result: %s\n", response[0]);
+                CleanResponse(response);
+                FreeResponse(response);
+            }
             char resp[256];
             printf("Game Over!\nPlay again?[y/N]");
             if (fgets(resp, 256, stdin) == NULL)
