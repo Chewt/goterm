@@ -105,6 +105,11 @@ void CloseClient(int socket)
     close(socket);
 }
 
+/* RecvCommand expects to see two newline characters, so be sure to send exactly
+ * two. If you send more, then the next command you send will have an extra
+ * newline at the beginning. In this case the user input already has a newline
+ * so I just add one more before sending.
+ */
 void SendCommand(int fd, char* command)
 {
     char buf[256];
