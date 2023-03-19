@@ -7,8 +7,6 @@
 #include <unistd.h>
 
 #include "networking.h"
-#include "gtp.h"
-
 
 int g_server_fd = -1;
 
@@ -118,6 +116,14 @@ void SendCommand(int fd, char* command)
 
 char* RecvCommand(int fd)
 {
-    char* m = GetMessage(fd); 
+    char* m = malloc(256);
+    int bytes = 0;
+    while(1)
+    {
+        bytes += read(fd, m + bytes, 1);
+        if (bytes > 2 && (m[bytes-1] == '\n') && (m[bytes-2] == '\n'))
+            break;
+    }
+    m[bytes-2] = '\0';
     return m;
 }
