@@ -199,5 +199,9 @@ int main(int argc, char** argv)
             running = ProcessCommand(&goban, input);
         }
     }
+    if (host >= 0)
+        CloseClient(host);
+    if (client >= 0)
+        CloseServer(client);
     return 0;
 }
