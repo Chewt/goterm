@@ -6,7 +6,7 @@
 #include "go.h"
 #include "commands.h"
 #include "gtp.h"
-
+#include "sgf.h"
 
 struct flags { char* e_path; int size; int g; };
 static int parse_opt (int key, char *arg, struct argp_state *state)
@@ -42,9 +42,14 @@ int main(int argc, char** argv)
     
     struct argp_option options[] =
     {
-        { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use GNUgo you can use -e \"gnugo --mode gtp\"."},
-        { "size", 's', "NUM", 0, "Size of the goboard. Default is 19."},
-        { "gnugo", 'g', 0, 0, "Play against GNUgo. Functionally identical to the example given for -e."},
+        { "engine", 'e', "PATH", 0, 
+            "Supplies a go engine to play as White. "
+            "To use GNUgo you can use -e \"gnugo --mode gtp\"."},
+        { "size", 's', "NUM", 0, 
+            "Size of the goboard. Default is 19."},
+        { "gnugo", 'g', 0, 0, 
+            "Play against GNUgo. Functionally identical "
+            "to the example given for -e."},
         { 0 }
     };
     struct argp argp = { options, parse_opt };
@@ -69,7 +74,8 @@ int main(int argc, char** argv)
     int running = 1;
     while (running)
     {
-        if (running == 2)
+        
+        if (running == 2) /* Game is in complete state */
         {
             if (e.pid >= 0)
             {
@@ -80,6 +86,12 @@ int main(int argc, char** argv)
                 printf("Result: %s\n", response[0]);
                 CleanResponse(response);
                 FreeResponse(response);
+            }
+            char* sgf = CreateSGF(&e);
+            if (sgf)
+            {
+                printf("%s\n", sgf);
+                free(sgf);
             }
             char resp[256];
             printf("Game Over!\nPlay again?[y/N]");

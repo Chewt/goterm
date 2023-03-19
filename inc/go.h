@@ -28,6 +28,7 @@ void ClearBoard(Goban* goban);
 void AddHistory(Goban* goban);
 void UndoHistory(Goban* goban);
 int HistorySize();
+Goban* GetHistory(int i);
 
 int ValidateInput(Goban* goban, Point* p, char input[256]);
 int ValidateMove(Goban* goban, Point move);

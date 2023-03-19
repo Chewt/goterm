@@ -59,6 +59,11 @@ void UndoHistory(Goban* goban)
     }
 }
 
+Goban* GetHistory(int i)
+{
+    return history + i;
+}
+
 int HistorySize()
 {
     return h_counter;
