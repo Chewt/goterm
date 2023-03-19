@@ -28,21 +28,30 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
 {
     char* save_ptr;
     char* token;
+
+    int i;
+    while (input[i] != '\0')
+    {
+        if (input[i] == '\n')
+            input[i] = '\0';
+        else
+            i++;
+    }
     token = strtok_r(input, " ", &save_ptr);
     char* lowercase_token = to_lowercase(token);
-    if (!strcmp(token, "undo\n"))
+    if (!strcmp(token, "undo"))
     {
         UndoHistory(goban);
     }
-    else if (!strcmp(token, "print\n"))
+    else if (!strcmp(token, "print"))
     {
         PrintBoard(goban);
     }
-    else if (!strcmp(token, "reset\n"))
+    else if (!strcmp(token, "reset"))
     {
         ResetGoban(goban);
     }
-    else if (!strcmp(token, "exit\n"))
+    else if (!strcmp(token, "exit"))
     {
         if (lowercase_token)
             free(lowercase_token);

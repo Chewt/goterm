@@ -20,6 +20,7 @@ char** AllocateResponse();
 void CleanResponse(char** resp);
 void FreeResponse(char** resp);
 int GetResponse(int fd, char** reps, int id);
+char* GetMessage(int fd);
 
 void SendProtocolVersion(int fd, int id);
 void SendName(int fd, int id);
