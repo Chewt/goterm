@@ -114,7 +114,7 @@ void SendCommand(int fd, char* command)
 {
     char buf[256];
     int index = 0;
-    index = sprintf(buf + index, "%s\n", command);
+    index = snprintf(buf + index, 256, "%s\n", command);
     buf[index] = '\0';
     send(fd, buf, strlen(buf), 0);
 }
@@ -123,12 +123,14 @@ char* RecvCommand(int fd)
 {
     char* m = malloc(256);
     int bytes = 0;
-    while(1)
+    int i;
+    for (i = 0; i < 255; ++i)
     {
         bytes += read(fd, m + bytes, 1);
         if (bytes > 2 && (m[bytes-1] == '\n') && (m[bytes-2] == '\n'))
             break;
     }
     m[bytes-2] = '\0';
+    m[255] = '\0';
     return m;
 }
