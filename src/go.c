@@ -16,7 +16,7 @@ int ValidateInput(Goban* goban, Point* p, char input[256])
     char col = input[0];
     int row = input[1] - '0';
     int i;
-    for (i = 2; i < 256; ++i)
+    for (i = 2; i < 256 && row > 0 && row < goban->size; ++i)
     {
         if (input[i] == '\n' || input[i] == '\0')
             break;

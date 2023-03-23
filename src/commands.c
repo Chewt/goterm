@@ -107,6 +107,8 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     int terms = 0;
     char tokens[256][256];
     token = strtok_r(input, " ", &save_ptr);
+    if (token == NULL)
+        return 1;
     while (token != NULL)
     {
         char* lowercase_token = to_lowercase(token);
