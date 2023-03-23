@@ -33,36 +33,37 @@ struct GoCommand
 
 int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
-    if (n_tokens != 1)
+    if (n_tokens != 1 || strcmp(tokens[0], "undo"))
         return -1;
     UndoHistory(goban);
     return 1;
 }
 int PrintCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
-    if (n_tokens != 1)
+    if (n_tokens != 1 || strcmp(tokens[0], "print"))
         return -1;
     PrintBoard(goban);
     return 1;
 }
 int ResetCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
-    if (n_tokens != 1)
+    if (n_tokens != 1 || strcmp(tokens[0], "reset"))
         return -1;
     ResetGoban(goban);
     return 1;
 }
 int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
-    if (n_tokens != 2)
+    if (n_tokens != 2 || strcmp(tokens[0], "size"))
         return -1;
     ResetGoban(goban);
-    goban->size = atoi(tokens[1]);
+    if((goban->size = atoi(tokens[1])) <= 1 || goban->size > 19)
+        goban->size = 19;
     return 1;
 }
 int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
-    if (n_tokens != 1)
+    if (n_tokens != 1 || strcmp(tokens[0], "pass"))
         return -1;
     AddHistory(goban);
     if (goban->lastmove.p.row == -1 && goban->lastmove.p.col == -1)
@@ -75,8 +76,10 @@ int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
 }
 int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
-    if (n_tokens != 1)
+    if (n_tokens != 1 || strcmp(tokens[0], "exit"))
         return -1;
+    goban->lastmove.p.col = -1;
+    goban->lastmove.p.row = -1;
     return 0;
 }
 
@@ -124,9 +127,10 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         i = 0;
         while (commands[i].name != NULL)
         {
-            printf("%s \t %s\n", commands[i].name, commands[i].help);
+            printf("%s - %s\n", commands[i].name, commands[i].help);
             i++;
         }
+        return 1;
     }
     else
     {
