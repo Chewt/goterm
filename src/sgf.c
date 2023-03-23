@@ -18,10 +18,10 @@ char* CreateSGF(Engine* e)
     index = sprintf(sgf + index, "(;FF[4]GM[1]SZ[%d]AP[Goterm:1.0]\n\n", 
             current->size);
     index += sprintf(sgf + index, "PB[Black]\n");
-    if (e->pid)
+    if (e->pid > 0)
         index += sprintf(sgf + index, "PW[%s]\n", e->name);
     else
-        index += sprintf(sgf + index, "PW[BLACK]\n");
+        index += sprintf(sgf + index, "PW[White]\n");
     index += sprintf(sgf + index, "DT[");
     index += strftime(sgf + index, 11, "%F", ptm);
     index += sprintf(sgf + index, "]\n\n");
