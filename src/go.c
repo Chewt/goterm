@@ -91,33 +91,6 @@ void ClearBoard(Goban* goban)
         }
 }
 
-int HasLiberties(Goban* goban, Point point)
-{
-    char color = goban->board[point.row][point.col];
-    int liberties = 0;
-    if (point.row > 0)
-    {
-        if (goban->board[point.row - 1][point.col] == ' ')
-            liberties++;
-    }
-    if (point.row < 18)
-    {
-        if (goban->board[point.row + 1][point.col] == ' ')
-            liberties++;
-    }
-    if (point.col > 0)
-    {
-        if (goban->board[point.row][point.col - 1] == ' ')
-            liberties++;
-    }
-    if (point.col < 18)
-    {
-        if (goban->board[point.row][point.col + 1] == ' ')
-            liberties++;
-    }
-    return liberties;
-}
-
 int IsSeen(Point seen[361], int nseen, Point p)
 {
     int i;

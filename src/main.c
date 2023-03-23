@@ -63,24 +63,20 @@ int main(int argc, char** argv)
     
     struct argp_option options[] =
     {
-        { "engine", 'e', "PATH", 0, 
-            "Supplies a go engine to play as White. "
-            "To use GNUgo you can use -e \"gnugo --mode gtp\"."},
-        { "size", 's', "NUM", 0, 
-            "Size of the goboard. Default is 19."},
-        { "gnugo", 'g', 0, 0, 
-            "Play against GNUgo. Functionally identical "
-            "to the example given for -e."},
-        { "host", 'h', 0, 0, 
-            "Allow connections from another player"},
-        { "connect", 'c', "IP", 0, 
-            "Connect to a host"},
-        { "port", 'p', "PORT", 0, 
-            "Port for connecting to host"},
+        { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use GNUgo you can use -e \"gnugo --mode gtp\".", 0},
+        { "size", 's', "NUM", 0, "Size of the goboard. Default is 19.", 0},
+        { "gnugo", 'g', 0, 0, "Play against GNUgo. Functionally identical to the example given for -e.", 0},
+        { "host", 'h', 0, 0, "Allow connections from another player", 0},
+        { "connect", 'c', "IP", 0, "Connect to a host", 0},
+        { "port", 'p', "PORT", 0, "Port for connecting to host", 0},
         { 0 }
     };
-    struct argp argp = { options, parse_opt };
-    int r = argp_parse(&argp, argc, argv, 0, 0, &flags);
+    struct argp argp = { options, parse_opt , 0, 0, 0, 0, 0};
+    if (argp_parse(&argp, argc, argv, 0, 0, &flags))
+    {
+        fprintf(stderr, "Error parsing arguments\n");
+        exit(-1);
+    }
     goban.size = flags.size;
 
     if (flags.g == 1)
@@ -94,7 +90,8 @@ int main(int argc, char** argv)
         printf("%s %s\n", e.name, e.version);
         char** response = AllocateResponse();
         SendClearBoard(e.write, 1);
-        int n_resp = GetResponse(e.read, response, 1);
+        if (!GetResponse(e.read, response, 1))
+            fprintf(stderr, "Couldn't get response from engine\n");
         CleanResponse(response);
         FreeResponse(response);
     }
@@ -118,11 +115,11 @@ int main(int argc, char** argv)
         {
             if (e.pid >= 0)
             {
-                int n_resp = 0;
                 char** response = AllocateResponse();
                 SendFinalScore(e.write, 1);
-                n_resp = GetResponse(e.read, response, 1);
-                printf("Result: %s\n", response[0]);
+                if (!GetResponse(e.read, response, 1))
+                    fprintf(stderr, "Couldn't get response from engine\n");
+                printf("Result: %s\n", response[1]);
                 CleanResponse(response);
                 FreeResponse(response);
             }
@@ -148,27 +145,30 @@ int main(int argc, char** argv)
         PrintBoard(&goban);
         if (e.pid >= 0 && goban.color == 'w') 
         {
-            int n_resp = 0;
             char** response = AllocateResponse();
 
             if (HistorySize() == 1)
             {
                 SendClearBoard(e.write, 1);
-                n_resp = GetResponse(e.read, response, 1);
+                if (!GetResponse(e.read, response, 1))
+                    fprintf(stderr, "Couldn't get response from engine\n");
                 CleanResponse(response);
                 SendBoardsize(e.write, 2, goban.size);
-                n_resp = GetResponse(e.read, response, 2);
+                if (!GetResponse(e.read, response, 2))
+                    fprintf(stderr, "Couldn't get response from engine\n");
                 CleanResponse(response);
             }
 
             SendPlay(e.write, 2, goban.lastmove, goban.size);
-            n_resp = GetResponse(e.read, response, 2);
+            if (!GetResponse(e.read, response, 2))
+                fprintf(stderr, "Couldn't get response from engine\n");
             CleanResponse(response);
 
             SendGenmove(e.write, 3, goban.color);
-            n_resp = GetResponse(e.read, response, 3);
-            printf("%s\n", response[0]);
-            running = ProcessCommand(&goban, response[0]);
+            if (!GetResponse(e.read, response, 3))
+                fprintf(stderr, "Couldn't get response from engine\n");
+            printf("%s\n", response[1]);
+            running = ProcessCommand(&goban, response[1]);
 
             CleanResponse(response);
             FreeResponse(response);

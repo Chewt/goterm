@@ -5,7 +5,7 @@ SOURCES = $(wildcard $(SRCDIR)/*.c)
 OBJECTS = $(SOURCES:$(SRCDIR)%.c=$(OBJDIR)%.o)
 INCLUDES = $(SOURCES:$(SRCDIR)%.c=$(INCLUDEDIR)%.h)
 UNIDEPS = 
-CFLAGS = -I$(INCLUDEDIR) -O2
+CFLAGS = -I$(INCLUDEDIR) -O2 -Wall -Wextra
 CC = gcc
 TARGET = goterm
 

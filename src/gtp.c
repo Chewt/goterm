@@ -103,7 +103,6 @@ int GetResponse(int fd, char** resp, int id)
         char* save_ptr;
         char* token;
         token = strtok_r(message, " ", &save_ptr);
-        token = strtok_r(NULL, " ", &save_ptr);
         while (token != NULL)
         {
             memcpy(temp[terms], token, strlen(token) + 1);
@@ -145,11 +144,11 @@ void StartEngine(Engine* engine, char* engine_exc)
         int bytes;
         if (n_terms)
         {
-            memcpy(engine->name, response[0], strlen(response[0]) + 1);
-            bytes = strlen(response[0]);
+            memcpy(engine->name, response[1], strlen(response[1]) + 1);
+            bytes = strlen(response[1]);
         }
         int i;
-        for (i = 1; i < n_terms; ++i) {
+        for (i = 2; i < n_terms; ++i) {
             sprintf(engine->name + bytes, " %s", response[i]);
             bytes += strlen(response[i]);
         }
@@ -158,7 +157,7 @@ void StartEngine(Engine* engine, char* engine_exc)
         SendVersion(CONTROLLER_WRITE, 1);
         n_terms = GetResponse(CONTROLLER_READ, response, 1);
         if (n_terms)
-            memcpy(engine->version, response[0], strlen(response[0]) + 1);
+            memcpy(engine->version, response[1], strlen(response[1]) + 1);
         CleanResponse(response);
         FreeResponse(response);
     }

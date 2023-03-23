@@ -33,16 +33,22 @@ struct GoCommand
 
 int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
+    if (n_tokens != 1)
+        return -1;
     UndoHistory(goban);
     return 1;
 }
 int PrintCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
+    if (n_tokens != 1)
+        return -1;
     PrintBoard(goban);
     return 1;
 }
 int ResetCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
+    if (n_tokens != 1)
+        return -1;
     ResetGoban(goban);
     return 1;
 }
@@ -56,6 +62,8 @@ int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
 }
 int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
+    if (n_tokens != 1)
+        return -1;
     AddHistory(goban);
     if (goban->lastmove.p.row == -1 && goban->lastmove.p.col == -1)
         return 2;
@@ -67,6 +75,8 @@ int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
 }
 int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
+    if (n_tokens != 1)
+        return -1;
     return 0;
 }
 

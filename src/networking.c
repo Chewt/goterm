@@ -12,13 +12,10 @@ int g_server_fd = -1;
 
 int SetupServer(int port)
 {
-    int fd;
-
-    int server_fd, new_socket, valread;
+    int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1024] = { 0 };
   
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -70,7 +67,7 @@ void CloseServer(int socket)
 
 int SetupClient(char* ip, int port)
 {
-    int status, valread, client_fd;
+    int status, client_fd;
     struct sockaddr_in serv_addr;
     if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");
