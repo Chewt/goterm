@@ -1,9 +1,11 @@
 # Goterm 
-A game of go that can be played in the terminal.
+A game of go/weiqi/baduk that can be played in the terminal.
 
 # Usage 
 Install with `make install` and use `goterm --help` to see a list of command
 line arguments goterm accepts.
+
+You can also use the command `help` while running the program to see a list of available commands.
 
 # Engines 
 Goterm uses the Go Text Protocol to communicate with go engines. You
