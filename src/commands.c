@@ -153,7 +153,14 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
                 return_val = commands[i].func(goban, terms, tokens);
                 if (return_val == -1)
                 {
-                    printf("Invalid usage of command %s\n", commands[i].name);
+                    if (goban->notes)
+                    {
+                      snprintf(goban->notes, 256,
+                               "Invalid usage of command %s\n",
+                               commands[i].name);
+                    }
+                    else
+                        printf("Invalid usage of command %s\n", commands[i].name);
                     return 1;
                 }
                 return return_val;
@@ -164,10 +171,21 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     Point p;
     if (!ValidateInput(goban, &p, tokens[0]))
     {
-        printf("Invalid Input: %s\n", tokens[0]);
+        if (goban->notes)
+        {
+            snprintf(goban->notes, strlen(tokens[0]) + 17, "Invalid Input: %s\n",
+                    tokens[0]);
+        }
+        else
+            printf("Invalid Input: %s\n", tokens[0]);
         return 1;
     }
     if (!ValidateMove(goban, p))
-        printf("Invalid Move\n");
+    {
+        if (goban->notes)
+            snprintf(goban->notes, 256,"Invalid Move\n");
+        else
+            printf("Invalid Move\n");
+    }
     return 1;
 }
