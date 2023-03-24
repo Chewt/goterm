@@ -180,6 +180,7 @@ int main(int argc, char** argv)
         }
         else if (host >= 0 && goban.color == 'w')
         {
+            printf("Waiting on opponent...\n");
             char* response = RecvCommand(host);
             printf("%s\n", response);
             running = ProcessCommand(&goban, response);
@@ -187,6 +188,7 @@ int main(int argc, char** argv)
         }
         else if (client >= 0 && goban.color == 'b')
         {
+            printf("Waiting on opponent...\n");
             char* response = RecvCommand(client);
             printf("%s\n", response);
             running = ProcessCommand(&goban, response);
