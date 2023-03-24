@@ -48,8 +48,10 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
 int main(int argc, char** argv)
 {
     char gnugo[32] = "gnugo --mode gtp";
+    char notes[256];
     srand(time(NULL));
     Goban goban;
+    goban.notes = notes;
     ResetGoban(&goban);
     goban.color = 'b';
 
@@ -143,6 +145,8 @@ int main(int argc, char** argv)
                 break;
         }
         PrintBoard(&goban);
+        printf("%s", goban.notes);
+        goban.notes[0] = '\0';
         if (e.pid >= 0 && goban.color == 'w') 
         {
             char** response = AllocateResponse();
@@ -189,6 +193,7 @@ int main(int argc, char** argv)
         }
         else{
             char input[COMMAND_LENGTH];
+            printf(": ");
             if (!fgets(input, 256, stdin))
                 exit(-1);
 

@@ -72,6 +72,8 @@ int HistorySize()
 void ResetGoban(Goban* goban)
 {
     ClearBoard(goban);
+    if (goban->notes)
+        goban->notes[0] = '\0';
     goban->wpris = 0;
     goban->bpris = 0;
     goban->color = 'b';
@@ -318,7 +320,25 @@ void PrintBoard(Goban* goban)
                     }
                     else if (j == goban->size - 1)
                     {
-                        printf("\u2500\u2524 %2d\e[0m\n", goban->size - (i/2));
+                        if (i == 2)
+                        {
+                            char lastmove[5] = { 0 };
+                            if (HistorySize() >= 1)
+                            {
+                                if (goban->lastmove.p.col == -1)
+                                    snprintf(lastmove, 5, "Pass");
+                                else
+                                {
+                                  snprintf(lastmove, 5, "%c%d",
+                                           coords[goban->lastmove.p.col],
+                                           goban->size - goban->lastmove.p.row);
+                                }
+                            }
+                            printf("\u2500\u2524 %2d\e[0m %s\n", goban->size - (i/2),
+                                     lastmove);
+                        }
+                        else
+                            printf("\u2500\u2524 %2d\e[0m\n", goban->size - (i/2));
                     }
                     else
                     {

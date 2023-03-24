@@ -125,9 +125,20 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     if (!strcmp(tokens[0], "help"))
     {
         i = 0;
+        int chars_printed = 0;
         while (commands[i].name != NULL)
         {
-            printf("%s - %s\n", commands[i].name, commands[i].help);
+            if (goban->notes == NULL)
+            {
+                printf("%s - %s\n", commands[i].name, commands[i].help);
+            }
+            else
+            {
+              chars_printed += snprintf(
+                      goban->notes + chars_printed,
+                      256 - chars_printed,
+                      "%s - %s\n", commands[i].name, commands[i].help);
+            }
             i++;
         }
         return 1;

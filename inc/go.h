@@ -15,6 +15,7 @@ typedef struct
 
 typedef struct
 {
+    char* notes;
     char board[19][19];
     int size;
     Move lastmove;
