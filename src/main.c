@@ -144,6 +144,7 @@ int main(int argc, char** argv)
             else 
                 break;
         }
+        printf("\e[2J\e[H");
         PrintBoard(&goban);
         printf("%s", goban.notes);
         goban.notes[0] = '\0';
