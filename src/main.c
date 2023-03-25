@@ -19,6 +19,9 @@ struct flags {
   int port;
 };
 
+const char *argp_program_bug_address = "<Hayden Johnson> hajohn100@gmail.com or at https://github.com/Chewt/goterm";
+const char *argp_program_version = "version 1.0";
+
 static int parse_opt (int key, char *arg, struct argp_state *state)
 {
     struct flags *flags = state->input;
@@ -73,7 +76,7 @@ int main(int argc, char** argv)
         { "port", 'p', "PORT", 0, "Port for connecting to host", 0},
         { 0 }
     };
-    struct argp argp = { options, parse_opt , 0, 0, 0, 0, 0};
+    struct argp argp = { options, parse_opt , 0, "Play Go/Baduk/Weiqi in the terminal!", 0, 0, 0};
     if (argp_parse(&argp, argc, argv, 0, 0, &flags))
     {
         fprintf(stderr, "Error parsing arguments\n");
