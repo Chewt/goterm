@@ -182,6 +182,11 @@ int main(int argc, char** argv)
         {
             printf("Waiting on opponent...\n");
             char* response = RecvCommand(host);
+            if (response == NULL)
+            {
+                printf("Connection to host broken\n");
+                break;
+            }
             printf("%s\n", response);
             running = ProcessCommand(&goban, response);
             free(response);
@@ -190,6 +195,11 @@ int main(int argc, char** argv)
         {
             printf("Waiting on opponent...\n");
             char* response = RecvCommand(client);
+            if (response == NULL)
+            {
+                printf("Connection to client broken\n");
+                break;
+            }
             printf("%s\n", response);
             running = ProcessCommand(&goban, response);
             free(response);

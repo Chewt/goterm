@@ -123,7 +123,13 @@ char* RecvCommand(int fd)
     int i;
     for (i = 0; i < 255; ++i)
     {
-        bytes += read(fd, m + bytes, 1);
+        int resp = read(fd, m + bytes, 1);
+        if (resp <= 0)
+        {
+            free(m);
+            return NULL;
+        }
+        bytes += resp;
         if (bytes > 2 && (m[bytes-1] == '\n') && (m[bytes-2] == '\n'))
             break;
     }
