@@ -374,7 +374,7 @@ void PrintBoard(Goban* goban)
                     printf("\n");
                 }
                 else
-                    printf("\e[30;43m\u2500");
+                    printf("\e[0m\e[30;43m\u2500");
             }
         }
     }
