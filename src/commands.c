@@ -28,6 +28,7 @@ struct GoCommand
 {
     char* name;
     int (*func)(Goban* goban, int n_tokens, char tokens[][256]);
+    int is_networked;
     char* help;
 };
 
@@ -54,6 +55,7 @@ int ResetCommand(Goban* goban, int n_tokens, char tokens[][256])
 }
 int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
+    printf("%d tokens\n", n_tokens);
     if (n_tokens != 2 || strcmp(tokens[0], "size"))
         return -1;
     ResetGoban(goban);
@@ -83,7 +85,7 @@ int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 0;
 }
 
-int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
+int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256])
 {
     char* save_ptr;
     char* token;
@@ -97,21 +99,10 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
             i++;
     }
 
-    struct GoCommand commands[] = {
-    {"undo", UndoCommand, "Undo last move"},
-    {"print", PrintCommand, "Print board to screen"},
-    {"reset", ResetCommand, "Reset board to empty"},
-    {"size", SizeCommand, "Change size of board. eg: size 19"},
-    {"pass", PassCommand, "Pass your turn"},
-    {"exit", ExitCommand, "Exit program"},
-    { 0 }
-    };
-
     int terms = 0;
-    char tokens[256][256];
     token = strtok_r(input, " ", &save_ptr);
     if (token == NULL)
-        return 1;
+        return -1;
     while (token != NULL)
     {
         char* lowercase_token = to_lowercase(token);
@@ -120,8 +111,51 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         token = strtok_r(NULL, " ", &save_ptr);
         terms++;
     }
+    return terms;
+}
+
+struct GoCommand commands[] = {
+    {"undo", UndoCommand, 1, "Undo last move"},
+    {"print", PrintCommand, 0, "Print board to screen"},
+    {"reset", ResetCommand, 1, "Reset board to empty"},
+    {"size", SizeCommand, 1, "Change size of board. eg: size 19"},
+    {"pass", PassCommand, 1, "Pass your turn"},
+    {"exit", ExitCommand, 1, "Exit program"},
+    { 0 }
+};
+
+int is_networked_command(char input[COMMAND_LENGTH])
+{
+    int terms;
+    char input_copy[COMMAND_LENGTH];
+    memcpy(input_copy, input, COMMAND_LENGTH);
+    char tokens[256][256];
+    terms = tokenize_command(input_copy, tokens);
+    if (terms <= 0)
+        return 0;
+
+    if (!strcmp(tokens[0], "help"))
+        return 0;
+    int i = 0;
+    while (commands[i].name != NULL)
+    {
+        if (!strcmp(commands[i].name, tokens[0]))
+        {
+            return commands[i].is_networked;
+        }
+        i++;
+    }
+    return 1;
+}
+
+int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
+{
+    int terms = 0;
+    char tokens[256][256];
+    terms = tokenize_command(input, tokens);
 
     int return_val = -2;
+    int i;
     if (!strcmp(tokens[0], "help"))
     {
         i = 0;

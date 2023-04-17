@@ -213,9 +213,9 @@ int main(int argc, char** argv)
             if (!fgets(input, 256, stdin))
                 exit(-1);
 
-            if (host >= 0)
+            if (host >= 0 && is_networked_command(input))
                 SendCommand(host, input);
-            else if (client >= 0)
+            else if (client >= 0 && is_networked_command(input))
                 SendCommand(client, input);
             running = ProcessCommand(&goban, input);
         }
