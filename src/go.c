@@ -345,7 +345,11 @@ void PrintBoard(Goban* goban)
                         printf("\u2500");
                         if (goban->size == 19 &&
                             (i == 6 || i == 18 || i == 30) &&
-                            (j == 3 || j == 9 || j == 15))
+                            (j == 3 || j == 9  || j == 15))
+                          printf("\u254b");
+                        else if (goban->size == 13 && 
+                                (i == 6 || i == 12 || i == 18) &&
+                                (j == 3 || j == 6  || j == 9 ))
                           printf("\u254b");
                         else if (goban->size == 9 && 
                                 (i == 4 || i == 12) &&
