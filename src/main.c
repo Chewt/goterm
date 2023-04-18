@@ -68,12 +68,14 @@ int main(int argc, char** argv)
     
     struct argp_option options[] =
     {
-        { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use GNUgo you can use -e \"gnugo --mode gtp\".", 0},
-        { "size", 's', "NUM", 0, "Size of the goboard. Default is 19.", 0},
-        { "gnugo", 'g', 0, 0, "Play against GNUgo. Functionally identical to the example given for -e.", 0},
-        { "host", 'h', 0, 0, "Allow connections from another player", 0},
-        { "connect", 'c', "IP", 0, "Connect to a host", 0},
-        { "port", 'p', "PORT", 0, "Port for connecting to host", 0},
+        { "size", 's', "NUM", 0, "Size of the goboard. Default is 19."},
+        {0,0,0,0, "Engines:", 7},
+        { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use GNUgo you can use -e \"gnugo --mode gtp\"."},
+        { "gnugo", 'g', 0, 0, "Play against GNUgo. Functionally identical to the example given for -e."},
+        {0,0,0,0, "Networking:", 1},
+        { "host", 'h', 0, 0, "Allow connections from another player"},
+        { "connect", 'c', "IP", 0, "Connect to a host"},
+        { "port", 'p', "PORT", 0, "Port for connecting to host"},
         { 0 }
     };
     struct argp argp = { options, parse_opt , 0, "Play Go/Baduk/Weiqi in the terminal!", 0, 0, 0};
