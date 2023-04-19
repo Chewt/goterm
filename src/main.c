@@ -281,22 +281,6 @@ int main(int argc, char** argv)
                 }
             }
         }
-        /*
-        if ((host   >= 0 && goban.color == host_col) ||
-                 (client >= 0 && goban.color == client_col)) 
-        {
-            int user = (host >= 0) ? host : client;
-            printf("Waiting on opponent...\n");
-            char* response = RecvCommand(user);
-            if (response == NULL)
-            {
-                printf("Connection to opponent broken\n");
-                break;
-            }
-            printf("%s\n", response);
-            running = ProcessCommand(&goban, response);
-            free(response);
-        } 
         else
         {
             char input[COMMAND_LENGTH];
@@ -311,7 +295,6 @@ int main(int argc, char** argv)
                 SendCommand(client, input);
             running = ProcessCommand(&goban, input);
         }
-        */
         if (running == SWAP)
         {
             char t = host_col;
