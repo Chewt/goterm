@@ -4,6 +4,7 @@
 
 #define COMMAND_LENGTH 256
 #define SWAP 100
+#define MOVE 200
 
 typedef struct
 {
@@ -14,5 +15,6 @@ typedef struct
 
 int is_networked_command(char input[COMMAND_LENGTH]);
 int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH]);
+int SubmitMove(Goban* goban, char input[COMMAND_LENGTH]);
 
 #endif

@@ -177,7 +177,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
             {
               chars_printed += snprintf(
                       goban->notes + chars_printed,
-                      256 - chars_printed,
+                      NOTES_LENGTH - chars_printed,
                       "%s - %s\n", commands[i].name, commands[i].help);
             }
             i++;
@@ -196,7 +196,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
                 {
                     if (goban->notes)
                     {
-                      snprintf(goban->notes, 256,
+                      snprintf(goban->notes, NOTES_LENGTH,
                                "Invalid usage of command %s\n",
                                commands[i].name);
                     }
@@ -209,12 +209,20 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
             ++i;
         }
     }
+    return MOVE;
+}
+
+int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
+{
+    int terms = 0;
+    char tokens[256][256];
+    terms = tokenize_command(input, tokens);
     Point p;
     if (!ValidateInput(goban, &p, tokens[0]))
     {
         if (goban->notes)
         {
-            snprintf(goban->notes, strlen(tokens[0]) + 17, "Invalid Input: %s\n",
+            snprintf(goban->notes, NOTES_LENGTH, "Invalid Input: %s\n",
                     tokens[0]);
         }
         else
@@ -224,7 +232,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     if (!ValidateMove(goban, p))
     {
         if (goban->notes)
-            snprintf(goban->notes, 256,"Invalid Move\n");
+            snprintf(goban->notes, NOTES_LENGTH,"Invalid Move\n");
         else
             printf("Invalid Move\n");
     }

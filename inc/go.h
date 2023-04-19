@@ -1,6 +1,8 @@
 #ifndef GO_H
 #define GO_H
 
+#define NOTES_LENGTH 256
+
 typedef struct
 {
     int row;

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <argp.h>
+#include <poll.h>
 #include "go.h"
 #include "commands.h"
 #include "gtp.h"
@@ -234,7 +235,54 @@ int main(int argc, char** argv)
             CleanResponse(response);
             FreeResponse(response);
         } 
-        else if ((host   >= 0 && goban.color == host_col) ||
+        else if (host >= 0 || client >= 0)
+        {
+            struct pollfd inputs[2];
+            inputs[0].fd = 0;
+            inputs[0].events = POLLIN;
+            inputs[1].fd = (host >= 0) ? host : client;
+            inputs[1].events = POLLIN;
+            char opponent_color = (host >= 0) ? host_col : client_col;
+            if (goban.color == opponent_color)
+                printf("Waiting on opponent...\n");
+            printf(": ");
+            fflush(stdout);
+            int ret_poll;
+            while ((ret_poll = poll(inputs, 2, 100)) == 0);
+            if (ret_poll > 0)
+            {
+                int user = (host >= 0) ? host : client;
+                if (inputs[0].revents & POLLIN)
+                {
+                    char input[COMMAND_LENGTH];
+                    if (!fgets(input, 256, stdin))
+                        exit(-1);
+                    input[strcspn(input, "\n")] = 0;
+
+                    running = ProcessCommand(&goban, input);
+                    if (running == MOVE && goban.color != opponent_color)
+                        SubmitMove(&goban, input);
+                    if (is_networked_command(input))
+                        SendCommand(user, input);
+                }
+                if (inputs[1].revents & POLLIN)
+                {
+                    char* response = RecvCommand(user);
+                    if (response == NULL)
+                    {
+                        printf("Connection to opponent broken\n");
+                        break;
+                    }
+                    printf("%s\n", response);
+                    running = ProcessCommand(&goban, response);
+                    if (running == MOVE && goban.color == opponent_color)
+                        SubmitMove(&goban, response);
+                    free(response);
+                }
+            }
+        }
+        /*
+        if ((host   >= 0 && goban.color == host_col) ||
                  (client >= 0 && goban.color == client_col)) 
         {
             int user = (host >= 0) ? host : client;
@@ -263,6 +311,7 @@ int main(int argc, char** argv)
                 SendCommand(client, input);
             running = ProcessCommand(&goban, input);
         }
+        */
         if (running == SWAP)
         {
             char t = host_col;
