@@ -17,6 +17,7 @@ struct flags {
   int is_server;
   char *host;
   int port;
+  int swap;
 };
 
 const char *argp_program_bug_address = "<Hayden Johnson> hajohn100@gmail.com or at https://github.com/Chewt/goterm";
@@ -44,6 +45,10 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
             break;
         case 'p':
             flags->port = atoi(arg);
+            break;
+        case 500:
+            flags->swap = 1;
+            break;
     }
     return 0;
 }
@@ -65,6 +70,7 @@ int main(int argc, char** argv)
     flags.is_server = 0;
     flags.host = NULL;
     flags.port = 0;
+    flags.swap = 0;
     
     struct argp_option options[] =
     {
@@ -76,6 +82,7 @@ int main(int argc, char** argv)
         { "host", 'h', 0, 0, "Allow connections from another player"},
         { "connect", 'c', "IP", 0, "Connect to a host"},
         { "port", 'p', "PORT", 0, "Port for connecting to host"},
+        { "swap", 500, 0, 0, "Swap colors for client and host (default host is white)"},
         { 0 }
     };
     struct argp argp = { options, parse_opt , 0, "Play Go/Baduk/Weiqi in the terminal!", 0, 0, 0};
@@ -105,13 +112,48 @@ int main(int argc, char** argv)
 
     int client = -1;
     int host = -1;
+    char host_col = 'w';
+    char client_col = 'b';
     if (flags.is_server && flags.port)
     {
         client = SetupServer(flags.port);
+        if (flags.swap)
+        {
+            char t = host_col;
+            host_col = client_col;
+            client_col = t;
+            SendCommand(client, "swap");
+        }
+        SendCommand(client, "ready");
     }
     else if (flags.host && flags.port)
     {
         host = SetupClient(flags.host, flags.port);
+        int setup_finished = 0;
+        while (!setup_finished)
+        {
+            char* resp = RecvCommand(host);
+            if (resp == NULL)
+            {
+                printf("Connection to other user broken\n");
+                exit(0);
+            }
+            if (!strcmp(resp, "swap"))
+            {
+                char t = host_col;
+                host_col = client_col;
+                client_col = t;
+            }
+            else if (!strcmp(resp, "ready"))
+            {
+                setup_finished = 1;
+            }
+            else
+            {
+                ProcessCommand(&goban, resp);
+            }
+            free(resp);
+        }
     }
 
     int running = 1;
@@ -183,7 +225,7 @@ int main(int argc, char** argv)
             CleanResponse(response);
             FreeResponse(response);
         }
-        else if (host >= 0 && goban.color == 'w')
+        else if (host >= 0 && goban.color == host_col)
         {
             printf("Waiting on opponent...\n");
             char* response = RecvCommand(host);
@@ -196,7 +238,7 @@ int main(int argc, char** argv)
             running = ProcessCommand(&goban, response);
             free(response);
         }
-        else if (client >= 0 && goban.color == 'b')
+        else if (client >= 0 && goban.color == client_col)
         {
             printf("Waiting on opponent...\n");
             char* response = RecvCommand(client);
