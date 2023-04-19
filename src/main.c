@@ -289,11 +289,9 @@ int main(int argc, char** argv)
                 exit(-1);
             input[strcspn(input, "\n")] = 0;
 
-            if (host >= 0 && is_networked_command(input))
-                SendCommand(host, input);
-            else if (client >= 0 && is_networked_command(input))
-                SendCommand(client, input);
             running = ProcessCommand(&goban, input);
+            if (running == MOVE)
+                SubmitMove(&goban, input);
         }
         if (running == SWAP)
         {
