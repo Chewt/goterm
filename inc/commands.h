@@ -3,6 +3,7 @@
 #include "go.h"
 
 #define COMMAND_LENGTH 256
+#define SWAP 100
 
 typedef struct
 {

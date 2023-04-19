@@ -76,6 +76,12 @@ int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
     goban->color = (goban->color == 'b') ? 'w' : 'b';
     return 1;
 }
+int SwapCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if (n_tokens != 1 || strcmp(tokens[0], "swap"))
+        return -1;
+    return SWAP;
+}
 int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 || strcmp(tokens[0], "exit"))
@@ -120,6 +126,7 @@ struct GoCommand commands[] = {
     {"reset", ResetCommand, 1, "Reset board to empty"},
     {"size", SizeCommand, 1, "Change size of board. eg: size 19"},
     {"pass", PassCommand, 1, "Pass your turn"},
+    {"swap", SwapCommand, 1, "Swap colors with opponent"},
     {"exit", ExitCommand, 1, "Exit program"},
     { 0 }
 };

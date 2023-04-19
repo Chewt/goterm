@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     flags.g = 0;
     flags.is_server = 0;
     flags.host = NULL;
-    flags.port = 0;
+    flags.port = 5000;
     flags.swap = 0;
     
     struct argp_option options[] =
@@ -97,6 +97,7 @@ int main(int argc, char** argv)
         flags.e_path = gnugo;
 
     Engine e;
+    char e_col = 'w';
     e.pid = -1;
     if (flags.e_path)
     {
@@ -124,6 +125,12 @@ int main(int argc, char** argv)
             client_col = t;
             SendCommand(client, "swap");
         }
+        if (flags.size != 19)
+        {
+            char command[10] = "";
+            snprintf(command, 9, "size %d", flags.size);
+            SendCommand(client, command);
+        }
         SendCommand(client, "ready");
     }
     else if (flags.host && flags.port)
@@ -133,6 +140,7 @@ int main(int argc, char** argv)
         while (!setup_finished)
         {
             char* resp = RecvCommand(host);
+            printf("%s", resp);
             if (resp == NULL)
             {
                 printf("Connection to other user broken\n");
@@ -146,6 +154,7 @@ int main(int argc, char** argv)
             }
             else if (!strcmp(resp, "ready"))
             {
+                printf("ready received\n");
                 setup_finished = 1;
             }
             else
@@ -195,7 +204,7 @@ int main(int argc, char** argv)
         PrintBoard(&goban);
         printf("%s", goban.notes);
         goban.notes[0] = '\0';
-        if (e.pid >= 0 && goban.color == 'w') 
+        if (e.pid >= 0 && goban.color == e_col) 
         {
             char** response = AllocateResponse();
 
@@ -224,44 +233,43 @@ int main(int argc, char** argv)
 
             CleanResponse(response);
             FreeResponse(response);
-        }
-        else if (host >= 0 && goban.color == host_col)
+        } 
+        else if ((host   >= 0 && goban.color == host_col) ||
+                 (client >= 0 && goban.color == client_col)) 
         {
+            int user = (host >= 0) ? host : client;
             printf("Waiting on opponent...\n");
-            char* response = RecvCommand(host);
+            char* response = RecvCommand(user);
             if (response == NULL)
             {
-                printf("Connection to host broken\n");
+                printf("Connection to opponent broken\n");
                 break;
             }
             printf("%s\n", response);
             running = ProcessCommand(&goban, response);
             free(response);
-        }
-        else if (client >= 0 && goban.color == client_col)
+        } 
+        else
         {
-            printf("Waiting on opponent...\n");
-            char* response = RecvCommand(client);
-            if (response == NULL)
-            {
-                printf("Connection to client broken\n");
-                break;
-            }
-            printf("%s\n", response);
-            running = ProcessCommand(&goban, response);
-            free(response);
-        }
-        else{
             char input[COMMAND_LENGTH];
             printf(": ");
             if (!fgets(input, 256, stdin))
                 exit(-1);
+            input[strcspn(input, "\n")] = 0;
 
             if (host >= 0 && is_networked_command(input))
                 SendCommand(host, input);
             else if (client >= 0 && is_networked_command(input))
                 SendCommand(client, input);
             running = ProcessCommand(&goban, input);
+        }
+        if (running == SWAP)
+        {
+            char t = host_col;
+            host_col = client_col;
+            client_col = t;
+            e_col = (e_col == 'w') ? 'b' : 'w';
+            running = 1;
         }
     }
     if (host >= 0)

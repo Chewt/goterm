@@ -131,7 +131,7 @@ void SendCommand(int fd, char* command)
 {
     char buf[256];
     int index = 0;
-    index = snprintf(buf + index, 256, "%s\n", command);
+    index = snprintf(buf + index, 256, "%s\n\n", command);
     buf[index] = '\0';
     send(fd, buf, strlen(buf), 0);
 }
