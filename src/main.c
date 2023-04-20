@@ -169,9 +169,9 @@ int main(int argc, char** argv)
     int running = 1;
     while (running)
     {
-        
         if (running == 2) /* Game is in complete state */
         {
+            char resp[256];
             if (e.pid >= 0)
             {
                 char** response = AllocateResponse();
@@ -182,13 +182,63 @@ int main(int argc, char** argv)
                 CleanResponse(response);
                 FreeResponse(response);
             }
+            else
+            {
+                printf("Please enter a list of stones seperated by spaces\n"); 
+                printf("(one stone per group)\n: ");
+                if (fgets(resp, 256, stdin) == NULL)
+                    continue;
+                if (!RemoveDeadGroups(&goban, resp))
+                {
+                    PrintBoard(&goban);
+                    continue;
+                }
+            }
+            ScoreBoard(&goban);
+            PointDiff(&goban, resp);
+            if (host >= 0 || client >= 0)
+            {
+                printf("Confirming with opponent...\n");
+                if (host >= 0) 
+                {
+                    SendCommand(host, resp);
+                    char* confirm = RecvCommand(host);
+                    if (!strcmp(confirm, "deny"))
+                    {
+                      snprintf(goban.notes, NOTES_LENGTH,
+                               "Opponent disagrees with result, play on.\n");
+                      UndoHistory(&goban);
+                      free(confirm);
+                      running = 1;
+                      continue;
+                    }
+                    free(confirm);
+                }
+                else if (client >= 0)
+                {
+                    char* opponent_diff = RecvCommand(client);
+                    if (strcmp(opponent_diff, resp))
+                    {
+                      snprintf(goban.notes, NOTES_LENGTH,
+                               "Opponent disagrees with result, play on.\n");
+                        SendCommand(client, "deny");
+                        UndoHistory(&goban);
+                        free(opponent_diff);
+                        running = 1;
+                        continue;
+                    }
+                    SendCommand(client, "confirm");
+                    free(opponent_diff);
+                }
+            }
+            AddHistory(&goban);
             char* sgf = CreateSGF(&e);
             if (sgf)
             {
-                printf("%s\n", sgf);
+                printf("%s\n\n", sgf);
                 free(sgf);
             }
-            char resp[256];
+            printf("Result: %s\n", resp);
             printf("Game Over!\nPlay again?[y/N]");
             if (fgets(resp, 256, stdin) == NULL)
                 break;
@@ -201,7 +251,6 @@ int main(int argc, char** argv)
             else 
                 break;
         }
-        printf("\e[2J\e[H");
         PrintBoard(&goban);
         printf("%s", goban.notes);
         goban.notes[0] = '\0';

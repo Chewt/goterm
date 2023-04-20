@@ -26,6 +26,8 @@ typedef struct
     char color;
     int wpris;
     int bpris;
+    float komi;
+    float result;
 } Goban;
 
 void ResetGoban(Goban* goban);
@@ -33,6 +35,8 @@ void ClearBoard(Goban* goban);
 void AddHistory(Goban* goban);
 void UndoHistory(Goban* goban);
 void ScoreBoard(Goban* goban);
+int RemoveDeadGroups(Goban* goban, char input[256]);
+void PointDiff(Goban* goban, char resp[256]);
 int HistorySize();
 Goban* GetHistory(int i);
 

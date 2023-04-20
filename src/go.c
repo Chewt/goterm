@@ -2,6 +2,7 @@
 #include <string.h>
 #include "go.h"
 #include "stack.h"
+#include "commands.h"
 
 char coords[] = {
     'A', 'B', 'C', 'D', 'E', 'F',
@@ -11,6 +12,7 @@ char coords[] = {
 Goban history[500];
 int h_counter = 0;
 
+// Return 0 if input isn't in move format, else returns 1 and populates p
 int ValidateInput(Goban* goban, Point* p, char input[256])
 {
     char col = input[0];
@@ -76,7 +78,9 @@ void ResetGoban(Goban* goban)
         goban->notes[0] = '\0';
     goban->wpris = 0;
     goban->bpris = 0;
+    goban->komi = 6.5;
     goban->color = 'b';
+    goban->result = -1;
     goban->lastmove.color = 'b';
     goban->lastmove.p.col = 0;
     goban->lastmove.p.row = 0;
@@ -365,6 +369,71 @@ int ScoreArea(Goban* goban, Point start, char searched[19][19])
     return (belongs_to == 'x') ? 0 : seenSize;
 }
 
+int RemoveDeadGroups(Goban* goban, char input[256])
+{
+    char tokens[256][256];
+    int terms = tokenize_command(input, tokens);
+    Goban tempgoban;
+    memcpy(&tempgoban, goban, sizeof(Goban));
+    int i;
+    for (i = 0; i < terms; ++i)
+    {
+        Point p;
+        if (ValidateInput(goban, &p, tokens[i]))
+        {
+            int points = RemoveGroup(&tempgoban, p);
+            if (tempgoban.board[p.row][p.col] == 'w')
+                tempgoban.wpris += points;
+            else if (goban->board[p.row][p.col] == 'b')
+                tempgoban.bpris += points;
+        }
+        else return 0;
+    }
+    ScoreBoard(&tempgoban);
+    PrintBoard(&tempgoban);
+    char resp[COMMAND_LENGTH];
+    printf("Does this look right?[Y/n]\n: ");
+    if (fgets(resp, 256, stdin) == NULL)
+        return 0;
+    if (resp[0] == 'n' || resp[0] == 'N')
+        return 0;
+    AddHistory(goban);
+    memcpy(goban, &tempgoban, sizeof(Goban));
+    return 1;
+}
+
+void PointDiff(Goban* goban, char resp[256])
+{
+    int black_score = 0;
+    int white_score = 0;
+    ScoreBoard(goban);
+    int i, j;
+    for (i = 0; i < goban->size; ++i)
+    {
+        for (j = 0; j < goban->size; ++j)
+        {
+            if (goban->score[i][j] == 'w')
+                white_score++;
+            else if (goban->score[i][j] == 'b')
+                black_score++;
+        }
+    }
+    white_score -= goban->wpris;
+    black_score -= goban->bpris;
+    float diff = white_score - black_score;
+    diff += goban->komi;
+    int idx = 0;
+    if (diff < 0)
+    {
+        diff *= -1;
+        idx += snprintf(resp, 256, "B+");
+    }
+    else if (diff > 0)
+        idx += snprintf(resp, 256, "W+");
+    snprintf(resp + idx, 256, "%.1f", diff);
+    goban->result = diff;
+}
+
 void ScoreBoard(Goban* goban)
 {
     memset(goban->score, ' ', 19 * 19);
@@ -378,27 +447,12 @@ void ScoreBoard(Goban* goban)
                 Point p;
                 p.row = i;
                 p.col = j;
-                int group_score = ScoreArea(goban, p, goban->score);
-                if (group_score)
-                {
-                    idx += snprintf(goban->notes + idx,
-                            NOTES_LENGTH - strlen(goban->notes), "%d ",
-                            group_score);
-                }
+                ScoreArea(goban, p, goban->score);
             }
         }
     }
     snprintf(goban->notes + idx, NOTES_LENGTH - strlen(goban->notes), "\n");
     goban->showscore = 1;
-    for (i = 0; i < goban->size; ++i)
-    {
-        for(j = 0; j < goban->size; ++j)
-        {
-            printf("%c", goban->score[i][j]);
-        }
-        printf("\n");
-    }
-
 }
 
 // Checks if two Gobans are equal
@@ -475,9 +529,12 @@ int ValidateMove(Goban* goban, Point move)
     }
 }
 
+
+
 // Print board to screen
 void PrintBoard(Goban* goban)
 {
+    printf("\e[2J\e[H");
     int i, j;
     printf("\e[30;43m ");
     for (i = 0; i < goban->size; ++i)

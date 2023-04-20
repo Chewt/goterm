@@ -24,7 +24,18 @@ char* CreateSGF(Engine* e)
         index += sprintf(sgf + index, "PW[White]\n");
     index += sprintf(sgf + index, "DT[");
     index += strftime(sgf + index, 11, "%F", ptm);
-    index += sprintf(sgf + index, "]\n\n");
+    index += sprintf(sgf + index, "]\n");
+    index += sprintf(sgf + index, "KM[");
+    index += sprintf(sgf + index, "%.1f", current->komi);
+    index += sprintf(sgf + index, "]\n");
+    Goban* last = GetHistory(HistorySize() - 1);
+    if (last->result >= 0)
+    {
+        index += sprintf(sgf + index, "RE[");
+        index += sprintf(sgf + index, "%.1f", last->result);
+        index += sprintf(sgf + index, "]\n");
+    }
+    index += sprintf(sgf + index, "\n");
 
     int i;
     for (i = 1; i < HistorySize(); ++i)
