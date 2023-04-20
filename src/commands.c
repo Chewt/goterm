@@ -90,6 +90,13 @@ int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
     goban->lastmove.p.row = -1;
     return 0;
 }
+int ScoreCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if (n_tokens != 1 || strcmp(tokens[0], "score"))
+        return -1;
+    ScoreBoard(goban);
+    return 1;
+}
 
 int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256])
 {
@@ -127,6 +134,7 @@ struct GoCommand commands[] = {
     {"size", SizeCommand, 1, "Change size of board. eg: size 19"},
     {"pass", PassCommand, 1, "Pass your turn"},
     {"swap", SwapCommand, 1, "Swap colors with opponent"},
+    {"score", ScoreCommand, 0, "Show current score on board"},
     {"exit", ExitCommand, 1, "Exit program"},
     { 0 }
 };
@@ -218,11 +226,11 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     char tokens[256][256];
     terms = tokenize_command(input, tokens);
     Point p;
-    if (!ValidateInput(goban, &p, tokens[0]))
+    if (terms == 0 || !ValidateInput(goban, &p, tokens[0]))
     {
         if (goban->notes)
         {
-            snprintf(goban->notes, NOTES_LENGTH, "Invalid Input: %s\n",
+            snprintf(goban->notes, NOTES_LENGTH - 17, "Invalid Input: %s\n",
                     tokens[0]);
         }
         else

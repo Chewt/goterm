@@ -80,6 +80,7 @@ void ResetGoban(Goban* goban)
     goban->lastmove.color = 'b';
     goban->lastmove.p.col = 0;
     goban->lastmove.p.row = 0;
+    goban->showscore = 0;
     h_counter = 0;
 }
 
@@ -90,6 +91,7 @@ void ClearBoard(Goban* goban)
         for (j = 0; j < 19; ++j)
         {
             goban->board[i][j] = ' ';
+            goban->score[i][j] = ' ';
         }
 }
 
@@ -105,7 +107,84 @@ int IsSeen(Point seen[361], int nseen, Point p)
     return 0;
 }
 
-int SearchGroup(Goban* goban, Point start, char searched[19][19])
+int CountLiberties(Goban* goban, Point start, char searched[19][19])
+{
+    Stack stack;
+    Point seen[361];
+    int seenSize = 0;
+    int liberties = 0;
+    char color = goban->board[start.row][start.col];
+
+    memset(seen, -1, sizeof(Point) * 361);
+    ClearStack(&stack);
+    PushStack(&stack, start);
+    while (StackSize(&stack) > 0)
+    {
+        Point currentPoint = PopStack(&stack);
+        Point tempPoint = currentPoint;
+        seen[seenSize++] = currentPoint;
+
+        if (currentPoint.row > 0)
+        {
+            tempPoint.row = currentPoint.row - 1;
+            tempPoint.col = currentPoint.col;
+            if (goban->board[tempPoint.row][tempPoint.col] == color &&
+                    !IsSeen(seen, seenSize, tempPoint))
+            {
+                PushStack(&stack, tempPoint);
+            }
+            else if (goban->board[currentPoint.row - 1][currentPoint.col] == ' ')
+                liberties++;
+        }
+        if (currentPoint.row < goban->size - 1)
+        {
+            tempPoint.row = currentPoint.row + 1;
+            tempPoint.col = currentPoint.col;
+            if (goban->board[tempPoint.row][tempPoint.col] == color &&
+                    !IsSeen(seen, seenSize, tempPoint))
+            {
+                PushStack(&stack, tempPoint);
+            }
+            else if (goban->board[currentPoint.row + 1][currentPoint.col] == ' ')
+                liberties++;
+        }
+        if (currentPoint.col > 0)
+        {
+            tempPoint.row = currentPoint.row;
+            tempPoint.col = currentPoint.col - 1;
+            if (goban->board[tempPoint.row][tempPoint.col] == color &&
+                    !IsSeen(seen, seenSize, tempPoint))
+            {
+                PushStack(&stack, tempPoint);
+            }
+            else if (goban->board[currentPoint.row][currentPoint.col - 1] == ' ')
+                liberties++;
+        }
+        if (currentPoint.col < goban->size - 1)
+        {
+            tempPoint.row = currentPoint.row;
+            tempPoint.col = currentPoint.col + 1;
+            if (goban->board[tempPoint.row][tempPoint.col] == color &&
+                    !IsSeen(seen, seenSize, tempPoint))
+            {
+                PushStack(&stack, tempPoint);
+            }
+            else if (goban->board[currentPoint.row][currentPoint.col + 1] == ' ')
+                liberties++;
+        }
+    }
+    int i;
+    if (liberties > 0)
+    {
+        for (i = 0; i < seenSize; ++i)
+        {
+            searched[seen[i].row][seen[i].col] = 'x';
+        }
+    }
+    return liberties;
+}
+
+int RemoveGroup(Goban* goban, Point start)
 {
     Stack stack;
     Point seen[361];
@@ -174,18 +253,155 @@ int SearchGroup(Goban* goban, Point start, char searched[19][19])
     int i;
     for (i = 0; i < seenSize; ++i)
     {
-        if (liberties > 0)
-        {
-            searched[seen[i].row][seen[i].col] = 'x';
-        }
-        else
-        {
-            goban->board[seen[i].row][seen[i].col] = ' ';
-        }
+        goban->board[seen[i].row][seen[i].col] = ' ';
     }
-    return (liberties) ? 0 : seenSize;
+    return seenSize;
 }
 
+char FindBelongsTo(Goban* goban, Point start)
+{
+    int i;
+    for (i  = start.col; i > 0; i--)
+    {
+        char current = goban->board[start.row][i];
+        if (current != ' ')
+            return current;
+    }
+    for (i  = start.col; i < goban->size; i++)
+    {
+        char current = goban->board[start.row][i];
+        if (current != ' ')
+            return current;
+    }
+    for (i  = start.row; i > 0; i--)
+    {
+        char current = goban->board[i][start.col];
+        if (current != ' ')
+            return current;
+    }
+    for (i  = start.row; i < goban->size; i++)
+    {
+        char current = goban->board[i][start.col];
+        if (current != ' ')
+            return current;
+    }
+    return 'x';
+}
+
+int ScoreArea(Goban* goban, Point start, char searched[19][19])
+{
+    Stack stack;
+    Point seen[361];
+    int seenSize = 0;
+    char belongs_to = FindBelongsTo(goban, start);
+
+    memset(seen, -1, sizeof(Point) * 361);
+    ClearStack(&stack);
+    PushStack(&stack, start);
+    while (StackSize(&stack) > 0)
+    {
+        Point currentPoint = PopStack(&stack);
+        Point tempPoint = currentPoint;
+        seen[seenSize++] = currentPoint;
+
+        if (currentPoint.row > 0)
+        {
+            tempPoint.row = currentPoint.row - 1;
+            tempPoint.col = currentPoint.col;
+            if (goban->board[tempPoint.row][tempPoint.col] == ' ' &&
+                    !IsSeen(seen, seenSize, tempPoint))
+            {
+                PushStack(&stack, tempPoint);
+            }
+            else if (goban->board[tempPoint.row][tempPoint.col] != ' ' &&
+                    goban->board[tempPoint.row][tempPoint.col] != belongs_to)
+                belongs_to = 'x';
+        }
+        if (currentPoint.row < goban->size - 1)
+        {
+            tempPoint.row = currentPoint.row + 1;
+            tempPoint.col = currentPoint.col;
+            if (goban->board[tempPoint.row][tempPoint.col] == ' ' &&
+                    !IsSeen(seen, seenSize, tempPoint))
+            {
+                PushStack(&stack, tempPoint);
+            }
+            else if (goban->board[tempPoint.row][tempPoint.col] != ' ' &&
+                    goban->board[tempPoint.row][tempPoint.col] != belongs_to)
+                belongs_to = 'x';
+        }
+        if (currentPoint.col > 0)
+        {
+            tempPoint.row = currentPoint.row;
+            tempPoint.col = currentPoint.col - 1;
+            if (goban->board[tempPoint.row][tempPoint.col] == ' ' &&
+                    !IsSeen(seen, seenSize, tempPoint))
+            {
+                PushStack(&stack, tempPoint);
+            }
+            else if (goban->board[tempPoint.row][tempPoint.col] != ' ' &&
+                    goban->board[tempPoint.row][tempPoint.col] != belongs_to)
+                belongs_to = 'x';
+        }
+        if (currentPoint.col < goban->size - 1)
+        {
+            tempPoint.row = currentPoint.row;
+            tempPoint.col = currentPoint.col + 1;
+            if (goban->board[tempPoint.row][tempPoint.col] == ' ' &&
+                    !IsSeen(seen, seenSize, tempPoint))
+            {
+                PushStack(&stack, tempPoint);
+            }
+            else if (goban->board[tempPoint.row][tempPoint.col] != ' ' &&
+                    goban->board[tempPoint.row][tempPoint.col] != belongs_to)
+                belongs_to = 'x';
+        }
+    }
+    int i;
+    for (i = 0; i < seenSize; ++i)
+    {
+        searched[seen[i].row][seen[i].col] = belongs_to;
+    }
+    return (belongs_to == 'x') ? 0 : seenSize;
+}
+
+void ScoreBoard(Goban* goban)
+{
+    memset(goban->score, ' ', 19 * 19);
+    int i, j, idx;
+    idx = 0;
+    for (i = 0; i < goban->size; ++i)
+    {
+        for (j = 0; j < goban->size; ++j) {
+            if ((goban->board[i][j] == ' ') && (goban->score[i][j] == ' '))
+            {
+                Point p;
+                p.row = i;
+                p.col = j;
+                int group_score = ScoreArea(goban, p, goban->score);
+                if (group_score)
+                {
+                    idx += snprintf(goban->notes + idx,
+                            NOTES_LENGTH - strlen(goban->notes), "%d ",
+                            group_score);
+                }
+            }
+        }
+    }
+    snprintf(goban->notes + idx, NOTES_LENGTH - strlen(goban->notes), "\n");
+    goban->showscore = 1;
+    for (i = 0; i < goban->size; ++i)
+    {
+        for(j = 0; j < goban->size; ++j)
+        {
+            printf("%c", goban->score[i][j]);
+        }
+        printf("\n");
+    }
+
+}
+
+// Checks if two Gobans are equal
 int IsEqual(Goban* a, Goban* b)
 {
     int i, j;
@@ -200,6 +416,7 @@ int IsEqual(Goban* a, Goban* b)
     return 1;
 }
 
+// Checks if the current board has appeared before. Used for ko checking
 int IsRepeat(Goban* goban)
 {
     if (h_counter == 0)
@@ -238,7 +455,9 @@ int ValidateMove(Goban* goban, Point move)
                 Point p;
                 p.row = i;
                 p.col = j;
-                int captured = SearchGroup(&tempgoban, p, search);
+                int captured = 0;
+                if (!CountLiberties(&tempgoban, p, search))
+                    captured = RemoveGroup(&tempgoban, p);
                 if (tempgoban.color == 'w')
                     tempgoban.wpris += captured;
                 else if (tempgoban.color == 'b')
@@ -246,7 +465,7 @@ int ValidateMove(Goban* goban, Point move)
             }
         }
     }
-    if (SearchGroup(&tempgoban, move, search) || IsRepeat(&tempgoban))
+    if (!CountLiberties(&tempgoban, move, search) || IsRepeat(&tempgoban))
         return 0;
     else
     {
@@ -256,6 +475,7 @@ int ValidateMove(Goban* goban, Point move)
     }
 }
 
+// Print board to screen
 void PrintBoard(Goban* goban)
 {
     int i, j;
@@ -274,7 +494,7 @@ void PrintBoard(Goban* goban)
                 {
                     if (j == 0)
                         printf("  ");
-                    printf(" \u2502");
+                    printf(" \u2502"); // │
                     if (j == goban->size - 1)
                         printf("   \e[0m\n");
                     else
@@ -283,43 +503,130 @@ void PrintBoard(Goban* goban)
                 else if (i == 0)
                 {
                     if (j == 0){
-                        printf("%2d \e[30;43m\u250c\u2500\u2500",
-                                goban->size);
+                        printf("%2d \e[30;43m", goban->size);
+                        if (goban->showscore && ((goban->score[i][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))) 
+                        {
+                            if (goban->score[i/2][j] == 'w')
+                                printf("\e[97;43m");
+                            printf("\u254b"); // ╋
+                            printf("\e[30;43m");
+                        }
+                        else
+                            printf("\u250c"); // ┌
+                        printf("\u2500\u2500"); // ──
                     }
-                    else if (j == goban->size - 1){
-                        printf("\u2500\u2510 %2d\e[0m W: %d\n", goban->size,
+                    else if (j == goban->size - 1){ // 
+                        printf("\u2500"); // ─
+                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))) 
+                        {
+                            if (goban->score[i][j] == 'w')
+                                printf("\e[97;43m");
+                            printf("\u254b"); // ╋
+                            printf("\e[30;43m");
+                        }
+                        else
+                            printf("\u2510"); // ┐
+                        printf(" %2d\e[0m W: %d\n", goban->size,
                                 goban->wpris);
                     }
                     else
                     {
-                        printf("\u2500\u252c\u2500\u2500");
+                        printf("\u2500"); // ─
+                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))) 
+                        {
+                            if (goban->score[i/2][j] == 'w')
+                                printf("\e[97;43m");
+                            printf("\u254b"); // ╋
+                            printf("\e[30;43m");
+                        }
+                        else
+                            printf("\u252c"); // ┬
+                        printf("\u2500\u2500"); // ──
                     }
                 }
                 else if (i == (2 * goban->size) - 2)
                 {
                     if (j == 0) {
 
-                        printf(" 1\e[30;43m \u2514\u2500\u2500");
+                        printf(" 1\e[30;43m ");
+                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))) 
+                        {
+                            if (goban->score[i/2][j] == 'w')
+                                printf("\e[97;43m");
+                            printf("\u254b"); // ╋
+                            printf("\e[30;43m");
+                        }
+                        else
+                            printf("\u2514"); // └
+                        printf("\u2500\u2500"); //──
                     }
                     else if (j == goban->size - 1)
                     {
-                        printf("\u2500\u2518  1\e[0m\n");
+                        printf("\u2500"); // ─
+                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))) 
+                        {
+                            if (goban->score[i/2][j] == 'w')
+                                printf("\e[97;43m");
+                            printf("\u254b"); // ╋
+                            printf("\e[30;43m");
+                        }
+                        else
+                            printf("\u2518"); // ┘
+                        printf("  1\e[0m\n"); 
                         i++;
                     }
                     else
                     {
-                        printf("\u2500\u2534\u2500\u2500");
+                        printf("\u2500"); // ─
+                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))) 
+                        {
+                            if (goban->score[i/2][j] == 'w')
+                                printf("\e[97;43m");
+                            printf("\u254b"); // ╋
+                            printf("\e[30;43m");
+                        }
+                        else
+                            printf("\u2534"); // ┴
+                        printf("\u2500\u2500"); // ──
                     }
                 }
                 else
                 {
                     if (j == 0)
                     {
-                      printf("%2d \e[30;43m\u251c\u2500\u2500",
-                             goban->size - (i / 2));
+                        printf("%2d \e[30;43m", goban->size - (i / 2));
+                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))) 
+                        {
+                            if (goban->score[i/2][j] == 'w')
+                                printf("\e[97;43m");
+                            printf("\u254b"); // ╋
+                            printf("\e[30;43m");
+                        }
+                        else
+                            printf("\u251c"); // ├
+                        printf("\u2500\u2500"); // ──
                     }
                     else if (j == goban->size - 1)
                     {
+                        printf("\u2500"); // ─
+                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))) 
+                        {
+                            if (goban->score[i/2][j] == 'w')
+                                printf("\e[97;43m");
+                            printf("\u254b"); // ╋
+                            printf("\e[30;43m");
+                        }
+                        else
+                            printf("\u2524"); // ┤
+                        printf(" %2d\e[0m", goban->size - (i / 2));
                         if (i == 2)
                         {
                             char lastmove[5] = { 0 };
@@ -329,34 +636,48 @@ void PrintBoard(Goban* goban)
                                     snprintf(lastmove, 5, "Pass");
                                 else
                                 {
-                                  snprintf(lastmove, 5, "%c%d",
-                                           coords[goban->lastmove.p.col],
-                                           goban->size - goban->lastmove.p.row);
+                                    snprintf(lastmove, 5, "%c%d",
+                                            coords[goban->lastmove.p.col],
+                                            goban->size - goban->lastmove.p.row);
                                 }
                             }
-                            printf("\u2500\u2524 %2d\e[0m %s\n", goban->size - (i/2),
-                                     lastmove);
+                            printf(" %s", lastmove);
                         }
-                        else
-                            printf("\u2500\u2524 %2d\e[0m\n", goban->size - (i/2));
+                        printf("\n");
                     }
                     else
                     {
-                        printf("\u2500");
-                        if (goban->size == 19 &&
-                            (i == 6 || i == 18 || i == 30) &&
-                            (j == 3 || j == 9  || j == 15))
-                          printf("\u254b");
-                        else if (goban->size == 13 && 
-                                (i == 6 || i == 12 || i == 18) &&
-                                (j == 3 || j == 6  || j == 9 ))
-                          printf("\u254b");
-                        else if (goban->size == 9 && 
-                                (i == 4 || i == 12) &&
-                                (j == 2 || j == 6))
-                          printf("\u254b");
-                        else printf("\u253c");
-                        printf("\u2500\u2500");
+                        printf("\u2500"); // ─
+                        if (goban->showscore == 0)
+                        {
+                            if (goban->size == 19 &&
+                                    (i == 6 || i == 18 || i == 30) &&
+                                    (j == 3 || j == 9  || j == 15))
+                                printf("\u254b"); // ╋
+                            else if (goban->size == 13 && 
+                                    (i == 6 || i == 12 || i == 18) &&
+                                    (j == 3 || j == 6  || j == 9 ))
+                                printf("\u254b"); // ╋
+                            else if (goban->size == 9 && 
+                                    (i == 4 || i == 12) &&
+                                    (j == 2 || j == 6))
+                                printf("\u254b"); // ╋
+                            else printf("\u253c"); // ┼
+                        }
+                        else
+                        {
+                            if ((goban->score[i/2][j] == 'w') ||
+                                    (goban->score[i/2][j] == 'b'))
+                            {
+                                if (goban->score[i/2][j] == 'w')
+                                    printf("\e[97;43m");
+                                printf("\u254b"); // ╋
+                                printf("\e[30;43m");
+                            }
+                            else
+                                printf("\u253c"); // ┼
+                        }
+                        printf("\u2500\u2500"); // ──
                     }
                 }
             }
@@ -385,5 +706,6 @@ void PrintBoard(Goban* goban)
     printf("\e[30;43m ");
     for (i = 0; i < goban->size; ++i)
         printf("  %c ", coords[i]);
+    goban->showscore = 0;
     printf("  \e[0m\n");
 }

@@ -19,6 +19,8 @@ typedef struct
 {
     char* notes;
     char board[19][19];
+    char score[19][19];
+    int showscore;
     int size;
     Move lastmove;
     char color;
@@ -30,6 +32,7 @@ void ResetGoban(Goban* goban);
 void ClearBoard(Goban* goban);
 void AddHistory(Goban* goban);
 void UndoHistory(Goban* goban);
+void ScoreBoard(Goban* goban);
 int HistorySize();
 Goban* GetHistory(int i);
 
