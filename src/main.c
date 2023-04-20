@@ -280,6 +280,8 @@ int main(int argc, char** argv)
                 fprintf(stderr, "Couldn't get response from engine\n");
             printf("%s\n", response[1]);
             running = ProcessCommand(&goban, response[1]);
+            if (running == MOVE)
+                SubmitMove(&goban, response[1]);
 
             CleanResponse(response);
             FreeResponse(response);
