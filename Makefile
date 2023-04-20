@@ -5,7 +5,7 @@ SOURCES = $(wildcard $(SRCDIR)/*.c)
 OBJECTS = $(SOURCES:$(SRCDIR)%.c=$(OBJDIR)%.o)
 INCLUDES = $(SOURCES:$(SRCDIR)%.c=$(INCLUDEDIR)%.h)
 UNIDEPS = 
-CFLAGS = -I$(INCLUDEDIR) -O2 -Wall -Wextra -Wno-missing-field-initializers
+CFLAGS = -I$(INCLUDEDIR) -O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter
 CC = gcc
 TARGET = goterm
 

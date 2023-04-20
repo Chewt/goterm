@@ -230,8 +230,8 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     {
         if (goban->notes)
         {
-            snprintf(goban->notes, NOTES_LENGTH - 17, "Invalid Input: %s\n",
-                    tokens[0]);
+            snprintf(goban->notes, NOTES_LENGTH - strlen(goban->notes),
+                     "Invalid Input: %s\n", tokens[0]);
         }
         else
             printf("Invalid Input: %s\n", tokens[0]);
