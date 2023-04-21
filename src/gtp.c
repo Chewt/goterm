@@ -216,6 +216,14 @@ void SendBoardsize(int fd, int id, int size)
         fprintf(stderr, "error writing command to engine");
 }
 
+void SendKomi(int fd, int id, float new_komi)
+{
+    char message[256];
+    sprintf(message, "%d komi %f\n", id, new_komi);
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
+}
+
 void SendGenmove(int fd, int id, char color)
 {
     char message[256];

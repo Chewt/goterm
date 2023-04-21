@@ -80,7 +80,7 @@ void ResetGoban(Goban* goban)
     goban->bpris = 0;
     goban->komi = 6.5;
     goban->color = 'b';
-    goban->result = -1;
+    goban->result[0] = '\0';
     goban->lastmove.color = 'b';
     goban->lastmove.p.col = 0;
     goban->lastmove.p.row = 0;
@@ -431,7 +431,7 @@ void PointDiff(Goban* goban, char resp[256])
     else if (diff > 0)
         idx += snprintf(resp, 256, "W+");
     snprintf(resp + idx, 256, "%.1f", diff);
-    goban->result = diff;
+    strcpy(goban->result, resp);
 }
 
 void ScoreBoard(Goban* goban)

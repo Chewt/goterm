@@ -178,7 +178,7 @@ int main(int argc, char** argv)
                 SendFinalScore(e.write, 1);
                 if (!GetResponse(e.read, response, 1))
                     fprintf(stderr, "Couldn't get response from engine\n");
-                printf("Result: %s\n", response[1]);
+                strcpy(goban.result, response[1]);
                 CleanResponse(response);
                 FreeResponse(response);
             }
@@ -193,9 +193,9 @@ int main(int argc, char** argv)
                     PrintBoard(&goban);
                     continue;
                 }
+                ScoreBoard(&goban);
+                PointDiff(&goban, resp);
             }
-            ScoreBoard(&goban);
-            PointDiff(&goban, resp);
             if (host >= 0 || client >= 0)
             {
                 printf("Confirming with opponent...\n");
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
                 printf("%s\n\n", sgf);
                 free(sgf);
             }
-            printf("Result: %s\n", resp);
+            printf("Result: %s\n", goban.result);
             printf("Game Over!\nPlay again?[y/N]");
             if (fgets(resp, 256, stdin) == NULL)
                 break;
@@ -266,6 +266,9 @@ int main(int argc, char** argv)
                 CleanResponse(response);
                 SendBoardsize(e.write, 2, goban.size);
                 if (!GetResponse(e.read, response, 2))
+                    fprintf(stderr, "Couldn't get response from engine\n");
+                SendKomi(e.write, 3, goban.komi);
+                if (!GetResponse(e.read, response, 3))
                     fprintf(stderr, "Couldn't get response from engine\n");
                 CleanResponse(response);
             }

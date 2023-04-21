@@ -97,6 +97,19 @@ int ScoreCommand(Goban* goban, int n_tokens, char tokens[][256])
     ScoreBoard(goban);
     return 1;
 }
+int KomiCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if ((n_tokens != 1 && n_tokens != 2) || strcmp(tokens[0], "komi"))
+        return -1;
+    if (n_tokens == 1)
+        snprintf(goban->notes, NOTES_LENGTH, "Komi is %.1f\n", goban->komi);
+    else if (n_tokens == 2)
+    {
+        ResetGoban(goban);
+        goban->komi = atof(tokens[1]);
+    }
+    return 1;
+}
 
 int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256])
 {
@@ -135,6 +148,7 @@ struct GoCommand commands[] = {
     {"pass", PassCommand, 1, "Pass your turn"},
     {"swap", SwapCommand, 1, "Swap colors with opponent"},
     {"score", ScoreCommand, 0, "Show current score on board"},
+    {"komi", KomiCommand, 1, "Show current komi or set new komi"},
     {"exit", ExitCommand, 1, "Exit program"},
     { 0 }
 };

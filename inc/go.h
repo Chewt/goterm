@@ -27,7 +27,7 @@ typedef struct
     int wpris;
     int bpris;
     float komi;
-    float result;
+    char result[8];
 } Goban;
 
 void ResetGoban(Goban* goban);
