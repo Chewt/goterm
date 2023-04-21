@@ -12,7 +12,12 @@ Here is an example of how it looks in the terminal
 ![Imgur](https://i.imgur.com/3MLY3fP.png)
  
 # Install 
-Install with `make install` and use `goterm --help` to see a list of command
+Available on AUR [here](https://aur.archlinux.org/packages/goterm)  
+
+Install from source with `make install` 
+
+# Usage  
+Use `goterm --help` to see a list of command
 line arguments goterm accepts.
 
 You can also use the command `help` while running the program to see a list of available commands.
