@@ -1,7 +1,7 @@
 #ifndef GO_H
 #define GO_H
 
-#define NOTES_LENGTH 256
+#define NOTES_LENGTH 512
 
 typedef struct
 {

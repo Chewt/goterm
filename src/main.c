@@ -57,7 +57,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
 int main(int argc, char** argv)
 {
     char gnugo[32] = "gnugo --mode gtp";
-    char notes[256];
+    char notes[NOTES_LENGTH];
     srand(time(NULL));
     Goban goban;
     goban.notes = notes;
