@@ -108,7 +108,6 @@ int main(int argc, char** argv)
         SendClearBoard(e.write, 1);
         if (!GetResponse(e.read, response, 1))
             fprintf(stderr, "Couldn't get response from engine\n");
-        CleanResponse(response);
         FreeResponse(response);
     }
 
@@ -179,7 +178,6 @@ int main(int argc, char** argv)
                 if (!GetResponse(e.read, response, 1))
                     fprintf(stderr, "Couldn't get response from engine\n");
                 strcpy(goban.result, response[1]);
-                CleanResponse(response);
                 FreeResponse(response);
             }
             else
@@ -263,20 +261,17 @@ int main(int argc, char** argv)
                 SendClearBoard(e.write, 1);
                 if (!GetResponse(e.read, response, 1))
                     fprintf(stderr, "Couldn't get response from engine\n");
-                CleanResponse(response);
                 SendBoardsize(e.write, 2, goban.size);
                 if (!GetResponse(e.read, response, 2))
                     fprintf(stderr, "Couldn't get response from engine\n");
                 SendKomi(e.write, 3, goban.komi);
                 if (!GetResponse(e.read, response, 3))
                     fprintf(stderr, "Couldn't get response from engine\n");
-                CleanResponse(response);
             }
 
             SendPlay(e.write, 2, goban.lastmove, goban.size);
             if (!GetResponse(e.read, response, 2))
                 fprintf(stderr, "Couldn't get response from engine\n");
-            CleanResponse(response);
 
             SendGenmove(e.write, 3, goban.color);
             if (!GetResponse(e.read, response, 3))
@@ -286,7 +281,6 @@ int main(int argc, char** argv)
             if (running == MOVE)
                 SubmitMove(&goban, response[1]);
 
-            CleanResponse(response);
             FreeResponse(response);
         } 
         else if (host >= 0 || client >= 0)

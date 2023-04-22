@@ -90,11 +90,13 @@ void CleanResponse(char** resp)
 
 void FreeResponse(char** resp)
 {
+    CleanResponse(resp);
     free(resp);
 }
 
 int GetResponse(int fd, char** resp, int id)
 {
+    CleanResponse(resp);
     char* message = GetMessage(fd);
     int terms = 0;
     if (ValidateResponse(message, id))
