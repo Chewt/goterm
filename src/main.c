@@ -22,7 +22,7 @@ struct flags {
 };
 
 const char *argp_program_bug_address = "<Hayden Johnson> hajohn100@gmail.com or at https://github.com/Chewt/goterm";
-const char *argp_program_version = "version 1.0";
+const char *argp_program_version = "version 1.0.1";
 
 static int parse_opt (int key, char *arg, struct argp_state *state)
 {
