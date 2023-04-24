@@ -39,7 +39,7 @@ int ValidateInput(Goban* goban, Point* p, char input[256])
         row = goban->size - row;
     else
         return 0;
-    if (col < 1 || col > goban->size)
+    if (col < 0 || col > goban->size)
         return 0;
     p->row = row;
     p->col = col;
