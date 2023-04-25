@@ -11,6 +11,7 @@
 #include "networking.h"
 
 
+// argp struct
 struct flags {
   char *e_path;
   int size;
@@ -21,9 +22,12 @@ struct flags {
   int swap;
 };
 
-const char *argp_program_bug_address = "<Hayden Johnson> hajohn100@gmail.com or at https://github.com/Chewt/goterm";
-const char *argp_program_version = "version 1.0.1";
+const char *argp_program_bug_address = "Hayden Johnson <hajohn100@gmail.com> or at https://github.com/Chewt/goterm";
+#ifdef VERSION
+const char *argp_program_version = VERSION;
+#endif
 
+// Parsing args
 static int parse_opt (int key, char *arg, struct argp_state *state)
 {
     struct flags *flags = state->input;
