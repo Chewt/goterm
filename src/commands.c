@@ -110,6 +110,21 @@ int KomiCommand(Goban* goban, int n_tokens, char tokens[][256])
     }
     return 1;
 }
+int SayCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if (n_tokens <= 1 || strcmp(tokens[0], "say"))
+        return -1;
+    int idx = 0;
+    int i;
+    idx += snprintf(goban->notes + idx, NOTES_LENGTH - strlen(goban->notes), "Message: \"");
+    for (i = 1; i < n_tokens; ++i)
+    {
+        idx += snprintf(goban->notes + idx,
+                        NOTES_LENGTH - strlen(goban->notes), "%s ", tokens[i]);
+    }
+    snprintf(goban->notes + idx - 1, NOTES_LENGTH - strlen(goban->notes), "\"\n");
+    return 1;
+}
 
 int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256])
 {
@@ -149,6 +164,7 @@ struct GoCommand commands[] = {
     {"swap", SwapCommand, 1, "Swap colors with opponent"},
     {"score", ScoreCommand, 0, "Show current score on board"},
     {"komi", KomiCommand, 1, "Show current komi or set new komi"},
+    {"say", SayCommand, 1, "Send a message to other player"},
     {"exit", ExitCommand, 1, "Exit program"},
     { 0 }
 };
@@ -179,9 +195,11 @@ int is_networked_command(char input[COMMAND_LENGTH])
 
 int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
 {
+    char input_copy[COMMAND_LENGTH];
+    memcpy(input_copy, input, COMMAND_LENGTH);
     int terms = 0;
     char tokens[256][256];
-    terms = tokenize_command(input, tokens);
+    terms = tokenize_command(input_copy, tokens);
 
     int return_val = -2;
     int i;

@@ -261,10 +261,11 @@ int main(int argc, char** argv)
             }
             break;
         }
+
         PrintBoard(&goban);
-        printf("%s", goban.notes);
+        printf("%s", goban.notes); 
         goban.notes[0] = '\0';
-        if (e.pid >= 0 && goban.color == e_col) 
+        if (e.pid >= 0 && goban.color == e_col)  // Engine's turn
         {
             char** response = AllocateResponse();
 
@@ -295,7 +296,7 @@ int main(int argc, char** argv)
 
             FreeResponse(response);
         } 
-        else if (host >= 0 || client >= 0)
+        else if (host >= 0 || client >= 0) // If game is over network
         {
             struct pollfd inputs[2];
             inputs[0].fd = 0;
@@ -308,16 +309,16 @@ int main(int argc, char** argv)
             printf(": ");
             fflush(stdout);
             int ret_poll;
-            while ((ret_poll = poll(inputs, 2, 100)) == 0);
+            while ((ret_poll = poll(inputs, 2, 100)) == 0); // Wait for input
             if (ret_poll > 0)
             {
                 int user = (host >= 0) ? host : client;
-                if (inputs[0].revents & POLLIN)
+                if (inputs[0].revents & POLLIN) // input from STDIN
                 {
                     char input[COMMAND_LENGTH];
                     if (!fgets(input, 256, stdin))
                         exit(-1);
-                    input[strcspn(input, "\n")] = 0;
+                    input[strcspn(input, "\n")] = '\0';
 
                     running = ProcessCommand(&goban, input);
                     if (running == MOVE && goban.color != opponent_color)
@@ -325,7 +326,7 @@ int main(int argc, char** argv)
                     if (is_networked_command(input))
                         SendCommand(user, input);
                 }
-                if (inputs[1].revents & POLLIN)
+                if (inputs[1].revents & POLLIN) // input from Network Socket
                 {
                     char* response = RecvCommand(user);
                     if (response == NULL)
@@ -341,7 +342,7 @@ int main(int argc, char** argv)
                 }
             }
         }
-        else
+        else // Playing alone
         {
             char input[COMMAND_LENGTH];
             printf(": ");
@@ -353,7 +354,8 @@ int main(int argc, char** argv)
             if (running == MOVE)
                 SubmitMove(&goban, input);
         }
-        if (running == SWAP)
+
+        if (running == SWAP) // Swap colors
         {
             char t = host_col;
             host_col = client_col;
@@ -362,6 +364,8 @@ int main(int argc, char** argv)
             running = 1;
         }
     }
+
+    // Clean up
     if (host >= 0)
         CloseClient(host);
     if (client >= 0)
