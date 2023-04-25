@@ -60,14 +60,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
 
 int main(int argc, char** argv)
 {
-    char gnugo[32] = "gnugo --mode gtp";
-    char notes[NOTES_LENGTH];
-    srand(time(NULL));
-    Goban goban;
-    goban.notes = notes;
-    ResetGoban(&goban);
-    goban.color = 'b';
-
+    // Default args
     struct flags flags;
     flags.e_path = NULL;
     flags.size = 19;
@@ -77,6 +70,18 @@ int main(int argc, char** argv)
     flags.port = 5000;
     flags.swap = 0;
     
+    // gnugo shortcut
+    char gnugo[32] = "gnugo --mode gtp";
+
+    // Board Setup
+    char notes[NOTES_LENGTH];
+    srand(time(NULL));
+    Goban goban;
+    goban.notes = notes;
+    ResetGoban(&goban);
+    goban.color = 'b';
+
+    // argp parsing args
     struct argp_option options[] =
     {
         { "size", 's', "NUM", 0, "Size of the goboard. Default is 19."},
@@ -98,9 +103,11 @@ int main(int argc, char** argv)
     }
     goban.size = flags.size;
 
+    // apply gnugo shortcut
     if (flags.g == 1)
         flags.e_path = gnugo;
 
+    // Setup go engine if requested
     Engine e;
     char e_col = 'w';
     e.pid = -1;
@@ -115,6 +122,7 @@ int main(int argc, char** argv)
         FreeResponse(response);
     }
 
+    // Setup Networking if requested
     int client = -1;
     int host = -1;
     char host_col = 'w';
@@ -169,13 +177,14 @@ int main(int argc, char** argv)
         }
     }
 
+    // Main loop
     int running = 1;
     while (running)
     {
-        if (running == 2) /* Game is in complete state */
+        if (running == 2) // Game is in complete state
         {
             char resp[256];
-            if (e.pid >= 0)
+            if (e.pid >= 0) // Ask engine to score board
             {
                 char** response = AllocateResponse();
                 SendFinalScore(e.write, 1);
@@ -184,7 +193,7 @@ int main(int argc, char** argv)
                 strcpy(goban.result, response[1]);
                 FreeResponse(response);
             }
-            else
+            else // Manually score board
             {
                 printf("Please enter a list of stones seperated by spaces\n"); 
                 printf("(one stone per group)\n: ");
@@ -198,7 +207,7 @@ int main(int argc, char** argv)
                 ScoreBoard(&goban);
                 PointDiff(&goban, resp);
             }
-            if (host >= 0 || client >= 0)
+            if (host >= 0 || client >= 0) // Make sure both players agree
             {
                 printf("Confirming with opponent...\n");
                 if (host >= 0) 
@@ -250,8 +259,7 @@ int main(int argc, char** argv)
                 ResetGoban(&goban);
                 continue;
             }
-            else 
-                break;
+            break;
         }
         PrintBoard(&goban);
         printf("%s", goban.notes);
