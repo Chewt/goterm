@@ -4,6 +4,8 @@
 #include <time.h>
 #include <argp.h>
 #include <poll.h>
+#include <ncurses.h>
+#include <locale.h>
 #include "go.h"
 #include "commands.h"
 #include "gtp.h"
@@ -60,6 +62,8 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
 
 int main(int argc, char** argv)
 {
+    // Setup ncurses color schemes
+
     // Default args
     struct flags flags;
     flags.e_path = NULL;
@@ -114,7 +118,7 @@ int main(int argc, char** argv)
     if (flags.e_path)
     {
         StartEngine(&e, flags.e_path);
-        printf("%s %s\n", e.name, e.version);
+        //printw("%s %s\n", e.name, e.version);
         char** response = AllocateResponse();
         SendClearBoard(e.write, 1);
         if (!GetResponse(e.read, response, 1))
@@ -152,10 +156,10 @@ int main(int argc, char** argv)
         while (!setup_finished)
         {
             char* resp = RecvCommand(host);
-            printf("%s", resp);
+            //printw("%s", resp);
             if (resp == NULL)
             {
-                printf("Connection to other user broken\n");
+                printw("Connection to other user broken\n");
                 exit(0);
             }
             if (!strcmp(resp, "swap"))
@@ -166,7 +170,6 @@ int main(int argc, char** argv)
             }
             else if (!strcmp(resp, "ready"))
             {
-                printf("ready received\n");
                 setup_finished = 1;
             }
             else
@@ -177,6 +180,8 @@ int main(int argc, char** argv)
         }
     }
 
+    setlocale(LC_ALL, "");
+    initscr();
     // Main loop
     int running = 1;
     while (running)
@@ -195,13 +200,13 @@ int main(int argc, char** argv)
             }
             else // Manually score board
             {
-                printf("Please enter a list of stones seperated by spaces\n"); 
-                printf("(one stone per group)\n: ");
+                printw("Please enter a list of stones seperated by spaces\n"); 
+                printw("(one stone per group)\n: ");
                 if (fgets(resp, 256, stdin) == NULL)
                     continue;
                 if (!RemoveDeadGroups(&goban, resp))
                 {
-                    PrintBoard(&goban);
+                    PrintBoardw(&goban);
                     continue;
                 }
                 ScoreBoard(&goban);
@@ -209,7 +214,7 @@ int main(int argc, char** argv)
             }
             if (host >= 0 || client >= 0) // Make sure both players agree
             {
-                printf("Confirming with opponent...\n");
+                printw("Confirming with opponent...\n");
                 if (host >= 0) 
                 {
                     SendCommand(host, resp);
@@ -246,11 +251,11 @@ int main(int argc, char** argv)
             char* sgf = CreateSGF(&e);
             if (sgf)
             {
-                printf("%s\n\n", sgf);
+                printw("%s\n\n", sgf);
                 free(sgf);
             }
-            printf("Result: %s\n", goban.result);
-            printf("Game Over!\nPlay again?[y/N]");
+            printw("Result: %s\n", goban.result);
+            printw("Game Over!\nPlay again?[y/N]");
             if (fgets(resp, 256, stdin) == NULL)
                 break;
             if (resp[0] == 'y' || resp[0] == 'Y')
@@ -262,8 +267,9 @@ int main(int argc, char** argv)
             break;
         }
 
-        PrintBoard(&goban);
-        printf("%s", goban.notes); 
+        PrintBoardw(&goban);
+        printw("%s", goban.notes); 
+        refresh();
         goban.notes[0] = '\0';
         if (e.pid >= 0 && goban.color == e_col)  // Engine's turn
         {
@@ -289,7 +295,7 @@ int main(int argc, char** argv)
             SendGenmove(e.write, 3, goban.color);
             if (!GetResponse(e.read, response, 3))
                 fprintf(stderr, "Couldn't get response from engine\n");
-            printf("%s\n", response[1]);
+            printw("%s\n", response[1]);
             running = ProcessCommand(&goban, response[1]);
             if (running == MOVE)
                 SubmitMove(&goban, response[1]);
@@ -305,9 +311,10 @@ int main(int argc, char** argv)
             inputs[1].events = POLLIN;
             char opponent_color = (host >= 0) ? host_col : client_col;
             if (goban.color == opponent_color)
-                printf("Waiting on opponent...\n");
-            printf(": ");
-            fflush(stdout);
+                printw("Waiting on opponent...\n");
+            printw(": ");
+            //fflush(stdout);
+            refresh();
             int ret_poll;
             while ((ret_poll = poll(inputs, 2, 100)) == 0); // Wait for input
             if (ret_poll > 0)
@@ -331,10 +338,10 @@ int main(int argc, char** argv)
                     char* response = RecvCommand(user);
                     if (response == NULL)
                     {
-                        printf("Connection to opponent broken\n");
+                        printw("Connection to opponent broken\n");
                         break;
                     }
-                    printf("%s\n", response);
+                    printw("%s\n", response);
                     running = ProcessCommand(&goban, response);
                     if (running == MOVE && goban.color == opponent_color)
                         SubmitMove(&goban, response);
@@ -345,7 +352,7 @@ int main(int argc, char** argv)
         else // Playing alone
         {
             char input[COMMAND_LENGTH];
-            printf(": ");
+            printw(": ");
             if (!fgets(input, 256, stdin))
                 exit(-1);
             input[strcspn(input, "\n")] = 0;
@@ -364,6 +371,7 @@ int main(int argc, char** argv)
             running = 1;
         }
     }
+    endwin();
 
     // Clean up
     if (host >= 0)

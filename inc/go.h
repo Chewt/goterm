@@ -45,5 +45,6 @@ int ValidateMove(Goban* goban, Point move);
 
 /* Prints the goban to the screen */
 void PrintBoard(Goban* goban);
+void PrintBoardw(Goban* goban);
 
 #endif

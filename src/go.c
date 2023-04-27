@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <ncurses.h>
+#include <wchar.h>
 #include "go.h"
 #include "stack.h"
 #include "commands.h"
@@ -529,12 +531,198 @@ int ValidateMove(Goban* goban, Point move)
     }
 }
 
+enum
+{
+    BLACK_STONE_COLOR = 1,
+    WHITE_STONE_COLOR = 2,
+    LAST_STONE_COLOR = 3,
+};
 
+// Print board to ncurses screen
+void PrintBoardw(Goban* goban)
+{
+    start_color();
+    init_pair(BLACK_STONE_COLOR, COLOR_BLACK, COLOR_YELLOW);
+    init_pair(WHITE_STONE_COLOR, COLOR_WHITE, COLOR_YELLOW);
+    init_pair(LAST_STONE_COLOR, COLOR_CYAN, COLOR_YELLOW);
+    int x_pos = 0;
+    int y_pos = 0;
+
+    clear(); // Set screen to blank
+
+    // Print empty board
+    attron(COLOR_PAIR(BLACK_STONE_COLOR));
+    int i;
+    //    Background color
+    for (i = 0; i < (goban->size * 2) + 1; ++i) 
+        printw("   %*s\n", goban->size * 4, ""); // format string abuse
+    x_pos = 3;
+    y_pos = 1;
+    move(y_pos, x_pos);
+    //    Top grid
+    addch(ACS_ULCORNER);
+    addch(ACS_HLINE);
+    addch(ACS_HLINE);
+    addch(ACS_HLINE);
+    for (i = 0; i < goban->size - 2; ++i)
+    {
+        addch(ACS_TTEE);
+        addch(ACS_HLINE);
+        addch(ACS_HLINE);
+        addch(ACS_HLINE);
+    }
+    addch(ACS_URCORNER);
+    //    Middle Grid
+    y_pos++;
+    move(y_pos, x_pos);
+    int j;
+    for (i = 0; i < goban->size - 2; ++i)
+    {
+        for (j = 0; j < goban->size; ++j)
+        {
+            addch(ACS_VLINE);
+            printw("   ");
+        }
+        move(++y_pos, x_pos);
+        addch(ACS_LTEE);
+        addch(ACS_HLINE);
+        addch(ACS_HLINE);
+        addch(ACS_HLINE);
+        for (j = 0; j < goban->size - 2; ++j)
+        {
+            addch(ACS_PLUS);
+            addch(ACS_HLINE);
+            addch(ACS_HLINE);
+            addch(ACS_HLINE);
+        }
+        addch(ACS_RTEE);
+        move(++y_pos, x_pos);
+    }
+    for (i = 0; i < goban->size; ++i)
+    {
+        addch(ACS_VLINE);
+        printw("   ");
+    }
+    //    Bottom Grid
+    move(++y_pos, x_pos);
+    addch(ACS_LLCORNER);
+    addch(ACS_HLINE);
+    addch(ACS_HLINE);
+    addch(ACS_HLINE);
+    for (i = 0; i < goban->size - 2; ++i)
+    {
+        addch(ACS_BTEE);
+        addch(ACS_HLINE);
+        addch(ACS_HLINE);
+        addch(ACS_HLINE);
+    }
+    addch(ACS_LRCORNER);
+
+    // Star points or showing score on the board
+    const char STARPOINT[] = "\u254b"; // ╋
+    if (goban->showscore)
+    {
+        for (i = 0; i < goban->size; ++i)
+        {
+            for (j = 0; j < goban->size; ++j)
+            {
+                if (goban->score[i][j] != ' ')
+                {
+                    move((i * 2) + 1, (j * 4) + 3);
+                    if (goban->score[i][j] == 'w')
+                    {
+                        attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+                        attrset(COLOR_PAIR(WHITE_STONE_COLOR));
+                        attron(A_BOLD);
+                    }
+                    addstr(STARPOINT); 
+                    attrset(COLOR_PAIR(BLACK_STONE_COLOR));
+                }
+            }
+        }
+
+    }
+    else if (goban->size == 19)
+    {
+        mvaddstr(3 * 2 + 1, 3   * 4 + 3, STARPOINT);
+        mvaddstr(3 * 2 + 1, 9   * 4 + 3, STARPOINT);
+        mvaddstr(3 * 2 + 1, 15  * 4 + 3, STARPOINT);
+        mvaddstr(9 * 2 + 1, 3   * 4 + 3, STARPOINT);
+        mvaddstr(9 * 2 + 1, 9   * 4 + 3, STARPOINT);
+        mvaddstr(9 * 2 + 1, 15  * 4 + 3, STARPOINT);
+        mvaddstr(15 * 2 + 1, 3  * 4 + 3, STARPOINT);
+        mvaddstr(15 * 2 + 1, 9  * 4 + 3, STARPOINT);
+        mvaddstr(15 * 2 + 1, 15 * 4 + 3, STARPOINT);
+    }
+    else if (goban->size == 13)
+    {
+        mvaddstr(3 * 2 + 1, 3 * 4 + 3, STARPOINT);
+        mvaddstr(3 * 2 + 1, 6 * 4 + 3, STARPOINT);
+        mvaddstr(3 * 2 + 1, 9 * 4 + 3, STARPOINT);
+        mvaddstr(6 * 2 + 1, 3 * 4 + 3, STARPOINT);
+        mvaddstr(6 * 2 + 1, 6 * 4 + 3, STARPOINT);
+        mvaddstr(6 * 2 + 1, 9 * 4 + 3, STARPOINT);
+        mvaddstr(9 * 2 + 1, 3 * 4 + 3, STARPOINT);
+        mvaddstr(9 * 2 + 1, 6 * 4 + 3, STARPOINT);
+        mvaddstr(9 * 2 + 1, 9 * 4 + 3, STARPOINT);
+    }
+    else if (goban->size == 9)
+    {
+        mvaddstr(2 * 2 + 1, 2 * 4 + 3, STARPOINT);
+        mvaddstr(2 * 2 + 1, 6 * 4 + 3, STARPOINT);
+        mvaddstr(6 * 2 + 1, 2 * 4 + 3, STARPOINT);
+        mvaddstr(6 * 2 + 1, 6 * 4 + 3, STARPOINT);
+    }
+
+    // Print coordinates
+    move(0, 3); 
+    for (i = 0; i < goban->size; ++i)
+        printw("%c   ", coords[i]); 
+    move((goban->size * 2), 3);
+    for (i = 0; i < goban->size; ++i)
+        printw("%c   ", coords[i]);
+    x_pos = 0;
+    y_pos = 1;
+    for (i = 0; i < goban->size ; ++i)
+    {
+        move(y_pos, x_pos);
+        printw("%2d", goban->size - i);
+        move(y_pos, x_pos + 3 + ((goban->size - 1) * 4) + 2);
+        printw("%2d", goban->size - i);
+        y_pos += 2;
+    }
+
+    // Place Stones
+    for (i = 0; i < goban->size; ++i)
+    {
+        for (j = 0; j < goban->size; ++j)
+        {
+            if (goban->board[i][j] != ' ')
+            {
+                move((i * 2) + 1, (j * 4) + 2);
+                if (goban->board[i][j] == 'w')
+                {
+                    attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+                    attrset(COLOR_PAIR(WHITE_STONE_COLOR));
+                    attron(A_BOLD);
+                }
+                addstr("\u2588\u2588"); // Block char
+
+                if (goban->lastmove.p.col == j && goban->lastmove.p.row == i)
+                    attrset(COLOR_PAIR(LAST_STONE_COLOR));
+                addstr("\u2588");
+                attrset(COLOR_PAIR(BLACK_STONE_COLOR));
+            }
+        }
+    }
+
+    attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+}
 
 // Print board to screen
 void PrintBoard(Goban* goban)
 {
-    printf("\e[2J\e[H");
+    printf("\e[2J\e[H"); // Clear Screen and position cursor top left
     int i, j;
     printf("\e[30;43m ");
     for (i = 0; i < goban->size; ++i)
@@ -544,7 +732,7 @@ void PrintBoard(Goban* goban)
     {
         for (j = 0; j < goban->size; ++j)
         {
-            printf("\e[30;43m");
+            printf("\e[30;43m"); // Reset terminal colors
             if (goban->board[i/2][j] == ' ' || (i & 0x1))
             {
                 if (i & 0x1)
@@ -744,7 +932,7 @@ void PrintBoard(Goban* goban)
                     printf("%2d", goban->size - (i/2));
                 if (goban->board[i/2][j] == 'w')
                     printf("\e[97;43m");
-                printf("\u2588\u2588");
+                printf("\u2588\u2588"); // █
                 if (goban->lastmove.p.col == j && goban->lastmove.p.row == i/2)
                     printf("\e[36m");
                 printf("\u2588");
