@@ -394,9 +394,11 @@ int RemoveDeadGroups(Goban* goban, char input[256])
     ScoreBoard(&tempgoban);
     PrintBoard(&tempgoban);
     char resp[COMMAND_LENGTH];
-    printf("Does this look right?[Y/n]\n: ");
-    if (fgets(resp, 256, stdin) == NULL)
-        return 0;
+    printw("Does this look right?[Y/n]\n: ");
+    refresh();
+    //if (fgets(resp, 256, stdin) == NULL)
+        //return 0;
+    getnstr(resp, 256);
     if (resp[0] == 'n' || resp[0] == 'N')
         return 0;
     AddHistory(goban);
@@ -439,8 +441,7 @@ void PointDiff(Goban* goban, char resp[256])
 void ScoreBoard(Goban* goban)
 {
     memset(goban->score, ' ', 19 * 19);
-    int i, j, idx;
-    idx = 0;
+    int i, j;
     for (i = 0; i < goban->size; ++i)
     {
         for (j = 0; j < goban->size; ++j) {
@@ -453,7 +454,6 @@ void ScoreBoard(Goban* goban)
             }
         }
     }
-    snprintf(goban->notes + idx, NOTES_LENGTH - strlen(goban->notes), "\n");
     goban->showscore = 1;
 }
 
@@ -626,7 +626,7 @@ void PrintBoardw(Goban* goban)
         {
             for (j = 0; j < goban->size; ++j)
             {
-                if (goban->score[i][j] != ' ')
+                if (goban->score[i][j] == 'b' || goban->score[i][j] == 'w')
                 {
                     move((i * 2) + 1, (j * 4) + 3);
                     if (goban->score[i][j] == 'w')
@@ -692,7 +692,26 @@ void PrintBoardw(Goban* goban)
         y_pos += 2;
     }
 
-    // Place Stones
+    // Prisoners and last move
+    attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+    mvprintw(0, goban->size * 4 + 4, "B: %d", goban->bpris);
+    mvprintw(1, goban->size * 4 + 4, "W: %d", goban->wpris);
+    char lastmove[5] = { 0 };
+    if (HistorySize() >= 1)
+    {
+        if (goban->lastmove.p.col == -1)
+            snprintf(lastmove, 5, "Pass");
+        else
+        {
+            snprintf(lastmove, 5, "%c%d",
+                    coords[goban->lastmove.p.col],
+                    goban->size - goban->lastmove.p.row);
+        }
+    }
+    mvprintw(3, goban->size * 4 + 4, "%s", lastmove);
+    attron(COLOR_PAIR(BLACK_STONE_COLOR));
+
+    // Place stones
     for (i = 0; i < goban->size; ++i)
     {
         for (j = 0; j < goban->size; ++j)
@@ -715,7 +734,7 @@ void PrintBoardw(Goban* goban)
             }
         }
     }
-
+    move(goban->size * 2 + 1, 0);
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
 }
 

@@ -55,7 +55,6 @@ int ResetCommand(Goban* goban, int n_tokens, char tokens[][256])
 }
 int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
-    printf("%d tokens\n", n_tokens);
     if (n_tokens != 2 || strcmp(tokens[0], "size"))
         return -1;
     ResetGoban(goban);
@@ -209,6 +208,14 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         int chars_printed = 0;
         while (commands[i].name != NULL)
         {
+            if (terms > 1 && !strcmp(tokens[1], commands[i].name))
+            {
+                chars_printed += snprintf(
+                        goban->notes + chars_printed,
+                        NOTES_LENGTH - chars_printed,
+                        "%s - %s\n", commands[i].name, commands[i].help);
+                return 1;
+            }
             if (goban->notes == NULL)
             {
                 printf("%s - %s\n", commands[i].name, commands[i].help);
@@ -218,10 +225,25 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
               chars_printed += snprintf(
                       goban->notes + chars_printed,
                       NOTES_LENGTH - chars_printed,
-                      "%s - %s\n", commands[i].name, commands[i].help);
+                      "%s", commands[i].name);
+              if (i % 3 == 2)
+              {
+              chars_printed += snprintf(
+                      goban->notes + chars_printed,
+                      NOTES_LENGTH - chars_printed, "\n");
+              }
+              else
+              {
+              chars_printed += snprintf(
+                      goban->notes + chars_printed,
+                      NOTES_LENGTH - chars_printed, "\t");
+              }
             }
             i++;
         }
+        chars_printed += snprintf(
+                goban->notes + chars_printed,
+                NOTES_LENGTH - chars_printed, "\n");
         return 1;
     }
     else

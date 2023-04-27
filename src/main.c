@@ -62,8 +62,6 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
 
 int main(int argc, char** argv)
 {
-    // Setup ncurses color schemes
-
     // Default args
     struct flags flags;
     flags.e_path = NULL;
@@ -256,8 +254,10 @@ int main(int argc, char** argv)
             }
             printw("Result: %s\n", goban.result);
             printw("Game Over!\nPlay again?[y/N]");
-            if (fgets(resp, 256, stdin) == NULL)
-                break;
+            refresh();
+            getnstr(resp, 256);
+            //if (fgets(resp, 256, stdin) == NULL)
+                //break;
             if (resp[0] == 'y' || resp[0] == 'Y')
             {
                 running = 1;
@@ -313,7 +313,7 @@ int main(int argc, char** argv)
             if (goban.color == opponent_color)
                 printw("Waiting on opponent...\n");
             printw(": ");
-            //fflush(stdout);
+            echo();
             refresh();
             int ret_poll;
             while ((ret_poll = poll(inputs, 2, 100)) == 0); // Wait for input
@@ -323,8 +323,9 @@ int main(int argc, char** argv)
                 if (inputs[0].revents & POLLIN) // input from STDIN
                 {
                     char input[COMMAND_LENGTH];
-                    if (!fgets(input, 256, stdin))
-                        exit(-1);
+                    getnstr(input, COMMAND_LENGTH);
+                    //if (!fgets(input, 256, stdin))
+                        //exit(-1);
                     input[strcspn(input, "\n")] = '\0';
 
                     running = ProcessCommand(&goban, input);
@@ -353,8 +354,10 @@ int main(int argc, char** argv)
         {
             char input[COMMAND_LENGTH];
             printw(": ");
-            if (!fgets(input, 256, stdin))
-                exit(-1);
+            refresh();
+            getnstr(input, COMMAND_LENGTH);
+            //if (!fgets(input, 256, stdin))
+                //exit(-1);
             input[strcspn(input, "\n")] = 0;
 
             running = ProcessCommand(&goban, input);
@@ -372,6 +375,8 @@ int main(int argc, char** argv)
         }
     }
     endwin();
+
+    PrintBoard(&goban);
 
     // Clean up
     if (host >= 0)
