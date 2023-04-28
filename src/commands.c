@@ -211,7 +211,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
             if (terms > 1 && !strcmp(tokens[1], commands[i].name))
             {
                 chars_printed += snprintf(
-                        goban->notes + chars_printed,
+                        goban->notes,
                         NOTES_LENGTH - chars_printed,
                         "%s - %s\n", commands[i].name, commands[i].help);
                 return 1;
