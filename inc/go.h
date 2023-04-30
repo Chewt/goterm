@@ -43,6 +43,9 @@ Goban* GetHistory(int i);
 int ValidateInput(Goban* goban, Point* p, char input[256]);
 int ValidateMove(Goban* goban, Point move);
 
+// Is the current window size big enough to print the board
+int BoardFitsScreen(Goban* goban);
+
 /* Prints the goban to the screen */
 void PrintBoard(Goban* goban);
 void PrintBoardw(Goban* goban);

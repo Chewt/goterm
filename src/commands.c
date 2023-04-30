@@ -53,6 +53,17 @@ int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
     ResetGoban(goban);
     if((goban->size = atoi(tokens[1])) <= 1 || goban->size > 19)
         goban->size = 19;
+    if (!BoardFitsScreen(goban))
+    {
+        int t = goban->size;
+        while (!BoardFitsScreen(goban))
+            goban->size--;
+        snprintf(goban->notes, NOTES_LENGTH,
+                 "Warning! Current size is too big for screen!\nMax size that "
+                 "will fit is %d\n",
+                 goban->size);
+        goban->size = t;
+    }
     return 1;
 }
 int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
@@ -191,6 +202,8 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     int terms = 0;
     char tokens[256][256];
     terms = tokenize_command(input_copy, tokens);
+    if (terms < 0)
+        return 1;
 
     int return_val = -2;
     int i;
@@ -206,6 +219,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
                         goban->notes,
                         NOTES_LENGTH - chars_printed,
                         "%s - %s\n", commands[i].name, commands[i].help);
+                input_copy[0] = '\0';
                 return 1;
             }
             if (goban->notes == NULL)
@@ -236,6 +250,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         chars_printed += snprintf(
                 goban->notes + chars_printed,
                 NOTES_LENGTH - chars_printed, "\n");
+        input_copy[0] = '\0';
         return 1;
     }
     else
@@ -256,13 +271,16 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
                     }
                     else
                         printf("Invalid usage of command %s\n", commands[i].name);
+                    input_copy[0] = '\0';
                     return 1;
                 }
+                input_copy[0] = '\0';
                 return return_val;
             }
             ++i;
         }
     }
+    input_copy[0] = '\0';
     return MOVE;
 }
 

@@ -392,7 +392,7 @@ int RemoveDeadGroups(Goban* goban, char input[256])
         else return 0;
     }
     ScoreBoard(&tempgoban);
-    PrintBoard(&tempgoban);
+    PrintBoardw(&tempgoban);
     char resp[COMMAND_LENGTH];
     printw("Does this look right?[Y/n]\n: ");
     refresh();
@@ -531,6 +531,15 @@ int ValidateMove(Goban* goban, Point move)
     }
 }
 
+int BoardFitsScreen(Goban* goban)
+{
+    int width_needed = goban->size * 4 + 11;
+    int height_needed = goban->size * 2 + 2;
+    return (getmaxx(stdscr) >= width_needed) &&
+           (getmaxy(stdscr) >= height_needed);
+}
+
+// Color pair declarations
 enum
 {
     BLACK_STONE_COLOR = 1,

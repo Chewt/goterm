@@ -180,8 +180,21 @@ int main(int argc, char** argv)
 
     setlocale(LC_ALL, "");
     initscr();
-    // Main loop
+
     int running = 1;
+
+    // Make sure board can fit screen
+    if (!BoardFitsScreen(&goban)) 
+    {
+        while (!BoardFitsScreen(&goban))
+            goban.size--;
+        snprintf(goban.notes, NOTES_LENGTH,
+                 "Warning! Current size is too big for screen!\nMax size that "
+                 "will fit is %d\n",
+                 goban.size);
+        goban.size = flags.size;
+    }
+    // Main loop
     while (running)
     {
         if (running == 2) // Game is in complete state
@@ -362,6 +375,7 @@ int main(int argc, char** argv)
             running = ProcessCommand(&goban, input);
             if (running == MOVE)
                 SubmitMove(&goban, input);
+            input[0] = '\0';
         }
 
         if (running == SWAP) // Swap colors
@@ -376,6 +390,7 @@ int main(int argc, char** argv)
     endwin();
 
     PrintBoard(&goban);
+    printf("%s\n", goban.notes);
 
     // Clean up
     if (host >= 0)
