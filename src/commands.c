@@ -39,13 +39,6 @@ int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
     UndoHistory(goban);
     return 1;
 }
-int PrintCommand(Goban* goban, int n_tokens, char tokens[][256])
-{
-    if (n_tokens != 1 || strcmp(tokens[0], "print"))
-        return -1;
-    PrintBoard(goban);
-    return 1;
-}
 int ResetCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 || strcmp(tokens[0], "reset"))
@@ -156,7 +149,6 @@ int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256])
 
 struct GoCommand commands[] = {
     {"undo", UndoCommand, 1, "Undo last move"},
-    {"print", PrintCommand, 0, "Print board to screen"},
     {"reset", ResetCommand, 1, "Reset board to empty"},
     {"size", SizeCommand, 1, "Change size of board. eg: size 19"},
     {"pass", PassCommand, 1, "Pass your turn"},

@@ -268,7 +268,7 @@ int main(int argc, char** argv)
         }
 
         PrintBoardw(&goban);
-        printw("%s", goban.notes); 
+        mvprintw(getcury(stdscr), 0, "%s", goban.notes); 
         refresh();
         goban.notes[0] = '\0';
         if (e.pid >= 0 && goban.color == e_col)  // Engine's turn
@@ -295,7 +295,6 @@ int main(int argc, char** argv)
             SendGenmove(e.write, 3, goban.color);
             if (!GetResponse(e.read, response, 3))
                 fprintf(stderr, "Couldn't get response from engine\n");
-            printw("%s\n", response[1]);
             running = ProcessCommand(&goban, response[1]);
             if (running == MOVE)
                 SubmitMove(&goban, response[1]);
@@ -312,7 +311,7 @@ int main(int argc, char** argv)
             char opponent_color = (host >= 0) ? host_col : client_col;
             if (goban.color == opponent_color)
                 printw("Waiting on opponent...\n");
-            printw(": ");
+            mvprintw(getcury(stdscr), 0, ": ");
             echo();
             refresh();
             int ret_poll;
@@ -353,7 +352,7 @@ int main(int argc, char** argv)
         else // Playing alone
         {
             char input[COMMAND_LENGTH];
-            printw(": ");
+            mvprintw(getcury(stdscr), 0, ": ");
             refresh();
             getnstr(input, COMMAND_LENGTH);
             //if (!fgets(input, 256, stdin))

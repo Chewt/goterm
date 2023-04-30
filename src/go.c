@@ -548,6 +548,13 @@ void PrintBoardw(Goban* goban)
     int x_pos = 0;
     int y_pos = 0;
 
+    // Determine where the board should be placed on screen
+    int width_needed = goban->size * 4 + 11;
+    int start_xpos = 0;
+    int max_x = getmaxx(stdscr);;
+    if ((max_x / 2) >= (width_needed / 2))
+        start_xpos = (max_x / 2) - (width_needed / 2);
+
     clear(); // Set screen to blank
 
     // Print empty board
@@ -555,8 +562,8 @@ void PrintBoardw(Goban* goban)
     int i;
     //    Background color
     for (i = 0; i < (goban->size * 2) + 1; ++i) 
-        printw("   %*s\n", goban->size * 4, ""); // format string abuse
-    x_pos = 3;
+        mvprintw(i, start_xpos, "   %*s", goban->size * 4, ""); // padding abuse
+    x_pos = start_xpos + 3;
     y_pos = 1;
     move(y_pos, x_pos);
     //    Top grid
@@ -628,7 +635,7 @@ void PrintBoardw(Goban* goban)
             {
                 if (goban->score[i][j] == 'b' || goban->score[i][j] == 'w')
                 {
-                    move((i * 2) + 1, (j * 4) + 3);
+                    move((i * 2) + 1, (j * 4) + 3 + start_xpos);
                     if (goban->score[i][j] == 'w')
                     {
                         attroff(COLOR_PAIR(BLACK_STONE_COLOR));
@@ -644,44 +651,44 @@ void PrintBoardw(Goban* goban)
     }
     else if (goban->size == 19)
     {
-        mvaddstr(3 * 2 + 1, 3   * 4 + 3, STARPOINT);
-        mvaddstr(3 * 2 + 1, 9   * 4 + 3, STARPOINT);
-        mvaddstr(3 * 2 + 1, 15  * 4 + 3, STARPOINT);
-        mvaddstr(9 * 2 + 1, 3   * 4 + 3, STARPOINT);
-        mvaddstr(9 * 2 + 1, 9   * 4 + 3, STARPOINT);
-        mvaddstr(9 * 2 + 1, 15  * 4 + 3, STARPOINT);
-        mvaddstr(15 * 2 + 1, 3  * 4 + 3, STARPOINT);
-        mvaddstr(15 * 2 + 1, 9  * 4 + 3, STARPOINT);
-        mvaddstr(15 * 2 + 1, 15 * 4 + 3, STARPOINT);
+        mvaddstr(3 * 2 + 1, 3   * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(3 * 2 + 1, 9   * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(3 * 2 + 1, 15  * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(9 * 2 + 1, 3   * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(9 * 2 + 1, 9   * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(9 * 2 + 1, 15  * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(15 * 2 + 1, 3  * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(15 * 2 + 1, 9  * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(15 * 2 + 1, 15 * 4 + 3 + start_xpos, STARPOINT);
     }
     else if (goban->size == 13)
     {
-        mvaddstr(3 * 2 + 1, 3 * 4 + 3, STARPOINT);
-        mvaddstr(3 * 2 + 1, 6 * 4 + 3, STARPOINT);
-        mvaddstr(3 * 2 + 1, 9 * 4 + 3, STARPOINT);
-        mvaddstr(6 * 2 + 1, 3 * 4 + 3, STARPOINT);
-        mvaddstr(6 * 2 + 1, 6 * 4 + 3, STARPOINT);
-        mvaddstr(6 * 2 + 1, 9 * 4 + 3, STARPOINT);
-        mvaddstr(9 * 2 + 1, 3 * 4 + 3, STARPOINT);
-        mvaddstr(9 * 2 + 1, 6 * 4 + 3, STARPOINT);
-        mvaddstr(9 * 2 + 1, 9 * 4 + 3, STARPOINT);
+        mvaddstr(3 * 2 + 1, 3 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(3 * 2 + 1, 6 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(3 * 2 + 1, 9 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(6 * 2 + 1, 3 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(6 * 2 + 1, 6 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(6 * 2 + 1, 9 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(9 * 2 + 1, 3 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(9 * 2 + 1, 6 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(9 * 2 + 1, 9 * 4 + 3 + start_xpos, STARPOINT);
     }
     else if (goban->size == 9)
     {
-        mvaddstr(2 * 2 + 1, 2 * 4 + 3, STARPOINT);
-        mvaddstr(2 * 2 + 1, 6 * 4 + 3, STARPOINT);
-        mvaddstr(6 * 2 + 1, 2 * 4 + 3, STARPOINT);
-        mvaddstr(6 * 2 + 1, 6 * 4 + 3, STARPOINT);
+        mvaddstr(2 * 2 + 1, 2 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(2 * 2 + 1, 6 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(6 * 2 + 1, 2 * 4 + 3 + start_xpos, STARPOINT);
+        mvaddstr(6 * 2 + 1, 6 * 4 + 3 + start_xpos, STARPOINT);
     }
 
     // Print coordinates
-    move(0, 3); 
+    move(0, 3 + start_xpos); 
     for (i = 0; i < goban->size; ++i)
         printw("%c   ", coords[i]); 
-    move((goban->size * 2), 3);
+    move((goban->size * 2), 3 + start_xpos);
     for (i = 0; i < goban->size; ++i)
         printw("%c   ", coords[i]);
-    x_pos = 0;
+    x_pos = start_xpos;
     y_pos = 1;
     for (i = 0; i < goban->size ; ++i)
     {
@@ -694,8 +701,8 @@ void PrintBoardw(Goban* goban)
 
     // Prisoners and last move
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
-    mvprintw(0, goban->size * 4 + 4, "B: %d", goban->bpris);
-    mvprintw(1, goban->size * 4 + 4, "W: %d", goban->wpris);
+    mvprintw(0, goban->size * 4 + 4 + start_xpos, "B: %d", goban->bpris);
+    mvprintw(1, goban->size * 4 + 4 + start_xpos, "W: %d", goban->wpris);
     char lastmove[5] = { 0 };
     if (HistorySize() >= 1)
     {
@@ -708,7 +715,7 @@ void PrintBoardw(Goban* goban)
                     goban->size - goban->lastmove.p.row);
         }
     }
-    mvprintw(3, goban->size * 4 + 4, "%s", lastmove);
+    mvprintw(3, goban->size * 4 + 4 + start_xpos, "%s", lastmove);
     attron(COLOR_PAIR(BLACK_STONE_COLOR));
 
     // Place stones
@@ -718,7 +725,7 @@ void PrintBoardw(Goban* goban)
         {
             if (goban->board[i][j] != ' ')
             {
-                move((i * 2) + 1, (j * 4) + 2);
+                move((i * 2) + 1, (j * 4) + 2 + start_xpos);
                 if (goban->board[i][j] == 'w')
                 {
                     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
@@ -734,7 +741,7 @@ void PrintBoardw(Goban* goban)
             }
         }
     }
-    move(goban->size * 2 + 1, 0);
+    move(goban->size * 2 + 1, start_xpos);
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
 }
 
