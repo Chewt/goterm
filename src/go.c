@@ -756,7 +756,7 @@ void PrintBoardw(Goban* goban)
 
 void PrintNotesw(Goban* goban)
 {
-    // Count how many lines the notes have, and adjust where to put the cursor
+    // Count how many lines the notes have
     char c;
     int i = 0;
     int linecount = 0;
@@ -766,7 +766,7 @@ void PrintNotesw(Goban* goban)
             linecount++;
     }
 
-    // Print notes
+    // Print notes and adjust starting y for notes
     int x, y;
     x = 0;
     y = getcury(stdscr);
