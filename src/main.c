@@ -280,9 +280,8 @@ int main(int argc, char** argv)
         }
 
         PrintBoardw(&goban);
-        mvprintw(getcury(stdscr), 0, "%s", goban.notes); 
+        PrintNotesw(&goban);
         refresh();
-        goban.notes[0] = '\0';
         if (e.pid >= 0 && goban.color == e_col)  // Engine's turn
         {
             char** response = AllocateResponse();

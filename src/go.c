@@ -754,6 +754,37 @@ void PrintBoardw(Goban* goban)
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
 }
 
+void PrintNotesw(Goban* goban)
+{
+    // Count how many lines the notes have, and adjust where to put the cursor
+    char c;
+    int i = 0;
+    int linecount = 0;
+    while ((c = goban->notes[i++]) != '\0')
+    {
+        if (c == '\n')
+            linecount++;
+    }
+
+    // Print notes
+    int x, y;
+    x = 0;
+    y = getcury(stdscr);
+    if ((getmaxy(stdscr) - y) <= linecount)
+        y -= linecount;
+    i = 0;
+    while ((c = goban->notes[i++]) != '\0')
+    {
+        if (c == '\n')
+            move(++y, x = 0);
+        else
+            mvaddch(y, x++, c);
+    }
+
+    // Reset notes to empty
+    goban->notes[0] = '\0';
+}
+
 // Print board to screen
 void PrintBoard(Goban* goban)
 {

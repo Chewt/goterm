@@ -49,5 +49,6 @@ int BoardFitsScreen(Goban* goban);
 /* Prints the goban to the screen */
 void PrintBoard(Goban* goban);
 void PrintBoardw(Goban* goban);
+void PrintNotesw(Goban* goban);
 
 #endif
