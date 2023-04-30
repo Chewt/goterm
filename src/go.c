@@ -656,7 +656,7 @@ void PrintBoardw(Goban* goban)
                 }
             }
         }
-
+        goban->showscore = 0;
     }
     else if (goban->size == 19)
     {
