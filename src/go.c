@@ -394,7 +394,7 @@ int RemoveDeadGroups(Goban* goban, char input[256])
     ScoreBoard(&tempgoban);
     PrintBoardw(&tempgoban);
     char resp[COMMAND_LENGTH];
-    printw("Does this look right?[Y/n]\n: ");
+    mvprintw(getcury(stdscr), 0, "Does this look right?[Y/n]\n: ");
     refresh();
     //if (fgets(resp, 256, stdin) == NULL)
         //return 0;

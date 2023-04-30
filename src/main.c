@@ -213,8 +213,7 @@ int main(int argc, char** argv)
             {
                 printw("Please enter a list of stones seperated by spaces\n"); 
                 printw("(one stone per group)\n: ");
-                if (fgets(resp, 256, stdin) == NULL)
-                    continue;
+                getnstr(resp, 256);
                 if (!RemoveDeadGroups(&goban, resp))
                 {
                     PrintBoardw(&goban);
