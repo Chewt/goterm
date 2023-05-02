@@ -225,6 +225,7 @@ int main(int argc, char** argv)
             if (host >= 0 || client >= 0) // Make sure both players agree
             {
                 printw("Confirming with opponent...\n");
+                refresh();
                 if (host >= 0) 
                 {
                     SendCommand(host, resp);
