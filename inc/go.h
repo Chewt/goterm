@@ -27,6 +27,7 @@ typedef struct
     int wpris;
     int bpris;
     float komi;
+    int handicap;
     char result[8];
 } Goban;
 
@@ -35,6 +36,7 @@ void ClearBoard(Goban* goban);
 void AddHistory(Goban* goban);
 void UndoHistory(Goban* goban);
 void ScoreBoard(Goban* goban);
+void SetHandicap(Goban* goban, int numStones);
 int RemoveDeadGroups(Goban* goban, char input[256]);
 void PointDiff(Goban* goban, char resp[256]);
 int HistorySize();

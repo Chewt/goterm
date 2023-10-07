@@ -101,6 +101,78 @@ void ClearBoard(Goban* goban)
         }
 }
 
+void SetHandicap(Goban* goban, int numStones)
+{
+    int line = (goban->size <= 9) ? 3 : 4;
+    int i;
+    switch (numStones)
+    {
+        case 1:
+            goban->board[goban->size / 2][goban->size / 2] = 'b';
+            break;
+        case 2:
+            goban->board[goban->size - line][line - 1] = 'b';
+            goban->board[line - 1][goban->size - line] = 'b';
+            break;
+        case 3:
+            goban->board[line - 1][line - 1] = 'b';
+            goban->board[goban->size - line][line - 1] = 'b';
+            goban->board[line - 1][goban->size - line] = 'b';
+            break;
+        case 4:
+            goban->board[line - 1][line - 1] = 'b';
+            goban->board[goban->size - line][line - 1] = 'b';
+            goban->board[line - 1][goban->size - line] = 'b';
+            goban->board[goban->size - line][goban->size - line] = 'b';
+            break;
+        case 5:
+            goban->board[line - 1][line - 1] = 'b';
+            goban->board[goban->size - line][line - 1] = 'b';
+            goban->board[line - 1][goban->size - line] = 'b';
+            goban->board[goban->size - line][goban->size - line] = 'b';
+            goban->board[goban->size / 2][goban->size / 2] = 'b';
+            break;
+        case 6:
+            goban->board[line - 1][line - 1] = 'b';
+            goban->board[goban->size - line][line - 1] = 'b';
+            goban->board[line - 1][goban->size - line] = 'b';
+            goban->board[goban->size - line][goban->size - line] = 'b';
+            goban->board[line - 1][goban->size / 2] = 'b';
+            goban->board[goban->size - line][goban->size / 2] = 'b';
+            break;
+        case 7:
+            goban->board[line - 1][line - 1] = 'b';
+            goban->board[goban->size - line][line - 1] = 'b';
+            goban->board[line - 1][goban->size - line] = 'b';
+            goban->board[goban->size - line][goban->size - line] = 'b';
+            goban->board[line - 1][goban->size / 2] = 'b';
+            goban->board[goban->size - line][goban->size / 2] = 'b';
+            goban->board[goban->size / 2][goban->size / 2] = 'b';
+            break;
+        case 8:
+            goban->board[line - 1][line - 1] = 'b';
+            goban->board[goban->size - line][line - 1] = 'b';
+            goban->board[line - 1][goban->size - line] = 'b';
+            goban->board[goban->size - line][goban->size - line] = 'b';
+            goban->board[line - 1][goban->size / 2] = 'b';
+            goban->board[goban->size - line][goban->size / 2] = 'b';
+            goban->board[goban->size / 2][line - 1] = 'b';
+            goban->board[goban->size / 2][goban->size - line] = 'b';
+            break;
+        case 9:
+            goban->board[line - 1][line - 1] = 'b';
+            goban->board[goban->size - line][line - 1] = 'b';
+            goban->board[line - 1][goban->size - line] = 'b';
+            goban->board[goban->size - line][goban->size - line] = 'b';
+            goban->board[line - 1][goban->size / 2] = 'b';
+            goban->board[goban->size - line][goban->size / 2] = 'b';
+            goban->board[goban->size / 2][line - 1] = 'b';
+            goban->board[goban->size / 2][goban->size - line] = 'b';
+            goban->board[goban->size / 2][goban->size / 2] = 'b';
+            break;
+    }
+}
+
 int IsSeen(Point seen[361], int nseen, Point p)
 {
     int i;

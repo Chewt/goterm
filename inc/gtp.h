@@ -31,6 +31,7 @@ void SendQuit(int fd, int id);
 void SendBoardsize(int fd, int id, int size);
 void SendClearBoard(int fd, int id);
 void SendKomi(int fd, int id, float new_komi);
+void SendHandicap(int fd, int id, int new_handicap);
 void SendPlay(int fd, int id, Move move, int size);
 void SendGenmove(int fd, int id, char color);
 void SendFinalScore(int fd, int id);

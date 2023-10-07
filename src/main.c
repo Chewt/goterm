@@ -297,6 +297,9 @@ int main(int argc, char** argv)
                 SendKomi(e.write, 3, goban.komi);
                 if (!GetResponse(e.read, response, 3))
                     fprintf(stderr, "Couldn't get response from engine\n");
+                SendHandicap(e.write, 4, goban.komi);
+                if (!GetResponse(e.read, response, 4))
+                    fprintf(stderr, "Couldn't get response from engine\n");
             }
 
             SendPlay(e.write, 2, goban.lastmove, goban.size);

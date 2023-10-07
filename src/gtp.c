@@ -226,6 +226,14 @@ void SendKomi(int fd, int id, float new_komi)
         fprintf(stderr, "error writing command to engine");
 }
 
+void SendHandicap(int fd, int id, int new_handicap)
+{
+    char message[256];
+    sprintf(message, "%d fixed_handicap %d\n", id, new_handicap);
+    if (write(fd, message, strlen(message)) < 0)
+        fprintf(stderr, "error writing command to engine");
+}
+
 void SendGenmove(int fd, int id, char color)
 {
     char message[256];
