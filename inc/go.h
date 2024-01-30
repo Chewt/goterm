@@ -17,6 +17,8 @@ typedef struct
 
 typedef struct
 {
+    char whitename[100];
+    char blackname[100];
     char* notes;
     char board[19][19];
     char score[19][19];
@@ -33,7 +35,7 @@ typedef struct
 void ResetGoban(Goban* goban);
 void ClearBoard(Goban* goban);
 void AddHistory(Goban* goban);
-void UndoHistory(Goban* goban);
+void UndoHistory(Goban* goban, int n);
 void ScoreBoard(Goban* goban);
 int RemoveDeadGroups(Goban* goban, char input[256]);
 void PointDiff(Goban* goban, char resp[256]);

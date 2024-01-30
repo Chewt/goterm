@@ -54,11 +54,11 @@ void AddHistory(Goban* goban)
     h_counter++;
 }
 
-void UndoHistory(Goban* goban)
+void UndoHistory(Goban* goban, int n)
 {
-    if (h_counter > 0)
+    if (h_counter - n >= 0)
     {
-        h_counter--;
+        h_counter -= n;
         memcpy(goban, history + h_counter, sizeof(Goban));
     }
 }

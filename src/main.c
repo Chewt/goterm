@@ -82,6 +82,8 @@ int main(int argc, char** argv)
     goban.notes = notes;
     ResetGoban(&goban);
     goban.color = 'b';
+    strcpy(goban.blackname, "Black");
+    strcpy(goban.whitename, "White");
 
     // argp parsing args
     struct argp_option options[] =
@@ -117,6 +119,7 @@ int main(int argc, char** argv)
     {
         StartEngine(&e, flags.e_path);
         //printw("%s %s\n", e.name, e.version);
+        strncpy(goban.whitename, e.name, 100);
         char** response = AllocateResponse();
         SendClearBoard(e.write, 1);
         if (!GetResponse(e.read, response, 1))
@@ -234,7 +237,7 @@ int main(int argc, char** argv)
                     {
                       snprintf(goban.notes, NOTES_LENGTH,
                                "Opponent disagrees with result, play on.\n");
-                      UndoHistory(&goban);
+                      UndoHistory(&goban, 1);
                       free(confirm);
                       running = 1;
                       continue;
@@ -249,7 +252,7 @@ int main(int argc, char** argv)
                       snprintf(goban.notes, NOTES_LENGTH,
                                "Opponent disagrees with result, play on.\n");
                         SendCommand(client, "deny");
-                        UndoHistory(&goban);
+                        UndoHistory(&goban, 1);
                         free(opponent_diff);
                         running = 1;
                         continue;
@@ -259,7 +262,7 @@ int main(int argc, char** argv)
                 }
             }
             AddHistory(&goban);
-            char* sgf = CreateSGF(&e);
+            char* sgf = CreateSGF();
             if (sgf)
             {
                 printw("%s\n\n", sgf);
@@ -384,6 +387,10 @@ int main(int argc, char** argv)
             client_col = t;
             e_col = (e_col == 'w') ? 'b' : 'w';
             running = 1;
+            char temp[100];
+            strncpy(temp, goban.whitename, 100);
+            strncpy(goban.whitename, goban.blackname, 100);
+            strncpy(goban.blackname, temp, 100);
         }
     }
     endwin();
