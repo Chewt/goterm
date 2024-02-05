@@ -474,11 +474,12 @@ int RemoveDeadGroups(Goban* goban, char input[256])
         Point p;
         if (ValidateInput(goban, &p, tokens[i]))
         {
+            char color = tempgoban.board[p.row][p.col];
             int points = RemoveGroup(&tempgoban, p);
-            if (tempgoban.board[p.row][p.col] == 'w')
-                tempgoban.wpris += points;
-            else if (goban->board[p.row][p.col] == 'b')
-                tempgoban.bpris += points;
+                if (color == 'w')
+                    tempgoban.wpris += points;
+                else if (color == 'b')
+                    tempgoban.bpris += points;
         }
         else return 0;
     }
@@ -487,8 +488,6 @@ int RemoveDeadGroups(Goban* goban, char input[256])
     char resp[COMMAND_LENGTH];
     mvprintw(getcury(stdscr), 0, "Does this look right?[Y/n]\n: ");
     refresh();
-    //if (fgets(resp, 256, stdin) == NULL)
-        //return 0;
     getnstr(resp, 256);
     if (resp[0] == 'n' || resp[0] == 'N')
         return 0;
@@ -583,9 +582,9 @@ int ValidateMove(Goban* goban, Move move)
         return 0;
     Goban tempgoban;
     memcpy(&tempgoban, goban, sizeof(Goban));
-    tempgoban.board[move.p.row][move.p.col] = goban->color;
+    tempgoban.board[move.p.row][move.p.col] = move.color;
     tempgoban.lastmove = move;
-    tempgoban.color = (tempgoban.color == 'b') ? 'w' : 'b';
+    tempgoban.color = (move.color == 'b') ? 'w' : 'b';
     char search[19][19];
     memset(search, 0, 361);
     int i, j;
@@ -799,8 +798,10 @@ void PrintBoardw(Goban* goban)
 
     // Prisoners and last move
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
-    mvprintw(0, goban->size * 4 + 4 + start_xpos, "B: %d", goban->bpris);
-    mvprintw(1, goban->size * 4 + 4 + start_xpos, "W: %d", goban->wpris);
+    mvprintw(0, goban->size * 4 + 4 + start_xpos, "B[%s]: %d", goban->blackname, goban->bpris);
+    mvprintw(1, goban->size * 4 + 4 + start_xpos, "W[%s]: %d", goban->whitename, goban->wpris);
+    if (goban->result[0] != '\0')
+        mvprintw(2, goban->size * 4 + 4 + start_xpos, "Result: %s", goban->result);
     char lastmove[5] = { 0 };
     if (HistorySize() >= 1)
     {

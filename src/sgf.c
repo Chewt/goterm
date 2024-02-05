@@ -114,6 +114,16 @@ void LoadSGF(Goban* goban, char* sgf)
             md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
             goban->size = strtod(md_token, NULL);
         }
+        else if (md_token[0] == 'H' && md_token[1] == 'A')
+        {
+            md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
+            SetHandicap(goban, strtod(md_token, NULL));
+        }
+        else if (md_token[0] == 'R' && md_token[1] == 'E')
+        {
+            md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
+            strlcpy(goban->result, md_token, 8);
+        }
     } while ((md_token = strtok_r(NULL, "[]", &meta_data_save_ptr)) != NULL);
 
     // Read Moves
@@ -121,11 +131,20 @@ void LoadSGF(Goban* goban, char* sgf)
     {
         Move m;
         m.color = (token[0] == 'B') ? 'b' : 'w';
-        m.p.col = token[2] - 'a';
-        m.p.row = goban->size - 1 - (token[3] - 'a');
-        ValidateMove(goban, m);
+        if ((token[1] == '[') && (token[2] == ']')) // Pass
+        {
+            AddHistory(goban);
+            goban->lastmove.p.col = -1;
+            goban->lastmove.p.row = -1;
+            goban->lastmove.color = m.color;
+            goban->color = (goban->color == 'b') ? 'w' : 'b';
+        }
+        else // Real move
+        {
+            m.p.col = token[2] - 'a';
+            m.p.row = token[3] - 'a';
+            ValidateMove(goban, m);
+        }
     }
-    sprintf(goban->notes,
-            "Loaded game from sgf...\nHistory Size: %d\nCurrent View: %d\n",
-            HistorySize(), GetViewIndex());
+    sprintf(goban->notes, "Loaded game from sgf...\n");
 }

@@ -274,25 +274,8 @@ int main(int argc, char** argv)
                 }
             }
             AddHistory(&goban);
-            char* sgf = CreateSGF();
-            if (sgf)
-            {
-                printw("%s\n\n", sgf);
-                free(sgf);
-            }
-            printw("Result: %s\n", goban.result);
-            printw("Game Over!\nPlay again?[y/N]");
-            refresh();
-            getnstr(resp, 256);
-            //if (fgets(resp, 256, stdin) == NULL)
-                //break;
-            if (resp[0] == 'y' || resp[0] == 'Y')
-            {
-                running = 1;
-                ResetGoban(&goban);
-                continue;
-            }
-            break;
+            PrintBoardw(&goban);
+            running = 1;
         }
 
         PrintBoardw(&goban);
