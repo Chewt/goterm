@@ -192,7 +192,7 @@ int HandicapCommand(Goban* goban, int n_tokens, char tokens[][256])
     if ((n_tokens != 1 && n_tokens != 2) || strcmp(tokens[0], "handicap"))
         return -1;
     if (n_tokens == 1)
-        snprintf(goban->notes, NOTES_LENGTH, "Komi is %.1f\n", goban->komi);
+        snprintf(goban->notes, NOTES_LENGTH, "Handicap is %d\n", goban->handicap);
     else if (n_tokens == 2)
     {
         ResetGoban(goban);
