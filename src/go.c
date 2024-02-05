@@ -104,7 +104,6 @@ void ClearBoard(Goban* goban)
 void SetHandicap(Goban* goban, int numStones)
 {
     int line = (goban->size <= 9) ? 3 : 4;
-    int i;
     switch (numStones)
     {
         case 1:
