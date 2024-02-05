@@ -26,6 +26,7 @@ char* CreateSGF()
     index += sprintf(sgf + index, "KM[");
     index += sprintf(sgf + index, "%.1f", current->komi);
     index += sprintf(sgf + index, "]\n");
+    index += sprintf(sgf + index, "SZ[%d]\n", current->size);
     Goban* last = GetHistory(HistorySize() - 1);
     if (last->result[0] != '\0')
     {
@@ -133,11 +134,11 @@ void LoadSGF(Goban* goban, char* sgf)
         m.color = (token[0] == 'B') ? 'b' : 'w';
         if ((token[1] == '[') && (token[2] == ']')) // Pass
         {
-            AddHistory(goban);
             goban->lastmove.p.col = -1;
             goban->lastmove.p.row = -1;
             goban->lastmove.color = m.color;
             goban->color = (goban->color == 'b') ? 'w' : 'b';
+            AddHistory(goban);
         }
         else // Real move
         {

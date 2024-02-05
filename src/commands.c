@@ -37,9 +37,7 @@ int SGFCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 2 || strcmp(tokens[0], "sgf"))
         return -1;
-    AddHistory(goban);
     char* sgf = CreateSGF();
-    UndoHistory(goban, 1);
     FILE* f = fopen(tokens[1], "w");
     fwrite(sgf, 1, strlen(sgf), f);
     fclose(f);
@@ -120,13 +118,13 @@ int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 || strcmp(tokens[0], "pass"))
         return -1;
-    AddHistory(goban);
     if (goban->lastmove.p.row == -1 && goban->lastmove.p.col == -1)
         return 2;
     goban->lastmove.color = goban->color;
     goban->lastmove.p.row = -1;
     goban->lastmove.p.col = -1;
     goban->color = (goban->color == 'b') ? 'w' : 'b';
+    AddHistory(goban);
     return 1;
 }
 int SwapCommand(Goban* goban, int n_tokens, char tokens[][256])

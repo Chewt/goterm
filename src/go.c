@@ -67,12 +67,13 @@ void UndoHistory(Goban* goban, int n)
 
 void ViewHistory(Goban* goban, int n)
 {
-    
-    if (n < 0)
-        n = 0;
+    if (HistorySize() == 0)
+        return;
     if (n >= HistorySize())
         n = HistorySize() - 1;
-    view_idx = n % HistorySize();
+    if (n < 0)
+        n = 0;
+    view_idx = n;
     memcpy(goban, history + n, sizeof(Goban));
 }
 
@@ -99,15 +100,17 @@ void ResetGoban(Goban* goban)
     goban->wpris = 0;
     goban->bpris = 0;
     goban->komi = 6.5;
+    goban->size = (goban->size) ? goban->size : 19;
     goban->color = 'b';
     goban->result[0] = '\0';
-    goban->blackname[0] = '\0';
-    goban->whitename[0] = '\0';
+    strcpy(goban->blackname, "Black");
+    strcpy(goban->whitename, "White");
     goban->lastmove.color = 'b';
-    goban->lastmove.p.col = 0;
-    goban->lastmove.p.row = 0;
+    goban->lastmove.p.col = -2;
+    goban->lastmove.p.row = -2;
     goban->showscore = 0;
     h_counter = 0;
+    AddHistory(goban);
 }
 
 void ClearBoard(Goban* goban)
@@ -491,8 +494,8 @@ int RemoveDeadGroups(Goban* goban, char input[256])
     getnstr(resp, 256);
     if (resp[0] == 'n' || resp[0] == 'N')
         return 0;
-    AddHistory(goban);
     memcpy(goban, &tempgoban, sizeof(Goban));
+    AddHistory(goban);
     return 1;
 }
 
@@ -613,8 +616,8 @@ int ValidateMove(Goban* goban, Move move)
         return 0;
     else
     {
-        AddHistory(goban);
         memcpy(goban, &tempgoban, sizeof(Goban));
+        AddHistory(goban);
         return 1;
     }
 }
