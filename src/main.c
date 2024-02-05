@@ -23,6 +23,7 @@ struct flags {
   int port;
   int swap;
   char* sgf;
+  int handicap;
 };
 
 const char *argp_program_bug_address = "Hayden Johnson <hajohn100@gmail.com> or at https://github.com/Chewt/goterm";
@@ -45,9 +46,6 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
         case 'g':
             flags->g = 1;
             break;
-        case 'h':
-            flags->is_server = 1;
-            break;
         case 'c':
             flags->host = arg;
             break;
@@ -57,8 +55,14 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
         case 'f':
             flags->sgf = ReadSGFFile(arg);
             break;
+        case 'h':
+            flags->handicap = strtod(arg, NULL);
+            break;
         case 500:
             flags->swap = 1;
+            break;
+        case 501:
+            flags->is_server = 1;
             break;
     }
     return 0;
@@ -76,6 +80,7 @@ int main(int argc, char** argv)
     flags.port = 5000;
     flags.swap = 0;
     flags.sgf = NULL;
+    flags.handicap = 0;
     
     // gnugo shortcut
     char gnugo[32] = "gnugo --mode gtp";
@@ -94,12 +99,13 @@ int main(int argc, char** argv)
     struct argp_option options[] =
     {
         { "size", 's', "NUM", 0, "Size of the goboard. Default is 19."},
+        { "handicap", 'h', "NUM", 0, "An optional handicap to start the game with."},
         { "sgf", 'f', "FILE", 0, "An optional SGF file to load"},
         {0,0,0,0, "Engines:", 7},
         { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use GNUgo you can use -e \"gnugo --mode gtp\"."},
         { "gnugo", 'g', 0, 0, "Play against GNUgo. Functionally identical to the example given for -e."},
         {0,0,0,0, "Networking:", 1},
-        { "host", 'h', 0, 0, "Allow connections from another player"},
+        { "host", 501, 0, 0, "Allow connections from another player"},
         { "connect", 'c', "IP", 0, "Connect to a host"},
         { "port", 'p', "PORT", 0, "Port for connecting to host"},
         { "swap", 500, 0, 0, "Swap colors for client and host (default host is white)"},
@@ -112,6 +118,7 @@ int main(int argc, char** argv)
         exit(-1);
     }
     goban.size = flags.size;
+    SetHandicap(&goban, flags.handicap);
 
     // apply gnugo shortcut
     if (flags.g == 1)
@@ -155,6 +162,13 @@ int main(int argc, char** argv)
             char command[10] = "";
             snprintf(command, 9, "size %d", flags.size);
             SendCommand(client, command);
+        }
+        if (flags.handicap != 0)
+        {
+            char command[30] = "";
+            snprintf(command, 30, "handicap %d", flags.handicap);
+            SendCommand(client, command);
+            goban.color = 'w';
         }
         SendCommand(client, "ready");
     }
