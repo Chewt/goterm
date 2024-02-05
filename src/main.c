@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     // Board Setup
     char notes[NOTES_LENGTH];
     srand(time(NULL));
-    Goban goban;
+    Goban goban = {0};
     goban.notes = notes;
     ResetGoban(&goban);
     goban.color = 'b';

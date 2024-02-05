@@ -16,8 +16,15 @@ char* CreateSGF()
     int index = 0;
     
     Goban* current = GetHistory(0);
-    index = sprintf(sgf + index, "(;FF[4]GM[1]SZ[%d]AP[Goterm:1.0]\n\n", 
-            current->size);
+
+#ifdef VERSION
+    const char* version = VERSION;
+#elif 
+    const char* version = "debug";
+#endif
+
+    index = sprintf(sgf + index, "(;FF[4]GM[1]SZ[%d]AP[Goterm:%s]\n\n", 
+            current->size, version);
     index += sprintf(sgf + index, "PB[%s]\n", current->blackname);
     index += sprintf(sgf + index, "PW[%s]\n", current->whitename);
     index += sprintf(sgf + index, "DT[");
@@ -26,7 +33,7 @@ char* CreateSGF()
     index += sprintf(sgf + index, "KM[");
     index += sprintf(sgf + index, "%.1f", current->komi);
     index += sprintf(sgf + index, "]\n");
-    index += sprintf(sgf + index, "SZ[%d]\n", current->size);
+    index += sprintf(sgf + index, "HA[%d]\n", current->handicap);
     Goban* last = GetHistory(HistorySize() - 1);
     if (last->result[0] != '\0')
     {

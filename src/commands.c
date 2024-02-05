@@ -172,8 +172,8 @@ int HandicapCommand(Goban* goban, int n_tokens, char tokens[][256])
     else if (n_tokens == 2)
     {
         ResetGoban(goban);
-        SetHandicap(goban, atoi(tokens[1]));
         goban->handicap = atoi(tokens[1]);
+        SetHandicap(goban, goban->handicap);
     }
     return 1;
 }
@@ -354,6 +354,8 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
 
 int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
 {
+    if (GetViewIndex() < (HistorySize() - 1))
+        ViewHistory(goban, HistorySize() - 1);
     int terms = 0;
     char tokens[256][256];
     terms = tokenize_command(input, tokens);

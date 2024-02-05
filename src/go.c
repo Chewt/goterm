@@ -100,6 +100,7 @@ void ResetGoban(Goban* goban)
     goban->wpris = 0;
     goban->bpris = 0;
     goban->komi = 6.5;
+    goban->handicap = 0;
     goban->size = (goban->size) ? goban->size : 19;
     goban->color = 'b';
     goban->result[0] = '\0';
@@ -651,7 +652,7 @@ void PrintBoardw(Goban* goban)
     // Determine where the board should be placed on screen
     int width_needed = goban->size * 4 + 11;
     int start_xpos = 0;
-    int max_x = getmaxx(stdscr);;
+    int max_x = getmaxx(stdscr);
     if ((max_x / 2) >= (width_needed / 2))
         start_xpos = (max_x / 2) - (width_needed / 2);
 
@@ -799,25 +800,26 @@ void PrintBoardw(Goban* goban)
         y_pos += 2;
     }
 
-    // Prisoners and last move
+    // Game info
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
     mvprintw(0, goban->size * 4 + 4 + start_xpos, "B[%s]: %d", goban->blackname, goban->bpris);
     mvprintw(1, goban->size * 4 + 4 + start_xpos, "W[%s]: %d", goban->whitename, goban->wpris);
     if (goban->result[0] != '\0')
         mvprintw(2, goban->size * 4 + 4 + start_xpos, "Result: %s", goban->result);
-    char lastmove[5] = { 0 };
-    if (HistorySize() >= 1)
+    char lastmove[10] = { 0 };
+    if (HistorySize() > 1)
     {
+        int idx = snprintf(lastmove, 10, "%d. ", GetViewIndex());
         if (goban->lastmove.p.col == -1)
-            snprintf(lastmove, 5, "Pass");
+            snprintf(lastmove + idx, 10, "Pass");
         else
         {
-            snprintf(lastmove, 5, "%c%d",
+            snprintf(lastmove + idx, 10, "%c%d",
                     coords[goban->lastmove.p.col],
                     goban->size - goban->lastmove.p.row);
         }
     }
-    mvprintw(3, goban->size * 4 + 4 + start_xpos, "%s", lastmove);
+    mvprintw(4, goban->size * 4 + 4 + start_xpos, "%s", lastmove);
     attron(COLOR_PAIR(BLACK_STONE_COLOR));
 
     // Place stones
