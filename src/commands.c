@@ -174,6 +174,7 @@ int HandicapCommand(Goban* goban, int n_tokens, char tokens[][256])
         ResetGoban(goban);
         goban->handicap = atoi(tokens[1]);
         SetHandicap(goban, goban->handicap);
+        goban->color = 'w';
     }
     return 1;
 }
@@ -235,7 +236,7 @@ struct GoCommand commands[] = {
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
     {"n", NextCommand, 0, "Shows the next move"},
     {"b", BackCommand, 0, "Shows the previous move"},
-    {"exit", ExitCommand, 1, "Exit program"},
+    {"exit", ExitCommand, 0, "Exit program"},
     { 0 }
 };
 

@@ -138,9 +138,11 @@ int main(int argc, char** argv)
     int host = -1;
     char host_col = 'w';
     char client_col = 'b';
+    int opponents_turn = 0;
     if (flags.is_server && flags.port)
     {
         client = SetupServer(flags.port);
+        opponents_turn = 1;
         if (flags.swap)
         {
             char t = host_col;
@@ -159,6 +161,7 @@ int main(int argc, char** argv)
     else if (flags.host && flags.port)
     {
         host = SetupClient(flags.host, flags.port);
+        
         int setup_finished = 0;
         while (!setup_finished)
         {
@@ -314,15 +317,21 @@ int main(int argc, char** argv)
 
             FreeResponse(response);
         } 
-        else if (host >= 0 || client >= 0) // If game is over network
+        else if ((host >= 0) || (client >= 0)) // If game is over network
         {
+            if (HistorySize() == 1)
+            {
+                if (host >= 0)
+                    opponents_turn = (goban.color == host_col) ? 1 : 0;
+                if (client >= 0)
+                    opponents_turn = (goban.color == client_col) ? 1 : 0;
+            }
             struct pollfd inputs[2];
             inputs[0].fd = 0;
             inputs[0].events = POLLIN;
             inputs[1].fd = (host >= 0) ? host : client;
             inputs[1].events = POLLIN;
-            char opponent_color = (host >= 0) ? host_col : client_col;
-            if (goban.color == opponent_color)
+            if (opponents_turn)
                 printw("Waiting on opponent...\n");
             mvprintw(getcury(stdscr), 0, ": ");
             echo();
@@ -341,8 +350,11 @@ int main(int argc, char** argv)
                     input[strcspn(input, "\n")] = '\0';
 
                     running = ProcessCommand(&goban, input);
-                    if (running == MOVE && goban.color != opponent_color)
+                    if (running == MOVE && !opponents_turn)
+                    {
                         SubmitMove(&goban, input);
+                        opponents_turn = 1;
+                    }
                     if (is_networked_command(input))
                         SendCommand(user, input);
                 }
@@ -351,13 +363,22 @@ int main(int argc, char** argv)
                     char* response = RecvCommand(user);
                     if (response == NULL)
                     {
-                        printw("Connection to opponent broken\n");
-                        break;
+                        snprintf(goban.notes, NOTES_LENGTH,
+                                "Opponent disconnected\n");
+                        printw("Opponent disconnected!\n");
+                        printf("Opponent disconnected!\n");
+                        host = -1;
+                        client = -1;
+                        free(response);
+                        continue;
                     }
                     printw("%s\n", response);
                     running = ProcessCommand(&goban, response);
-                    if (running == MOVE && goban.color == opponent_color)
+                    if (running == MOVE && opponents_turn)
+                    {
                         SubmitMove(&goban, response);
+                        opponents_turn = 0;
+                    }
                     free(response);
                 }
             }
