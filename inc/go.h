@@ -30,7 +30,7 @@ typedef struct
     int bpris;
     float komi;
     int handicap;
-    char result[8];
+    char result[10];
 } Goban;
 
 void ResetGoban(Goban* goban);

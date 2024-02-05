@@ -130,7 +130,7 @@ void LoadSGF(Goban* goban, char* sgf)
         else if (md_token[0] == 'R' && md_token[1] == 'E')
         {
             md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
-            strlcpy(goban->result, md_token, 8);
+            strlcpy(goban->result, md_token, 10);
         }
     } while ((md_token = strtok_r(NULL, "[]", &meta_data_save_ptr)) != NULL);
 
