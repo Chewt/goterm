@@ -63,6 +63,32 @@ int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
     }
     return 1;
 }
+int NextCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if ((n_tokens != 1 && n_tokens != 2) || strcmp(tokens[0], "n"))
+        return -1;
+    if (n_tokens == 1)
+        ViewHistory(goban, GetViewIndex() + 1);
+    else if (n_tokens == 2)
+    {
+        int n = strtol(tokens[1], NULL, 10);
+        ViewHistory(goban, GetViewIndex() + n);
+    }
+    return 1;
+}
+int BackCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if ((n_tokens != 1 && n_tokens != 2) || strcmp(tokens[0], "b"))
+        return -1;
+    if (n_tokens == 1)
+        ViewHistory(goban, GetViewIndex() - 1);
+    else if (n_tokens == 2)
+    {
+        int n = strtol(tokens[1], NULL, 10);
+        ViewHistory(goban, GetViewIndex() - n);
+    }
+    return 1;
+}
 int ResetCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 || strcmp(tokens[0], "reset"))
@@ -192,6 +218,8 @@ struct GoCommand commands[] = {
     {"komi", KomiCommand, 1, "Show current komi or set new komi"},
     {"say", SayCommand, 1, "Send a message to other player"},
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
+    {"n", NextCommand, 0, "Shows the next move"},
+    {"b", BackCommand, 0, "Shows the previous move"},
     {"exit", ExitCommand, 1, "Exit program"},
     { 0 }
 };
@@ -314,8 +342,9 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     int terms = 0;
     char tokens[256][256];
     terms = tokenize_command(input, tokens);
-    Point p;
-    if (terms == 0 || !ValidateInput(goban, &p, tokens[0]))
+    Move m;
+    m.color = goban->color;
+    if (terms == 0 || !ValidateInput(goban, &m.p, tokens[0]))
     {
         if (goban->notes)
         {
@@ -326,7 +355,7 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
             printf("Invalid Input: %s\n", tokens[0]);
         return 1;
     }
-    if (!ValidateMove(goban, p))
+    if (!ValidateMove(goban, m))
     {
         if (goban->notes)
             snprintf(goban->notes, NOTES_LENGTH,"Invalid Move\n");

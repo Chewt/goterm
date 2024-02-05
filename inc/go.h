@@ -36,14 +36,16 @@ void ResetGoban(Goban* goban);
 void ClearBoard(Goban* goban);
 void AddHistory(Goban* goban);
 void UndoHistory(Goban* goban, int n);
+void ViewHistory(Goban* goban, int n);
 void ScoreBoard(Goban* goban);
 int RemoveDeadGroups(Goban* goban, char input[256]);
 void PointDiff(Goban* goban, char resp[256]);
 int HistorySize();
+int GetViewIndex();
 Goban* GetHistory(int i);
 
 int ValidateInput(Goban* goban, Point* p, char input[256]);
-int ValidateMove(Goban* goban, Point move);
+int ValidateMove(Goban* goban, Move move);
 
 // Is the current window size big enough to print the board
 int BoardFitsScreen(Goban* goban);
