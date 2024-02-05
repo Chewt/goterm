@@ -35,7 +35,7 @@ struct GoCommand
 
 int NameCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
-    if (n_tokens <= 3 || strcmp(tokens[0], "name"))
+    if (n_tokens < 3 || strcmp(tokens[0], "name"))
         return -1;
     char* color = to_lowercase(tokens[1]);
 
