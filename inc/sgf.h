@@ -1,8 +1,10 @@
 #ifndef SGF_H
 #define SGF_H 
 
-#include "gtp.h"
+#include "go.h"
 
-char* CreateSGF(Engine* e);
+char* CreateSGF();
+void LoadSGF(Goban* goban, char* sgf);
+char* ReadSGFFile(char* filename);
 
 #endif 

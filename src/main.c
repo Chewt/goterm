@@ -22,6 +22,7 @@ struct flags {
   char *host;
   int port;
   int swap;
+  char* sgf;
 };
 
 const char *argp_program_bug_address = "Hayden Johnson <hajohn100@gmail.com> or at https://github.com/Chewt/goterm";
@@ -53,6 +54,9 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
         case 'p':
             flags->port = atoi(arg);
             break;
+        case 'f':
+            flags->sgf = ReadSGFFile(arg);
+            break;
         case 500:
             flags->swap = 1;
             break;
@@ -71,6 +75,7 @@ int main(int argc, char** argv)
     flags.host = NULL;
     flags.port = 5000;
     flags.swap = 0;
+    flags.sgf = NULL;
     
     // gnugo shortcut
     char gnugo[32] = "gnugo --mode gtp";
@@ -82,11 +87,14 @@ int main(int argc, char** argv)
     goban.notes = notes;
     ResetGoban(&goban);
     goban.color = 'b';
+    strcpy(goban.blackname, "Black");
+    strcpy(goban.whitename, "White");
 
     // argp parsing args
     struct argp_option options[] =
     {
         { "size", 's', "NUM", 0, "Size of the goboard. Default is 19."},
+        { "sgf", 'f', "FILE", 0, "An optional SGF file to load"},
         {0,0,0,0, "Engines:", 7},
         { "engine", 'e', "PATH", 0, "Supplies a go engine to play as White. To use GNUgo you can use -e \"gnugo --mode gtp\"."},
         { "gnugo", 'g', 0, 0, "Play against GNUgo. Functionally identical to the example given for -e."},
@@ -117,6 +125,7 @@ int main(int argc, char** argv)
     {
         StartEngine(&e, flags.e_path);
         //printw("%s %s\n", e.name, e.version);
+        strncpy(goban.whitename, e.name, 100);
         char** response = AllocateResponse();
         SendClearBoard(e.write, 1);
         if (!GetResponse(e.read, response, 1))
@@ -183,6 +192,12 @@ int main(int argc, char** argv)
 
     int running = 1;
 
+    if (flags.sgf)
+    {
+        LoadSGF(&goban, flags.sgf);
+        free(flags.sgf);
+    }
+
     // Make sure board can fit screen
     if (!BoardFitsScreen(&goban)) 
     {
@@ -225,6 +240,7 @@ int main(int argc, char** argv)
             if (host >= 0 || client >= 0) // Make sure both players agree
             {
                 printw("Confirming with opponent...\n");
+                refresh();
                 if (host >= 0) 
                 {
                     SendCommand(host, resp);
@@ -233,7 +249,7 @@ int main(int argc, char** argv)
                     {
                       snprintf(goban.notes, NOTES_LENGTH,
                                "Opponent disagrees with result, play on.\n");
-                      UndoHistory(&goban);
+                      UndoHistory(&goban, 1);
                       free(confirm);
                       running = 1;
                       continue;
@@ -248,7 +264,7 @@ int main(int argc, char** argv)
                       snprintf(goban.notes, NOTES_LENGTH,
                                "Opponent disagrees with result, play on.\n");
                         SendCommand(client, "deny");
-                        UndoHistory(&goban);
+                        UndoHistory(&goban, 1);
                         free(opponent_diff);
                         running = 1;
                         continue;
@@ -258,7 +274,7 @@ int main(int argc, char** argv)
                 }
             }
             AddHistory(&goban);
-            char* sgf = CreateSGF(&e);
+            char* sgf = CreateSGF();
             if (sgf)
             {
                 printw("%s\n\n", sgf);
@@ -386,6 +402,10 @@ int main(int argc, char** argv)
             client_col = t;
             e_col = (e_col == 'w') ? 'b' : 'w';
             running = 1;
+            char temp[100];
+            strncpy(temp, goban.whitename, 100);
+            strncpy(goban.whitename, goban.blackname, 100);
+            strncpy(goban.blackname, temp, 100);
         }
     }
     endwin();

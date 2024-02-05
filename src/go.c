@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ncurses.h>
-#include <wchar.h>
 #include "go.h"
 #include "stack.h"
 #include "commands.h"
@@ -13,6 +12,7 @@ char coords[] = {
 
 Goban history[500];
 int h_counter = 0;
+int view_idx = 0;
 
 // Return 0 if input isn't in move format, else returns 1 and populates p
 int ValidateInput(Goban* goban, Point* p, char input[256])
@@ -52,22 +52,40 @@ void AddHistory(Goban* goban)
 {
     memcpy(history + h_counter, goban, sizeof(Goban));
     h_counter++;
+    view_idx = h_counter - 1;
 }
 
-void UndoHistory(Goban* goban)
+void UndoHistory(Goban* goban, int n)
 {
-    if (h_counter > 0)
+    if (h_counter - n >= 0)
     {
-        h_counter--;
+        h_counter -= n;
+        view_idx = h_counter - 1;
         memcpy(goban, history + h_counter, sizeof(Goban));
     }
 }
+
+void ViewHistory(Goban* goban, int n)
+{
+    
+    if (n < 0)
+        n = 0;
+    if (n >= HistorySize())
+        n = HistorySize() - 1;
+    view_idx = n % HistorySize();
+    memcpy(goban, history + n, sizeof(Goban));
+}
+
 
 Goban* GetHistory(int i)
 {
     return history + i;
 }
 
+int GetViewIndex()
+{
+    return view_idx;
+}
 int HistorySize()
 {
     return h_counter;
@@ -83,6 +101,8 @@ void ResetGoban(Goban* goban)
     goban->komi = 6.5;
     goban->color = 'b';
     goban->result[0] = '\0';
+    goban->blackname[0] = '\0';
+    goban->whitename[0] = '\0';
     goban->lastmove.color = 'b';
     goban->lastmove.p.col = 0;
     goban->lastmove.p.row = 0;
@@ -555,18 +575,16 @@ int IsRepeat(Goban* goban)
     return 0;
 }
 
+
 /* Validates a move, and if it is valid makes the move*/
-int ValidateMove(Goban* goban, Point move)
+int ValidateMove(Goban* goban, Move move)
 {
-    if (goban->board[move.row][move.col] != ' ')
+    if (goban->board[move.p.row][move.p.col] != ' ')
         return 0;
     Goban tempgoban;
     memcpy(&tempgoban, goban, sizeof(Goban));
-    tempgoban.board[move.row][move.col] = goban->color;
-    Move m;
-    m.color = goban->color;
-    m.p = move;
-    tempgoban.lastmove = m;
+    tempgoban.board[move.p.row][move.p.col] = goban->color;
+    tempgoban.lastmove = move;
     tempgoban.color = (tempgoban.color == 'b') ? 'w' : 'b';
     char search[19][19];
     memset(search, 0, 361);
@@ -592,7 +610,7 @@ int ValidateMove(Goban* goban, Point move)
             }
         }
     }
-    if (!CountLiberties(&tempgoban, move, search) || IsRepeat(&tempgoban))
+    if (!CountLiberties(&tempgoban, move.p, search) || IsRepeat(&tempgoban))
         return 0;
     else
     {
@@ -727,7 +745,7 @@ void PrintBoardw(Goban* goban)
                 }
             }
         }
-
+        goban->showscore = 0;
     }
     else if (goban->size == 19)
     {
