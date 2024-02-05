@@ -33,6 +33,30 @@ struct GoCommand
     char* help;
 };
 
+int NameCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if (n_tokens <= 3 || strcmp(tokens[0], "name"))
+        return -1;
+    char* color = to_lowercase(tokens[1]);
+
+    char* name = NULL;
+    if (!strcmp(color, "black"))
+        name = goban->blackname;
+    if (!strcmp(color, "white"))
+        name = goban->whitename;
+    if (name == NULL)
+        return -1;
+    int idx = 0;
+    int i;
+    for (i = 2; i < n_tokens; ++i)
+    {
+        idx += snprintf(name + idx,
+                        NOTES_LENGTH - strlen(goban->notes), "%s ", tokens[i]);
+    }
+    name[idx - 1] = '\0';
+    return 1;
+}
+
 int SGFCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 2 || strcmp(tokens[0], "sgf"))
@@ -214,9 +238,14 @@ int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256])
         return -1;
     while (token != NULL)
     {
-        char* lowercase_token = to_lowercase(token);
-        memcpy(tokens[terms], lowercase_token, strlen(lowercase_token) + 1);
-        free(lowercase_token);
+        if (terms == 0) // only want first token to be lowercase
+        {
+            char* lowercase_token = to_lowercase(token);
+            memcpy(tokens[terms], lowercase_token, strlen(lowercase_token) + 1);
+            free(lowercase_token);
+        }
+        else
+            memcpy(tokens[terms], token, strlen(token) + 1);
         token = strtok_r(NULL, " ", &save_ptr);
         terms++;
     }
@@ -233,6 +262,7 @@ struct GoCommand commands[] = {
     {"komi", KomiCommand, 1, "Show current komi or set new komi"},
     {"say", SayCommand, 1, "Send a message to other player"},
     {"handicap", HandicapCommand, 1, "Set handicap on board."},
+    {"name", NameCommand, 1, "Change the name of black or white player\nUsage: name black|white NAME"},
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
     {"n", NextCommand, 0, "Shows the next move"},
     {"b", BackCommand, 0, "Shows the previous move"},
