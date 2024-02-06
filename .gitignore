@@ -1,4 +1,7 @@
 .ccls*
+.cache/
 obj/**
 goterm
 vgcore*
+*.json
+*.sgf
