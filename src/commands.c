@@ -62,6 +62,12 @@ int SGFCommand(Goban* goban, int n_tokens, char tokens[][256])
     if (n_tokens != 2 || strcmp(tokens[0], "sgf"))
         return -1;
     char* sgf = CreateSGF();
+    if (sgf == NULL)
+    {
+      snprintf(goban->notes, NOTES_LENGTH,
+               "Please make at least one move before writing a sgf\n");
+      return 1;
+    }
     FILE* f = fopen(tokens[1], "w");
     fwrite(sgf, 1, strlen(sgf), f);
     fclose(f);

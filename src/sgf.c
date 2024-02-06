@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 
 #include "sgf.h"
@@ -9,6 +10,8 @@
 
 char* CreateSGF()
 {
+    if (HistorySize() <= 1)
+        return NULL;
     time_t rawtime = time(NULL);
     struct tm* ptm = localtime(&rawtime);
 
@@ -16,6 +19,7 @@ char* CreateSGF()
     int index = 0;
     
     Goban* current = GetHistory(0);
+    Goban* last = GetHistory(HistorySize() - 1);
 
 #ifdef VERSION
     const char* version = VERSION;
@@ -24,17 +28,16 @@ char* CreateSGF()
 #endif
 
     index = sprintf(sgf + index, "(;FF[4]GM[1]SZ[%d]AP[Goterm:%s]\n\n", 
-            current->size, version);
-    index += sprintf(sgf + index, "PB[%s]\n", current->blackname);
-    index += sprintf(sgf + index, "PW[%s]\n", current->whitename);
+            last->size, version);
+    index += sprintf(sgf + index, "PB[%s]\n", last->blackname);
+    index += sprintf(sgf + index, "PW[%s]\n", last->whitename);
     index += sprintf(sgf + index, "DT[");
     index += strftime(sgf + index, 11, "%F", ptm);
     index += sprintf(sgf + index, "]\n");
     index += sprintf(sgf + index, "KM[");
-    index += sprintf(sgf + index, "%.1f", current->komi);
+    index += sprintf(sgf + index, "%.1f", last->komi);
     index += sprintf(sgf + index, "]\n");
-    index += sprintf(sgf + index, "HA[%d]\n", current->handicap);
-    Goban* last = GetHistory(HistorySize() - 1);
+    index += sprintf(sgf + index, "HA[%d]\n", last->handicap);
     if (last->result[0] != '\0')
     {
         index += sprintf(sgf + index, "RE[");
@@ -105,12 +108,14 @@ void LoadSGF(Goban* goban, char* sgf)
         if (md_token[0] == 'P' && md_token[1] == 'W')
         {
             md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
-            strncpy(goban->whitename, md_token, 100);
+            bzero(goban->whitename, 100);
+            strncpy(goban->whitename, md_token, 99);
         }
         else if (md_token[0] == 'P' && md_token[1] == 'B')
         {
             md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
-            strncpy(goban->blackname, md_token, 100);
+            bzero(goban->blackname, 100);
+            strncpy(goban->blackname, md_token, 99);
         }
         else if (md_token[0] == 'K' && md_token[1] == 'M')
         {
@@ -130,7 +135,8 @@ void LoadSGF(Goban* goban, char* sgf)
         else if (md_token[0] == 'R' && md_token[1] == 'E')
         {
             md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
-            strncpy(goban->result, md_token, 10);
+            bzero(goban->result, 10);
+            strncpy(goban->result, md_token, 9);
         }
     } while ((md_token = strtok_r(NULL, "[]", &meta_data_save_ptr)) != NULL);
 
