@@ -61,7 +61,7 @@ void UndoHistory(Goban* goban, int n)
     {
         h_counter -= n;
         view_idx = h_counter - 1;
-        memcpy(goban, history + h_counter, sizeof(Goban));
+        memcpy(goban, history + h_counter - 1, sizeof(Goban));
     }
 }
 

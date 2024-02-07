@@ -86,11 +86,16 @@ int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
         UndoHistory(goban, 1);
     else if (n_tokens == 2)
     {
-        int n = strtol(tokens[1], NULL, 10);
-        UndoHistory(goban, (n) ? n : 1);
+        int n = 1;
+        if (!strcmp(tokens[1], "here"))
+            n = HistorySize() - (GetViewIndex() + 1);
+        else
+            n = strtol(tokens[1], NULL, 10);
+        UndoHistory(goban, n);
     }
     return 1;
 }
+
 int NextCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if ((n_tokens != 1 && n_tokens != 2) || strcmp(tokens[0], "n"))
@@ -259,7 +264,7 @@ int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256])
 }
 
 struct GoCommand commands[] = {
-    {"undo", UndoCommand, 1, "Undo last move"},
+    {"undo", UndoCommand, 1, "Undo last move.\nOptionally you can supply a number of moves to undo, or the word \"here\" to undo to the board state currently in view"},
     {"reset", ResetCommand, 1, "Reset board to empty"},
     {"size", SizeCommand, 1, "Change size of board. eg: size 19"},
     {"pass", PassCommand, 1, "Pass your turn"},
