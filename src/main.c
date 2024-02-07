@@ -365,8 +365,22 @@ int main(int argc, char** argv)
                         SubmitMove(&goban, input);
                         opponents_turn = 1;
                     }
-                    if (is_networked_command(input))
-                        SendCommand(user, input);
+                    if (IsNetworkedCommand(input))
+                    { // This is a hack and I'm not proud
+                        if (!strncmp(input, "undo", 4))
+                        {
+                            snprintf(input, COMMAND_LENGTH, "goto %d", GetViewIndex());
+                            SendCommand(user, input);
+                            snprintf(input, COMMAND_LENGTH, "undo here");
+                            SendCommand(user, input);
+                            if (host >= 0)
+                                opponents_turn = (goban.color == host_col) ? 1 : 0;
+                            if (client >= 0)
+                                opponents_turn = (goban.color == client_col) ? 1 : 0;
+                        }
+                        else
+                            SendCommand(user, input);
+                    }
                 }
                 if (inputs[1].revents & POLLIN) // input from Network Socket
                 {
@@ -387,6 +401,13 @@ int main(int argc, char** argv)
                     {
                         SubmitMove(&goban, response);
                         opponents_turn = 0;
+                    }
+                    if (!strncmp(response, "undo", 4))
+                    {
+                        if (host >= 0)
+                            opponents_turn = (goban.color == host_col) ? 1 : 0;
+                        if (client >= 0)
+                            opponents_turn = (goban.color == client_col) ? 1 : 0;
                     }
                     free(response);
                 }

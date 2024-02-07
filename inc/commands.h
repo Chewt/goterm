@@ -13,7 +13,7 @@ typedef struct
 
 } Command;
 
-int is_networked_command(char input[COMMAND_LENGTH]);
+int IsNetworkedCommand(char input[COMMAND_LENGTH]);
 int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH]);
 int SubmitMove(Goban* goban, char input[COMMAND_LENGTH]);
 int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256]);

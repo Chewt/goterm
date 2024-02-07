@@ -103,12 +103,12 @@ int GotoCommand(Goban* goban, int n_tokens, char tokens[][256])
     {
         int n;
         if (!strcmp(tokens[1], "start"))
-            n = 1;
+            n = 0;
         else if (!strcmp(tokens[1], "end"))
             n = HistorySize() - 1;
         else
             n = strtol(tokens[1], NULL, 10);
-        n = (n) ? n : GetViewIndex();
+        n = (n >= 0) ? n : GetViewIndex();
         ViewHistory(goban, n);
     }
     return 1;
@@ -299,31 +299,7 @@ struct GoCommand commands[] = {
     { 0 }
 };
 
-int is_networked_command(char input[COMMAND_LENGTH])
-{
-    int terms;
-    char input_copy[COMMAND_LENGTH];
-    memcpy(input_copy, input, COMMAND_LENGTH);
-    char tokens[256][256];
-    terms = tokenize_command(input_copy, tokens);
-    if (terms <= 0)
-        return 0;
-
-    if (!strcmp(tokens[0], "help"))
-        return 0;
-    int i = 0;
-    while (commands[i].name != NULL)
-    {
-        if (!strcmp(commands[i].name, tokens[0]))
-        {
-            return commands[i].is_networked;
-        }
-        i++;
-    }
-    return 1;
-}
-
-int AutoComplete(Goban* goban, char* input)
+int AutoComplete(char* input)
 {
     int matches = 0;
     int last_match = -1;
@@ -347,6 +323,24 @@ int AutoComplete(Goban* goban, char* input)
     if (matches > 1)
         return -2;
     return -1;
+}
+
+int IsNetworkedCommand(char input[COMMAND_LENGTH])
+{
+    int terms;
+    char input_copy[COMMAND_LENGTH];
+    memcpy(input_copy, input, COMMAND_LENGTH);
+    char tokens[256][256];
+    terms = tokenize_command(input_copy, tokens);
+    if (terms <= 0)
+        return 0;
+
+    if (!strcmp(tokens[0], "help"))
+        return 0;
+    int idx = AutoComplete(input);
+    if (idx >= 0)
+        return commands[idx].is_networked;
+    return 1;
 }
 
 int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
@@ -382,7 +376,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     }
     else // Try commands
     {
-        i = AutoComplete(goban, tokens[0]);
+        i = AutoComplete(tokens[0]);
         if (i >= 0)
         {
             return_val = commands[i].func(goban, terms, tokens);
