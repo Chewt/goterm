@@ -57,7 +57,7 @@ void AddHistory(Goban* goban)
 
 void UndoHistory(Goban* goban, int n)
 {
-    if (h_counter - n >= 0)
+    if (h_counter - n > 0)
     {
         h_counter -= n;
         view_idx = h_counter - 1;
