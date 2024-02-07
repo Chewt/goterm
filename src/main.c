@@ -252,7 +252,7 @@ int main(int argc, char** argv)
                     continue;
                 }
                 ScoreBoard(&goban);
-                PointDiff(&goban, resp);
+                UpdateResult(&goban);
             }
             if (host >= 0 || client >= 0) // Make sure both players agree
             {

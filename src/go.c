@@ -500,7 +500,7 @@ int RemoveDeadGroups(Goban* goban, char input[256])
     return 1;
 }
 
-void PointDiff(Goban* goban, char resp[256])
+void UpdateResult(Goban* goban)
 {
     int black_score = 0;
     int white_score = 0;
@@ -524,12 +524,11 @@ void PointDiff(Goban* goban, char resp[256])
     if (diff < 0)
     {
         diff *= -1;
-        idx += snprintf(resp, 256, "B+");
+        idx += snprintf(goban->result, 256, "B+");
     }
     else if (diff > 0)
-        idx += snprintf(resp, 256, "W+");
-    snprintf(resp + idx, 256, "%.1f", diff);
-    strcpy(goban->result, resp);
+        idx += snprintf(goban->result, 256, "W+");
+    snprintf(goban->result + idx, 256, "%.1f", diff);
 }
 
 void ScoreBoard(Goban* goban)
