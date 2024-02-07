@@ -337,7 +337,7 @@ int IsNetworkedCommand(char input[COMMAND_LENGTH])
 
     if (!strcmp(tokens[0], "help"))
         return 0;
-    int idx = AutoComplete(input);
+    int idx = AutoComplete(tokens[0]);
     if (idx >= 0)
         return commands[idx].is_networked;
     return 1;
@@ -398,7 +398,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
 
 int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
 {
-    if (GetViewIndex() < (HistorySize() - 1))
+    if (GetViewIndex() != (HistorySize() - 1))
         ViewHistory(goban, HistorySize() - 1);
     int terms = 0;
     char tokens[256][256];
