@@ -96,6 +96,25 @@ int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
+int GotoCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if ((n_tokens != 2) || strcmp(tokens[0], "goto"))
+        return -1;
+    else if (n_tokens == 2)
+    {
+        int n;
+        if (!strcmp(tokens[1], "start"))
+            n = 1;
+        else if (!strcmp(tokens[1], "end"))
+            n = HistorySize() - 1;
+        else
+            n = strtol(tokens[1], NULL, 10);
+        n = (n) ? n : GetViewIndex();
+        ViewHistory(goban, n);
+    }
+    return 1;
+}
+
 int NextCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if ((n_tokens != 1 && n_tokens != 2) || strcmp(tokens[0], "n"))
@@ -109,6 +128,7 @@ int NextCommand(Goban* goban, int n_tokens, char tokens[][256])
     }
     return 1;
 }
+
 int BackCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if ((n_tokens != 1 && n_tokens != 2) || strcmp(tokens[0], "b"))
@@ -277,6 +297,7 @@ struct GoCommand commands[] = {
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
     {"n", NextCommand, 0, "Shows the next move"},
     {"b", BackCommand, 0, "Shows the previous move"},
+    {"goto", GotoCommand, 0, "Go to a specific move in the game"},
     {"exit", ExitCommand, 0, "Exit program"},
     { 0 }
 };
