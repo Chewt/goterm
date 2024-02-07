@@ -160,7 +160,7 @@ int main(int argc, char** argv)
         if (flags.size != 19)
         {
             char command[10] = "";
-            snprintf(command, 9, "size %d", flags.size);
+            snprintf(command, 10, "size %d", flags.size);
             SendCommand(client, command);
         }
         if (flags.handicap != 0)
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
     {
         while (!BoardFitsScreen(&goban))
             goban.size--;
-        snprintf(goban.notes, NOTES_LENGTH,
+        WriteNotes(&goban,
                  "Warning! Current size is too big for screen!\nMax size that "
                  "will fit is %d\n",
                  goban.size);
@@ -264,7 +264,7 @@ int main(int argc, char** argv)
                     char* confirm = RecvCommand(host);
                     if (!strcmp(confirm, "deny"))
                     {
-                      snprintf(goban.notes, NOTES_LENGTH,
+                      WriteNotes(&goban,
                                "Opponent disagrees with result, play on.\n");
                       UndoHistory(&goban, 1);
                       free(confirm);
@@ -278,7 +278,7 @@ int main(int argc, char** argv)
                     char* opponent_diff = RecvCommand(client);
                     if (strcmp(opponent_diff, resp))
                     {
-                      snprintf(goban.notes, NOTES_LENGTH,
+                      WriteNotes(&goban,
                                "Opponent disagrees with result, play on.\n");
                         SendCommand(client, "deny");
                         UndoHistory(&goban, 1);
@@ -377,8 +377,7 @@ int main(int argc, char** argv)
                     char* response = RecvCommand(user);
                     if (response == NULL)
                     {
-                        snprintf(goban.notes, NOTES_LENGTH,
-                                "Opponent disconnected\n");
+                        WriteNotes(&goban, "Opponent disconnected\n");
                         printw("Opponent disconnected!\n");
                         printf("Opponent disconnected!\n");
                         host = -1;

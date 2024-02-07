@@ -53,8 +53,7 @@ int RenameCommand(Goban* goban, int n_tokens, char tokens[][256])
     int i;
     for (i = 2; i < n_tokens; ++i)
     {
-        idx += snprintf(name + idx,
-                        NOTES_LENGTH - strlen(goban->notes), "%s ", tokens[i]);
+        idx += snprintf(name + idx, NAME_LENGTH, "%s ", tokens[i]);
     }
     name[idx - 1] = '\0';
     return 1;
@@ -67,17 +66,14 @@ int SGFCommand(Goban* goban, int n_tokens, char tokens[][256])
     char* sgf = CreateSGF();
     if (sgf == NULL)
     {
-      snprintf(goban->notes, NOTES_LENGTH,
-               "Please make at least one move before writing a sgf\n");
+        WriteNotes(goban, "Please make at least one move before writing a sgf\n");
       return 1;
     }
     FILE* f = fopen(tokens[1], "w");
     fwrite(sgf, 1, strlen(sgf), f);
     fclose(f);
     free(sgf);
-    snprintf(goban->notes, NOTES_LENGTH,
-            "sgf saved to %s\n",
-            tokens[1]);
+    WriteNotes(goban, "sgf saved to %s\n", tokens[1]);
     return 1;
 }
 
@@ -164,7 +160,7 @@ int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
         int t = goban->size;
         while (!BoardFitsScreen(goban))
             goban->size--;
-        snprintf(goban->notes, NOTES_LENGTH,
+        WriteNotes(goban,
                  "Warning! Current size is too big for screen!\nMax size that "
                  "will fit is %d\n",
                  goban->size);
@@ -212,7 +208,7 @@ int KomiCommand(Goban* goban, int n_tokens, char tokens[][256])
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
     if (n_tokens == 1)
-        snprintf(goban->notes, NOTES_LENGTH, "Komi is %.1f\n", goban->komi);
+        WriteNotes(goban, "Komi is %.1f\n", goban->komi);
     else if (n_tokens == 2)
     {
         ResetGoban(goban);
@@ -226,7 +222,7 @@ int HandicapCommand(Goban* goban, int n_tokens, char tokens[][256])
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
     if (n_tokens == 1)
-        snprintf(goban->notes, NOTES_LENGTH, "Handicap is %d\n", goban->handicap);
+        WriteNotes(goban, "Handicap is %d\n", goban->handicap);
     else if (n_tokens == 2)
     {
         ResetGoban(goban);
@@ -240,15 +236,13 @@ int SayCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if (n_tokens <= 1)
         return -1;
-    int idx = 0;
     int i;
-    idx += snprintf(goban->notes + idx, NOTES_LENGTH - strlen(goban->notes), "Message: \"");
+    WriteNotes(goban, "Message: \"");
     for (i = 1; i < n_tokens; ++i)
     {
-        idx += snprintf(goban->notes + idx,
-                        NOTES_LENGTH - strlen(goban->notes), "%s ", tokens[i]);
+        AppendNotes(goban, "%s ", tokens[i]);
     }
-    snprintf(goban->notes + idx - 1, NOTES_LENGTH - strlen(goban->notes), "\"\n");
+    AppendNotes(goban, "\"\n");
     return 1;
 }
 
@@ -296,7 +290,7 @@ struct GoCommand commands[] = {
     {"komi", KomiCommand, 1, "Show current komi or set new komi"},
     {"say", SayCommand, 1, "Send a message to other player"},
     {"handicap", HandicapCommand, 1, "Set handicap on board."},
-    {"rename", RenameCommand, 1, "Change the name of black or white player\nUsage: name black|white NAME"},
+    {"rename", RenameCommand, 1, "Change the name of black or white player\nUsage: rename black|white NAME"},
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
     {"next", NextCommand, 0, "Shows the next move"},
     {"back", BackCommand, 0, "Shows the previous move"},
@@ -370,33 +364,20 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
     if (!strcmp(tokens[0], "help"))
     {
         i = 0;
-        int chars_printed = 0;
         while (commands[i].name != NULL)
         {
             if (terms > 1 && !strcmp(tokens[1], commands[i].name))
             {
-                chars_printed += snprintf(
-                        goban->notes,
-                        NOTES_LENGTH - chars_printed,
-                        "%s - %s\n", commands[i].name, commands[i].help);
+                WriteNotes(goban, "%s - %s\n", commands[i].name, commands[i].help);
                 return 1;
             }
             if (goban->notes == NULL)
-            {
                 printf("%s - %s\n", commands[i].name, commands[i].help);
-            }
             else
-            {
-              chars_printed += snprintf(
-                      goban->notes + chars_printed,
-                      NOTES_LENGTH - chars_printed,
-                      "%s%c", commands[i].name, (i % 3 == 2) ? '\n' : '\t');
-            }
+                AppendNotes(goban, "%s%c", commands[i].name, (i % 3 == 2) ? '\n' : '\t');
             i++;
         }
-        chars_printed += snprintf(
-                goban->notes + chars_printed,
-                NOTES_LENGTH - chars_printed, "\n");
+        AppendNotes(goban, "\n");
         return 1;
     }
     else // Try commands
@@ -407,16 +388,14 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
             return_val = commands[i].func(goban, terms, tokens);
             if (return_val == -1)
             {
-                snprintf(goban->notes, NOTES_LENGTH,
-                        "Invalid usage of command %s\n",
-                        commands[i].name);
+                WriteNotes(goban, "Invalid usage of command %s\n", commands[i].name);
                 return 1;
             }
             return return_val;
         }
         else if (i == -2)
         {
-            snprintf(goban->notes, NOTES_LENGTH, "Command is ambiguous\n");
+            WriteNotes(goban, "Command is ambiguous\n");
             return 1;
         }
     }
@@ -436,8 +415,7 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     {
         if (goban->notes)
         {
-            snprintf(goban->notes, NOTES_LENGTH - strlen(goban->notes),
-                     "Invalid Input: %s\n", tokens[0]);
+            WriteNotes(goban, "Invalid Input: %s\n", tokens[0]);
         }
         else
             printf("Invalid Input: %s\n", tokens[0]);
@@ -446,7 +424,7 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     if (!ValidateMove(goban, m))
     {
         if (goban->notes)
-            snprintf(goban->notes, NOTES_LENGTH,"Invalid Move\n");
+            WriteNotes(goban, "Invalid Move\n");
         else
             printf("Invalid Move\n");
     }
