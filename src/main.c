@@ -131,7 +131,6 @@ int main(int argc, char** argv)
     if (flags.e_path)
     {
         StartEngine(&e, flags.e_path);
-        //printw("%s %s\n", e.name, e.version);
         strncpy(goban.whitename, e.name, 100);
         char** response = AllocateResponse();
         SendClearBoard(e.write, 1);
@@ -180,7 +179,6 @@ int main(int argc, char** argv)
         while (!setup_finished)
         {
             char* resp = RecvCommand(host);
-            //printw("%s", resp);
             if (resp == NULL)
             {
                 printw("Connection to other user broken\n");
@@ -359,8 +357,6 @@ int main(int argc, char** argv)
                 {
                     char input[COMMAND_LENGTH];
                     getnstr(input, COMMAND_LENGTH);
-                    //if (!fgets(input, 256, stdin))
-                        //exit(-1);
                     input[strcspn(input, "\n")] = '\0';
 
                     running = ProcessCommand(&goban, input);
@@ -402,8 +398,6 @@ int main(int argc, char** argv)
             mvprintw(getcury(stdscr), 0, ": ");
             refresh();
             getnstr(input, COMMAND_LENGTH);
-            //if (!fgets(input, 256, stdin))
-                //exit(-1);
             input[strcspn(input, "\n")] = 0;
 
             running = ProcessCommand(&goban, input);
