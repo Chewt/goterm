@@ -90,74 +90,133 @@ char* ReadSGFFile(char* filename)
     return sgf;
 }
 
+char* FindTagEnd(char* src)
+{
+    char* c = src;
+    while (*c != ']')
+    {
+        if (*c == '\0') // if we find a null char this isn't a tag
+            return c;
+        if (*c == '\\') // Skip sequence '\]'
+            c++;
+        c++;
+    }
+    return c;
+}
+
+/*  copy at most n chars of src to dst, up until the character ']' is found.
+ *  Ignores sequence '\]'
+ *
+ *  Returns pointer to location in src right after ']'.
+ */
+char* CopyTagContents(char* dst, char* src, int n)
+{
+    char* c = FindTagEnd(src);
+    *c = '\0';
+    strncpy(dst, src, n - 1);
+    *c = ']';
+    return c + 1;
+}
+
+// Return a pointer to the beginning of a label following a tag
+char* FindNextLabel(char* src)
+{
+    char* c = FindTagEnd(src);
+    return c + 1;
+}
+
+// Return a pointer to the opening '[' of a tag
+char* FindNextTag(char* src)
+{
+    char* c = src;
+    while ((*c != '[') && (*c != '\0'))
+        c++;
+    return c;
+}
+
 void LoadSGF(Goban* goban, char* sgf)
 {
     // Start from clean state
     ResetGoban(goban);
     char* token;
-    char* save_ptr_outer;
-    token = strtok_r(sgf, ";", &save_ptr_outer); // First token always '(' 
+    char* save_ptr;
+    token = strtok_r(sgf, ";", &save_ptr); // First token always '(' 
 
     // Get metadata
-    token = strtok_r(NULL, ";", &save_ptr_outer);
-    char* meta_data_save_ptr;
-    char* md_token;
-    md_token = strtok_r(token, "[]", &meta_data_save_ptr);
-    do 
+    token = strtok_r(NULL, ";", &save_ptr);
+    char* label = token;
+    char* label_end = FindNextTag(label);
+    while (label[0] != '\0')
     {
-        if (md_token[0] == 'P' && md_token[1] == 'W')
+        if (!strncmp(label, "PW", label_end - label))
         {
-            md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
             bzero(goban->whitename, 100);
-            strncpy(goban->whitename, md_token, 99);
+            CopyTagContents(goban->whitename, label_end + 1, 100);
         }
-        else if (md_token[0] == 'P' && md_token[1] == 'B')
+        else if (!strncmp(label, "PB", label_end - label))
         {
-            md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
             bzero(goban->blackname, 100);
-            strncpy(goban->blackname, md_token, 99);
+            CopyTagContents(goban->blackname, label_end + 1, 100);
         }
-        else if (md_token[0] == 'K' && md_token[1] == 'M')
+        else if (!strncmp(label, "KM", label_end - label))
         {
-            md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
-            goban->komi = strtof(md_token, NULL);
+            char* tag_end = FindTagEnd(label_end);
+            *tag_end = '\0';
+            goban->komi = strtof(label_end + 1, NULL);
+            *tag_end = ']';
         }
-        else if (md_token[0] == 'S' && md_token[1] == 'Z')
+        else if (!strncmp(label, "SZ", label_end - label))
         {
-            md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
-            goban->size = strtod(md_token, NULL);
+            char* tag_end = FindTagEnd(label_end);
+            *tag_end = '\0';
+            goban->size = strtod(label_end + 1, NULL);
+            *tag_end = ']';
         }
-        else if (md_token[0] == 'H' && md_token[1] == 'A')
+        else if (!strncmp(label, "HA", label_end - label))
         {
-            md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
-            SetHandicap(goban, strtod(md_token, NULL));
+            char* tag_end = FindTagEnd(label_end);
+            *tag_end = '\0';
+            SetHandicap(goban, strtod(label_end + 1, NULL));
+            *tag_end = ']';
         }
-        else if (md_token[0] == 'R' && md_token[1] == 'E')
+        else if (!strncmp(label, "RE", label_end - label))
         {
-            md_token = strtok_r(NULL, "[]", &meta_data_save_ptr);
             bzero(goban->result, 10);
-            strncpy(goban->result, md_token, 9);
+            CopyTagContents(goban->result, label_end + 1, 10);
         }
-    } while ((md_token = strtok_r(NULL, "[]", &meta_data_save_ptr)) != NULL);
+        label = FindNextLabel(label);
+        label_end = FindNextTag(label);
+    } 
 
     // Read Moves
-    while ((token = strtok_r(NULL, ";", &save_ptr_outer)) != NULL)
+    while ((token = strtok_r(NULL, ";", &save_ptr)) != NULL)
     {
-        Move m;
-        m.color = (token[0] == 'B') ? 'b' : 'w';
-        if ((token[1] == '[') && (token[2] == ']')) // Pass
+        label = token;
+        label_end = FindNextTag(label);
+        while (label[0] != '\0')
         {
-            goban->lastmove.p.col = -1;
-            goban->lastmove.p.row = -1;
-            goban->lastmove.color = m.color;
-            goban->color = (goban->color == 'b') ? 'w' : 'b';
-            AddHistory(goban);
-        }
-        else // Real move
-        {
-            m.p.col = token[2] - 'a';
-            m.p.row = token[3] - 'a';
-            ValidateMove(goban, m);
+          if (!strncmp(label, "W", label_end - label) ||
+              !strncmp(label, "B", label_end - label))
+          {
+              Move m;
+              m.color = (label[0] == 'B') ? 'b' : 'w';
+              if ((label[1] == '[') && (label[2] == ']')) // Pass
+              {
+                  goban->lastmove.p.col = -1;
+                  goban->lastmove.p.row = -1;
+                  goban->lastmove.color = m.color;
+                  goban->color = (goban->color == 'b') ? 'w' : 'b';
+                  AddHistory(goban);
+              }
+              else // Real move
+              {
+                  m.p.col = label[2] - 'a';
+                  m.p.row = label[3] - 'a';
+                  ValidateMove(goban, m);
+              }
+          }
+          label = FindNextLabel(label);
+          label_end = FindNextTag(label);
         }
     }
     sprintf(goban->notes, "Loaded game from sgf...\n");

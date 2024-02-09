@@ -290,7 +290,6 @@ int RemoveGroup(Goban* goban, Point start)
     Stack stack;
     Point seen[361];
     int seenSize = 0;
-    int liberties = 0;
     char color = goban->board[start.row][start.col];
 
     memset(seen, ' ', sizeof(Point) * 361);
@@ -311,8 +310,6 @@ int RemoveGroup(Goban* goban, Point start)
             {
                 PushStack(&stack, tempPoint);
             }
-            else if (goban->board[currentPoint.row - 1][currentPoint.col] == ' ')
-                liberties++;
         }
         if (currentPoint.row < goban->size - 1)
         {
@@ -323,8 +320,6 @@ int RemoveGroup(Goban* goban, Point start)
             {
                 PushStack(&stack, tempPoint);
             }
-            else if (goban->board[currentPoint.row + 1][currentPoint.col] == ' ')
-                liberties++;
         }
         if (currentPoint.col > 0)
         {
@@ -335,8 +330,6 @@ int RemoveGroup(Goban* goban, Point start)
             {
                 PushStack(&stack, tempPoint);
             }
-            else if (goban->board[currentPoint.row][currentPoint.col - 1] == ' ')
-                liberties++;
         }
         if (currentPoint.col < goban->size - 1)
         {
@@ -347,8 +340,6 @@ int RemoveGroup(Goban* goban, Point start)
             {
                 PushStack(&stack, tempPoint);
             }
-            else if (goban->board[currentPoint.row][currentPoint.col + 1] == ' ')
-                liberties++;
         }
     }
     int i;
