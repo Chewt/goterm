@@ -184,7 +184,7 @@ void LoadSGF(Goban* goban, char* sgf)
             bzero(goban->result, 10);
             CopyTagContents(goban->result, label_end + 1, 10);
         }
-        label = FindNextLabel(label);
+        label = FindNextLabel(label_end);
         label_end = FindNextTag(label);
     } 
 
