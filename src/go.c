@@ -295,11 +295,11 @@ int RemoveGroup(Goban* goban, Point start)
     memset(seen, ' ', sizeof(Point) * 361);
     ClearStack(&stack);
     PushStack(&stack, start);
+    seen[seenSize++] = start;
     while (StackSize(&stack) > 0)
     {
         Point currentPoint = PopStack(&stack);
         Point tempPoint = currentPoint;
-        seen[seenSize++] = currentPoint;
 
         if (currentPoint.row > 0)
         {
@@ -309,6 +309,7 @@ int RemoveGroup(Goban* goban, Point start)
                     !IsSeen(seen, seenSize, tempPoint))
             {
                 PushStack(&stack, tempPoint);
+                seen[seenSize++] = tempPoint;
             }
         }
         if (currentPoint.row < goban->size - 1)
@@ -319,6 +320,7 @@ int RemoveGroup(Goban* goban, Point start)
                     !IsSeen(seen, seenSize, tempPoint))
             {
                 PushStack(&stack, tempPoint);
+                seen[seenSize++] = tempPoint;
             }
         }
         if (currentPoint.col > 0)
@@ -329,6 +331,7 @@ int RemoveGroup(Goban* goban, Point start)
                     !IsSeen(seen, seenSize, tempPoint))
             {
                 PushStack(&stack, tempPoint);
+                seen[seenSize++] = tempPoint;
             }
         }
         if (currentPoint.col < goban->size - 1)
@@ -339,6 +342,7 @@ int RemoveGroup(Goban* goban, Point start)
                     !IsSeen(seen, seenSize, tempPoint))
             {
                 PushStack(&stack, tempPoint);
+                seen[seenSize++] = tempPoint;
             }
         }
     }
