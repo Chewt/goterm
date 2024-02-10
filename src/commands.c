@@ -398,8 +398,6 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
 
 int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
 {
-    if (GetViewIndex() != (HistorySize() - 1))
-        ViewHistory(goban, HistorySize() - 1);
     int terms = 0;
     char tokens[256][256];
     terms = tokenize_command(input, tokens);
@@ -422,5 +420,7 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
         else
             printf("Invalid Move\n");
     }
+    if (GetViewIndex() != (HistorySize() - 1))
+        ViewHistory(goban, HistorySize() - 1);
     return 1;
 }
