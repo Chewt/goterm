@@ -119,6 +119,8 @@ int main(int argc, char** argv)
     }
     goban.size = flags.size;
     SetHandicap(&goban, flags.handicap);
+    if (flags.handicap)
+        goban.color = 'w';
 
     // apply gnugo shortcut
     if (flags.g == 1)
@@ -167,7 +169,6 @@ int main(int argc, char** argv)
             char command[30] = "";
             snprintf(command, 30, "handicap %d", flags.handicap);
             SendCommand(client, command);
-            goban.color = 'w';
         }
         SendCommand(client, "ready");
     }
