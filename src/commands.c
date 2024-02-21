@@ -181,6 +181,17 @@ int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
     AddHistory(goban);
     return 1;
 }
+int ResignCommand(Goban* goban, int n_tokens, char tokens[][256])
+{
+    if (n_tokens != 1)
+        return -1;
+    // This is a naive implementation that allows a user to resign on the behalf
+    // whoevers turn it is
+    char color = goban->color;
+    snprintf(goban->result, RESULT_LENGTH, "%c+Resign", (color == 'b') ? 'W' : 'B');
+    WriteNotes(goban, "%s Resigned\n", (color == 'b') ? goban->blackname : goban->whitename);
+    return 1;
+}
 int SwapCommand(Goban* goban, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
@@ -291,6 +302,7 @@ struct GoCommand commands[] = {
     {"say", SayCommand, 1, "Send a message to other player"},
     {"handicap", HandicapCommand, 1, "Set handicap on board."},
     {"rename", RenameCommand, 1, "Change the name of black or white player\nUsage: rename black|white NAME"},
+    {"resign", ResignCommand, 1, "Resign"},
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
     {"next", NextCommand, 0, "Shows the next move"},
     {"back", BackCommand, 0, "Shows the previous move"},
