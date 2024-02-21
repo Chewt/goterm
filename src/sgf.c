@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +5,7 @@
 #include <time.h>
 
 #include "sgf.h"
+#include "display.h"
 #include "gameinfo.h"
 #include "go.h"
 
@@ -221,5 +221,5 @@ void LoadSGF(Goban* goban, char* sgf)
           label_end = FindNextTag(label);
         }
     }
-    sprintf(goban->notes, "Loaded game from sgf...\n");
+    WriteNotes("Loaded game from sgf...\n");
 }

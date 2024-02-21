@@ -12,6 +12,7 @@
 #include "gtp.h"
 #include "sgf.h"
 #include "networking.h"
+#include "display.h"
 
 
 // argp struct
@@ -87,11 +88,9 @@ int main(int argc, char** argv)
     char gnugo[32] = "gnugo --mode gtp";
 
     // Board Setup
-    char notes[NOTES_LENGTH];
     srand(time(NULL));
     GameInfo* gameInfo = GetGameInfo();
     Goban goban = {0};
-    goban.notes = notes;
     ResetGoban(&goban);
     goban.color = 'b';
     strcpy(gameInfo->blackName, "Black");
@@ -221,7 +220,7 @@ int main(int argc, char** argv)
     {
         while (!BoardFitsScreen(&goban))
             gameInfo->boardSize--;
-        WriteNotes(&goban,
+        WriteNotes(
                  "Warning! Current size is too big for screen!\nMax size that "
                  "will fit is %d\n",
                  gameInfo->boardSize);
@@ -244,13 +243,30 @@ int main(int argc, char** argv)
             }
             else // Manually score board
             {
+                Goban tempgoban;
+                memcpy(&tempgoban, &goban, sizeof(Goban));
                 printw("Please enter a list of stones seperated by spaces\n"); 
                 printw("(one stone per group)\n: ");
                 getnstr(resp, 256);
-                if (!RemoveDeadGroups(&goban, resp))
+                if (!RemoveDeadGroups(&tempgoban, resp))
                 {
                     PrintBoardw(&goban);
                     continue;
+                }
+                else
+                {
+                    ScoreBoard(&tempgoban);
+                    PrintBoardw(&tempgoban);
+                    char resp[COMMAND_LENGTH];
+                    mvprintw(getcury(stdscr), 0, "Does this look right?[Y/n]\n: ");
+                    refresh();
+                    getnstr(resp, 256);
+                    if (resp[0] == 'n' || resp[0] == 'N')
+                    {
+                        PrintBoardw(&goban);
+                        continue;
+                    }
+                    memcpy(&goban, &tempgoban, sizeof(Goban));
                 }
                 ScoreBoard(&goban);
                 UpdateResult(&goban);
@@ -265,8 +281,7 @@ int main(int argc, char** argv)
                     char* confirm = RecvCommand(host);
                     if (!strcmp(confirm, "deny"))
                     {
-                      WriteNotes(&goban,
-                               "Opponent disagrees with result, play on.\n");
+                      WriteNotes("Opponent disagrees with result, play on.\n");
                       UndoHistory(&goban, 1);
                       free(confirm);
                       running = 1;
@@ -279,8 +294,7 @@ int main(int argc, char** argv)
                     char* opponent_diff = RecvCommand(client);
                     if (strcmp(opponent_diff, resp))
                     {
-                      WriteNotes(&goban,
-                               "Opponent disagrees with result, play on.\n");
+                      WriteNotes("Opponent disagrees with result, play on.\n");
                         SendCommand(client, "deny");
                         UndoHistory(&goban, 1);
                         free(opponent_diff);
@@ -390,7 +404,7 @@ int main(int argc, char** argv)
                     char* response = RecvCommand(user);
                     if (response == NULL)
                     {
-                        WriteNotes(&goban, "Opponent disconnected\n");
+                        WriteNotes("Opponent disconnected\n");
                         printw("Opponent disconnected!\n");
                         printf("Opponent disconnected!\n");
                         host = -1;
@@ -444,9 +458,6 @@ int main(int argc, char** argv)
         }
     }
     endwin();
-
-    PrintBoard(&goban);
-    printf("%s\n", goban.notes);
 
     // Clean up
     if (host >= 0)
