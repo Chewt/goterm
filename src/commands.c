@@ -31,12 +31,12 @@ char* to_lowercase(char* s)
 struct GoCommand
 {
     char* name;
-    int (*func)(Goban* goban, int n_tokens, char tokens[][256]);
+    int (*func)(Goban* goban, char player, int n_tokens, char tokens[][256]);
     int is_networked;
     char* help;
 };
 
-int RenameCommand(Goban* goban, int n_tokens, char tokens[][256])
+int RenameCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens < 3)
         return -1;
@@ -59,7 +59,7 @@ int RenameCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int SGFCommand(Goban* goban, int n_tokens, char tokens[][256])
+int SGFCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 2 )
         return -1;
@@ -77,7 +77,7 @@ int SGFCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
+int UndoCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
@@ -95,7 +95,7 @@ int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int GotoCommand(Goban* goban, int n_tokens, char tokens[][256])
+int GotoCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 2)
         return -1;
@@ -114,7 +114,7 @@ int GotoCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int NextCommand(Goban* goban, int n_tokens, char tokens[][256])
+int NextCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
@@ -128,7 +128,7 @@ int NextCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int BackCommand(Goban* goban, int n_tokens, char tokens[][256])
+int BackCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
@@ -141,14 +141,14 @@ int BackCommand(Goban* goban, int n_tokens, char tokens[][256])
     }
     return 1;
 }
-int ResetCommand(Goban* goban, int n_tokens, char tokens[][256])
+int ResetCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
     ResetGoban(goban);
     return 1;
 }
-int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
+int SizeCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 2)
         return -1;
@@ -168,7 +168,7 @@ int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
     }
     return 1;
 }
-int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
+int PassCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
@@ -181,24 +181,21 @@ int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
     AddHistory(goban);
     return 1;
 }
-int ResignCommand(Goban* goban, int n_tokens, char tokens[][256])
+int ResignCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
-    // This is a naive implementation that allows a user to resign on the behalf
-    // whoevers turn it is
-    char color = goban->color;
-    snprintf(goban->result, RESULT_LENGTH, "%c+Resign", (color == 'b') ? 'W' : 'B');
-    WriteNotes(goban, "%s Resigned\n", (color == 'b') ? goban->blackname : goban->whitename);
+    snprintf(goban->result, RESULT_LENGTH, "%c+Resign", (player == 'b') ? 'W' : 'B');
+    WriteNotes(goban, "%s Resigned\n", (player == 'b') ? goban->blackname : goban->whitename);
     return 1;
 }
-int SwapCommand(Goban* goban, int n_tokens, char tokens[][256])
+int SwapCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
     return SWAP;
 }
-int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
+int ExitCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
@@ -206,7 +203,7 @@ int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
     goban->lastmove.p.row = -1;
     return 0;
 }
-int ScoreCommand(Goban* goban, int n_tokens, char tokens[][256])
+int ScoreCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
@@ -214,7 +211,7 @@ int ScoreCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int KomiCommand(Goban* goban, int n_tokens, char tokens[][256])
+int KomiCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
@@ -228,7 +225,7 @@ int KomiCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int HandicapCommand(Goban* goban, int n_tokens, char tokens[][256])
+int HandicapCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
@@ -243,12 +240,12 @@ int HandicapCommand(Goban* goban, int n_tokens, char tokens[][256])
     }
     return 1;
 }
-int SayCommand(Goban* goban, int n_tokens, char tokens[][256])
+int SayCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens <= 1)
         return -1;
     int i;
-    WriteNotes(goban, "Message: \"");
+    WriteNotes(goban, "%s: \"", (player == 'b') ? goban->blackname : goban->whitename);
     for (i = 1; i < n_tokens; ++i)
     {
         AppendNotes(goban, "%s ", tokens[i]);
@@ -355,7 +352,7 @@ int IsNetworkedCommand(char input[COMMAND_LENGTH])
     return 1;
 }
 
-int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
+int ProcessCommand(Goban* goban, char player, char input[COMMAND_LENGTH])
 {
     char input_copy[COMMAND_LENGTH];
     memcpy(input_copy, input, COMMAND_LENGTH);
@@ -391,7 +388,7 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         i = AutoComplete(tokens[0]);
         if (i >= 0)
         {
-            return_val = commands[i].func(goban, terms, tokens);
+            return_val = commands[i].func(goban, player, terms, tokens);
             if (return_val == -1)
             {
                 WriteNotes(goban, "Invalid usage of command %s\n", commands[i].name);

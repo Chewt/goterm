@@ -197,7 +197,7 @@ int main(int argc, char** argv)
             }
             else
             {
-                ProcessCommand(&goban, resp);
+                ProcessCommand(&goban, host_col, resp);
             }
             free(resp);
         }
@@ -324,7 +324,7 @@ int main(int argc, char** argv)
             SendGenmove(e.write, 3, goban.color);
             if (!GetResponse(e.read, response, 3))
                 fprintf(stderr, "Couldn't get response from engine\n");
-            running = ProcessCommand(&goban, response[1]);
+            running = ProcessCommand(&goban, e_col, response[1]);
             if (running == MOVE)
                 SubmitMove(&goban, response[1]);
 
@@ -360,7 +360,7 @@ int main(int argc, char** argv)
                     getnstr(input, COMMAND_LENGTH);
                     input[strcspn(input, "\n")] = '\0';
 
-                    running = ProcessCommand(&goban, input);
+                    running = ProcessCommand(&goban, (host >= 0) ? client_col : host_col, input);
                     if (running == MOVE && !opponents_turn)
                     {
                         SubmitMove(&goban, input);
@@ -397,7 +397,7 @@ int main(int argc, char** argv)
                         continue;
                     }
                     printw("%s\n", response);
-                    running = ProcessCommand(&goban, response);
+                    running = ProcessCommand(&goban, (host >= 0) ? host_col : client_col, response);
                     if (running == MOVE && opponents_turn)
                     {
                         SubmitMove(&goban, response);
@@ -422,7 +422,7 @@ int main(int argc, char** argv)
             getnstr(input, COMMAND_LENGTH);
             input[strcspn(input, "\n")] = 0;
 
-            running = ProcessCommand(&goban, input);
+            running = ProcessCommand(&goban, goban.color, input);
             if (running == MOVE)
                 SubmitMove(&goban, input);
             input[0] = '\0';
