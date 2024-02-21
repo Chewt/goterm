@@ -6,10 +6,12 @@
 #include <time.h>
 
 #include "sgf.h"
+#include "gameinfo.h"
 #include "go.h"
 
 char* CreateSGF()
 {
+    GameInfo* gameInfo = GetGameInfo();
     if (HistorySize() <= 1)
         return NULL;
     time_t rawtime = time(NULL);
@@ -19,7 +21,6 @@ char* CreateSGF()
     int index = 0;
     
     Goban* current = GetHistory(0);
-    Goban* last = GetHistory(HistorySize() - 1);
 
 #ifdef VERSION
     const char* version = VERSION;
@@ -28,20 +29,20 @@ char* CreateSGF()
 #endif
 
     index = sprintf(sgf + index, "(;FF[4]GM[1]SZ[%d]AP[Goterm:%s]\n\n", 
-            last->size, version);
-    index += sprintf(sgf + index, "PB[%s]\n", last->blackname);
-    index += sprintf(sgf + index, "PW[%s]\n", last->whitename);
+            gameInfo->boardSize, version);
+    index += sprintf(sgf + index, "PB[%s]\n", gameInfo->blackName);
+    index += sprintf(sgf + index, "PW[%s]\n", gameInfo->whiteName);
     index += sprintf(sgf + index, "DT[");
     index += strftime(sgf + index, 11, "%F", ptm);
     index += sprintf(sgf + index, "]\n");
     index += sprintf(sgf + index, "KM[");
-    index += sprintf(sgf + index, "%.1f", last->komi);
+    index += sprintf(sgf + index, "%.1f", gameInfo->komi);
     index += sprintf(sgf + index, "]\n");
-    index += sprintf(sgf + index, "HA[%d]\n", last->handicap);
-    if (last->result[0] != '\0')
+    index += sprintf(sgf + index, "HA[%d]\n", gameInfo->handicap);
+    if (gameInfo->result[0] != '\0')
     {
         index += sprintf(sgf + index, "RE[");
-        index += sprintf(sgf + index, "%s", last->result);
+        index += sprintf(sgf + index, "%s", gameInfo->result);
         index += sprintf(sgf + index, "]\n");
     }
     index += sprintf(sgf + index, "\n");
@@ -137,6 +138,7 @@ char* FindNextTag(char* src)
 void LoadSGF(Goban* goban, char* sgf)
 {
     // Start from clean state
+    GameInfo* gameInfo = GetGameInfo();
     ResetGoban(goban);
     char* token;
     char* save_ptr;
@@ -150,26 +152,26 @@ void LoadSGF(Goban* goban, char* sgf)
     {
         if (!strncmp(label, "PW", label_end - label))
         {
-            bzero(goban->whitename, 100);
-            CopyTagContents(goban->whitename, label_end + 1, 100);
+            bzero(gameInfo->whiteName, NAME_LENGTH);
+            CopyTagContents(gameInfo->whiteName, label_end + 1, NAME_LENGTH);
         }
         else if (!strncmp(label, "PB", label_end - label))
         {
-            bzero(goban->blackname, 100);
-            CopyTagContents(goban->blackname, label_end + 1, 100);
+            bzero(gameInfo->blackName, NAME_LENGTH);
+            CopyTagContents(gameInfo->blackName, label_end + 1, NAME_LENGTH);
         }
         else if (!strncmp(label, "KM", label_end - label))
         {
             char* tag_end = FindTagEnd(label_end);
             *tag_end = '\0';
-            goban->komi = strtof(label_end + 1, NULL);
+            gameInfo->komi = strtof(label_end + 1, NULL);
             *tag_end = ']';
         }
         else if (!strncmp(label, "SZ", label_end - label))
         {
             char* tag_end = FindTagEnd(label_end);
             *tag_end = '\0';
-            goban->size = strtod(label_end + 1, NULL);
+            gameInfo->boardSize = strtod(label_end + 1, NULL);
             *tag_end = ']';
         }
         else if (!strncmp(label, "HA", label_end - label))
@@ -181,8 +183,8 @@ void LoadSGF(Goban* goban, char* sgf)
         }
         else if (!strncmp(label, "RE", label_end - label))
         {
-            bzero(goban->result, 10);
-            CopyTagContents(goban->result, label_end + 1, 10);
+            bzero(gameInfo->result, 10);
+            CopyTagContents(gameInfo->result, label_end + 1, 10);
         }
         label = FindNextLabel(label);
         label_end = FindNextTag(label);

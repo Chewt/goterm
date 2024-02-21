@@ -6,6 +6,7 @@
 #include <poll.h>
 #include <ncurses.h>
 #include <locale.h>
+#include "gameinfo.h"
 #include "go.h"
 #include "commands.h"
 #include "gtp.h"
@@ -88,12 +89,13 @@ int main(int argc, char** argv)
     // Board Setup
     char notes[NOTES_LENGTH];
     srand(time(NULL));
+    GameInfo* gameInfo = GetGameInfo();
     Goban goban = {0};
     goban.notes = notes;
     ResetGoban(&goban);
     goban.color = 'b';
-    strcpy(goban.blackname, "Black");
-    strcpy(goban.whitename, "White");
+    strcpy(gameInfo->blackName, "Black");
+    strcpy(gameInfo->whiteName, "White");
 
     // argp parsing args
     struct argp_option options[] =
@@ -117,7 +119,7 @@ int main(int argc, char** argv)
         fprintf(stderr, "Error parsing arguments\n");
         exit(-1);
     }
-    goban.size = flags.size;
+    gameInfo->boardSize = flags.size;
     SetHandicap(&goban, flags.handicap);
     if (flags.handicap)
         goban.color = 'w';
@@ -133,7 +135,7 @@ int main(int argc, char** argv)
     if (flags.e_path)
     {
         StartEngine(&e, flags.e_path);
-        strncpy(goban.whitename, e.name, 100);
+        strncpy(gameInfo->whiteName, e.name, 100);
         char** response = AllocateResponse();
         SendClearBoard(e.write, 1);
         if (!GetResponse(e.read, response, 1))
@@ -218,12 +220,12 @@ int main(int argc, char** argv)
     if (!BoardFitsScreen(&goban)) 
     {
         while (!BoardFitsScreen(&goban))
-            goban.size--;
+            gameInfo->boardSize--;
         WriteNotes(&goban,
                  "Warning! Current size is too big for screen!\nMax size that "
                  "will fit is %d\n",
-                 goban.size);
-        goban.size = flags.size;
+                 gameInfo->boardSize);
+        gameInfo->boardSize = flags.size;
     }
     // Main loop
     while (running)
@@ -237,7 +239,7 @@ int main(int argc, char** argv)
                 SendFinalScore(e.write, 1);
                 if (!GetResponse(e.read, response, 1))
                     fprintf(stderr, "Couldn't get response from engine\n");
-                strcpy(goban.result, response[1]);
+                strcpy(gameInfo->result, response[1]);
                 FreeResponse(response);
             }
             else // Manually score board
@@ -306,18 +308,18 @@ int main(int argc, char** argv)
                 SendClearBoard(e.write, 1);
                 if (!GetResponse(e.read, response, 1))
                     fprintf(stderr, "Couldn't get response from engine\n");
-                SendBoardsize(e.write, 2, goban.size);
+                SendBoardsize(e.write, 2, gameInfo->boardSize);
                 if (!GetResponse(e.read, response, 2))
                     fprintf(stderr, "Couldn't get response from engine\n");
-                SendKomi(e.write, 3, goban.komi);
+                SendKomi(e.write, 3, gameInfo->komi);
                 if (!GetResponse(e.read, response, 3))
                     fprintf(stderr, "Couldn't get response from engine\n");
-                SendHandicap(e.write, 4, goban.komi);
+                SendHandicap(e.write, 4, gameInfo->komi);
                 if (!GetResponse(e.read, response, 4))
                     fprintf(stderr, "Couldn't get response from engine\n");
             }
 
-            SendPlay(e.write, 2, goban.lastmove, goban.size);
+            SendPlay(e.write, 2, goban.lastmove, gameInfo->boardSize);
             if (!GetResponse(e.read, response, 2))
                 fprintf(stderr, "Couldn't get response from engine\n");
 
@@ -436,9 +438,9 @@ int main(int argc, char** argv)
             e_col = (e_col == 'w') ? 'b' : 'w';
             running = 1;
             char temp[100];
-            strncpy(temp, goban.whitename, 100);
-            strncpy(goban.whitename, goban.blackname, 100);
-            strncpy(goban.blackname, temp, 100);
+            strncpy(temp, gameInfo->whiteName, 100);
+            strncpy(gameInfo->whiteName, gameInfo->blackName, 100);
+            strncpy(gameInfo->blackName, temp, 100);
         }
     }
     endwin();

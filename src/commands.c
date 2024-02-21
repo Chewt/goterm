@@ -7,6 +7,7 @@
 #include "commands.h"
 #include "go.h"
 #include "sgf.h"
+#include "gameinfo.h"
 
 char* to_lowercase(char* s)
 {
@@ -41,12 +42,12 @@ int RenameCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
     if (n_tokens < 3)
         return -1;
     char* color = to_lowercase(tokens[1]);
-
+    GameInfo* gi = GetGameInfo();
     char* name = NULL;
     if (!strcmp(color, "black"))
-        name = goban->blackname;
+        name = gi->blackName;
     if (!strcmp(color, "white"))
-        name = goban->whitename;
+        name = gi->whiteName;
     if (name == NULL)
         return -1;
     int idx = 0;
@@ -153,18 +154,19 @@ int SizeCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
     if (n_tokens != 2)
         return -1;
     ResetGoban(goban);
-    if((goban->size = atoi(tokens[1])) <= 1 || goban->size > 19)
-        goban->size = 19;
+    GameInfo* gameInfo = GetGameInfo();
+    if((gameInfo->boardSize = atoi(tokens[1])) <= 1 || gameInfo->boardSize > 19)
+        gameInfo->boardSize = 19;
     if (!BoardFitsScreen(goban))
     {
-        int t = goban->size;
+        int t = gameInfo->boardSize;
         while (!BoardFitsScreen(goban))
-            goban->size--;
+            gameInfo->boardSize--;
         WriteNotes(goban,
                  "Warning! Current size is too big for screen!\nMax size that "
                  "will fit is %d\n",
-                 goban->size);
-        goban->size = t;
+                 gameInfo->boardSize);
+        gameInfo->boardSize = t;
     }
     return 1;
 }
@@ -185,8 +187,9 @@ int ResignCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
-    snprintf(goban->result, RESULT_LENGTH, "%c+Resign", (player == 'b') ? 'W' : 'B');
-    WriteNotes(goban, "%s Resigned\n", (player == 'b') ? goban->blackname : goban->whitename);
+    GameInfo* gameInfo = GetGameInfo();
+    snprintf(gameInfo->result, RESULT_LENGTH, "%c+Resign", (player == 'b') ? 'W' : 'B');
+    WriteNotes(goban, "%s Resigned\n", (player == 'b') ? gameInfo->blackName : gameInfo->whiteName);
     return 1;
 }
 int SwapCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
@@ -215,12 +218,13 @@ int KomiCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
+    GameInfo* gameInfo = GetGameInfo();
     if (n_tokens == 1)
-        WriteNotes(goban, "Komi is %.1f\n", goban->komi);
+        WriteNotes(goban, "Komi is %.1f\n", gameInfo->komi);
     else if (n_tokens == 2)
     {
         ResetGoban(goban);
-        goban->komi = atof(tokens[1]);
+        gameInfo->komi = atof(tokens[1]);
     }
     return 1;
 }
@@ -229,13 +233,14 @@ int HandicapCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
+    GameInfo* gameInfo = GetGameInfo();
     if (n_tokens == 1)
-        WriteNotes(goban, "Handicap is %d\n", goban->handicap);
+        WriteNotes(goban, "Handicap is %d\n", gameInfo->handicap);
     else if (n_tokens == 2)
     {
         ResetGoban(goban);
-        goban->handicap = atoi(tokens[1]);
-        SetHandicap(goban, goban->handicap);
+        gameInfo->handicap = atoi(tokens[1]);
+        SetHandicap(goban, gameInfo->handicap);
         goban->color = 'w';
     }
     return 1;
@@ -244,12 +249,14 @@ int SayCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens <= 1)
         return -1;
+    GameInfo* gameInfo = GetGameInfo();
     int i;
-    WriteNotes(goban, "%s: \"", (player == 'b') ? goban->blackname : goban->whitename);
-    for (i = 1; i < n_tokens; ++i)
+    WriteNotes(goban, "%s: \"", (player == 'b') ? gameInfo->blackName : gameInfo->whiteName);
+    for (i = 1; i < n_tokens - 1; ++i)
     {
         AppendNotes(goban, "%s ", tokens[i]);
     }
+    AppendNotes(goban, "%s", tokens[i]);
     AppendNotes(goban, "\"\n");
     return 1;
 }
