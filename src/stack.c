@@ -1,4 +1,3 @@
-#include <string.h>
 #include "stack.h"
 
 void ClearStack(Stack* stack)

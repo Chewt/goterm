@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +6,8 @@
 #include "commands.h"
 #include "go.h"
 #include "sgf.h"
+#include "gameinfo.h"
+#include "display.h"
 
 char* to_lowercase(char* s)
 {
@@ -31,22 +32,22 @@ char* to_lowercase(char* s)
 struct GoCommand
 {
     char* name;
-    int (*func)(Goban* goban, int n_tokens, char tokens[][256]);
+    int (*func)(Goban* goban, char player, int n_tokens, char tokens[][256]);
     int is_networked;
     char* help;
 };
 
-int RenameCommand(Goban* goban, int n_tokens, char tokens[][256])
+int RenameCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens < 3)
         return -1;
     char* color = to_lowercase(tokens[1]);
-
+    GameInfo* gi = GetGameInfo();
     char* name = NULL;
     if (!strcmp(color, "black"))
-        name = goban->blackname;
+        name = gi->blackName;
     if (!strcmp(color, "white"))
-        name = goban->whitename;
+        name = gi->whiteName;
     if (name == NULL)
         return -1;
     int idx = 0;
@@ -59,25 +60,25 @@ int RenameCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int SGFCommand(Goban* goban, int n_tokens, char tokens[][256])
+int SGFCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 2 )
         return -1;
     char* sgf = CreateSGF();
     if (sgf == NULL)
     {
-        WriteNotes(goban, "Please make at least one move before writing a sgf\n");
+        WriteNotes("Please make at least one move before writing a sgf\n");
       return 1;
     }
     FILE* f = fopen(tokens[1], "w");
     fwrite(sgf, 1, strlen(sgf), f);
     fclose(f);
     free(sgf);
-    WriteNotes(goban, "sgf saved to %s\n", tokens[1]);
+    WriteNotes("sgf saved to %s\n", tokens[1]);
     return 1;
 }
 
-int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
+int UndoCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
@@ -95,7 +96,7 @@ int UndoCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int GotoCommand(Goban* goban, int n_tokens, char tokens[][256])
+int GotoCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 2)
         return -1;
@@ -114,7 +115,7 @@ int GotoCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int NextCommand(Goban* goban, int n_tokens, char tokens[][256])
+int NextCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
@@ -128,7 +129,7 @@ int NextCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int BackCommand(Goban* goban, int n_tokens, char tokens[][256])
+int BackCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
@@ -141,34 +142,35 @@ int BackCommand(Goban* goban, int n_tokens, char tokens[][256])
     }
     return 1;
 }
-int ResetCommand(Goban* goban, int n_tokens, char tokens[][256])
+int ResetCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
     ResetGoban(goban);
     return 1;
 }
-int SizeCommand(Goban* goban, int n_tokens, char tokens[][256])
+int SizeCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 2)
         return -1;
     ResetGoban(goban);
-    if((goban->size = atoi(tokens[1])) <= 1 || goban->size > 19)
-        goban->size = 19;
+    GameInfo* gameInfo = GetGameInfo();
+    if((gameInfo->boardSize = atoi(tokens[1])) <= 1 || gameInfo->boardSize > 19)
+        gameInfo->boardSize = 19;
     if (!BoardFitsScreen(goban))
     {
-        int t = goban->size;
+        int t = gameInfo->boardSize;
         while (!BoardFitsScreen(goban))
-            goban->size--;
-        WriteNotes(goban,
+            gameInfo->boardSize--;
+        WriteNotes(
                  "Warning! Current size is too big for screen!\nMax size that "
                  "will fit is %d\n",
-                 goban->size);
-        goban->size = t;
+                 gameInfo->boardSize);
+        gameInfo->boardSize = t;
     }
     return 1;
 }
-int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
+int PassCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
@@ -181,13 +183,22 @@ int PassCommand(Goban* goban, int n_tokens, char tokens[][256])
     AddHistory(goban);
     return 1;
 }
-int SwapCommand(Goban* goban, int n_tokens, char tokens[][256])
+int ResignCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
+{
+    if (n_tokens != 1)
+        return -1;
+    GameInfo* gameInfo = GetGameInfo();
+    snprintf(gameInfo->result, RESULT_LENGTH, "%c+Resign", (player == 'b') ? 'W' : 'B');
+    WriteNotes("%s Resigned\n", (player == 'b') ? gameInfo->blackName : gameInfo->whiteName);
+    return 1;
+}
+int SwapCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
     return SWAP;
 }
-int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
+int ExitCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
@@ -195,7 +206,7 @@ int ExitCommand(Goban* goban, int n_tokens, char tokens[][256])
     goban->lastmove.p.row = -1;
     return 0;
 }
-int ScoreCommand(Goban* goban, int n_tokens, char tokens[][256])
+int ScoreCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1)
         return -1;
@@ -203,46 +214,50 @@ int ScoreCommand(Goban* goban, int n_tokens, char tokens[][256])
     return 1;
 }
 
-int KomiCommand(Goban* goban, int n_tokens, char tokens[][256])
+int KomiCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
+    GameInfo* gameInfo = GetGameInfo();
     if (n_tokens == 1)
-        WriteNotes(goban, "Komi is %.1f\n", goban->komi);
+        WriteNotes("Komi is %.1f\n", gameInfo->komi);
     else if (n_tokens == 2)
     {
         ResetGoban(goban);
-        goban->komi = atof(tokens[1]);
+        gameInfo->komi = atof(tokens[1]);
     }
     return 1;
 }
 
-int HandicapCommand(Goban* goban, int n_tokens, char tokens[][256])
+int HandicapCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
+    GameInfo* gameInfo = GetGameInfo();
     if (n_tokens == 1)
-        WriteNotes(goban, "Handicap is %d\n", goban->handicap);
+        WriteNotes("Handicap is %d\n", gameInfo->handicap);
     else if (n_tokens == 2)
     {
         ResetGoban(goban);
-        goban->handicap = atoi(tokens[1]);
-        SetHandicap(goban, goban->handicap);
+        gameInfo->handicap = atoi(tokens[1]);
+        SetHandicap(goban, gameInfo->handicap);
         goban->color = 'w';
     }
     return 1;
 }
-int SayCommand(Goban* goban, int n_tokens, char tokens[][256])
+int SayCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens <= 1)
         return -1;
+    GameInfo* gameInfo = GetGameInfo();
     int i;
-    WriteNotes(goban, "Message: \"");
-    for (i = 1; i < n_tokens; ++i)
+    WriteNotes("%s: \"", (player == 'b') ? gameInfo->blackName : gameInfo->whiteName);
+    for (i = 1; i < n_tokens - 1; ++i)
     {
-        AppendNotes(goban, "%s ", tokens[i]);
+        AppendNotes("%s ", tokens[i]);
     }
-    AppendNotes(goban, "\"\n");
+    AppendNotes("%s", tokens[i]);
+    AppendNotes("\"\n");
     return 1;
 }
 
@@ -291,6 +306,7 @@ struct GoCommand commands[] = {
     {"say", SayCommand, 1, "Send a message to other player"},
     {"handicap", HandicapCommand, 1, "Set handicap on board."},
     {"rename", RenameCommand, 1, "Change the name of black or white player\nUsage: rename black|white NAME"},
+    {"resign", ResignCommand, 1, "Resign"},
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
     {"next", NextCommand, 0, "Shows the next move"},
     {"back", BackCommand, 0, "Shows the previous move"},
@@ -343,7 +359,7 @@ int IsNetworkedCommand(char input[COMMAND_LENGTH])
     return 1;
 }
 
-int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
+int ProcessCommand(Goban* goban, char player, char input[COMMAND_LENGTH])
 {
     char input_copy[COMMAND_LENGTH];
     memcpy(input_copy, input, COMMAND_LENGTH);
@@ -362,16 +378,13 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         {
             if (terms > 1 && !strcmp(tokens[1], commands[i].name))
             {
-                WriteNotes(goban, "%s - %s\n", commands[i].name, commands[i].help);
+                WriteNotes("%s - %s\n", commands[i].name, commands[i].help);
                 return 1;
             }
-            if (goban->notes == NULL)
-                printf("%s - %s\n", commands[i].name, commands[i].help);
-            else
-                AppendNotes(goban, "%s%c", commands[i].name, (i % 3 == 2) ? '\n' : '\t');
+            AppendNotes("%s%c", commands[i].name, (i % 3 == 2) ? '\n' : '\t');
             i++;
         }
-        AppendNotes(goban, "\n");
+        AppendNotes("\n");
         return 1;
     }
     else // Try commands
@@ -379,17 +392,17 @@ int ProcessCommand(Goban* goban, char input[COMMAND_LENGTH])
         i = AutoComplete(tokens[0]);
         if (i >= 0)
         {
-            return_val = commands[i].func(goban, terms, tokens);
+            return_val = commands[i].func(goban, player, terms, tokens);
             if (return_val == -1)
             {
-                WriteNotes(goban, "Invalid usage of command %s\n", commands[i].name);
+                WriteNotes("Invalid usage of command %s\n", commands[i].name);
                 return 1;
             }
             return return_val;
         }
         else if (i == -2)
         {
-            WriteNotes(goban, "Command is ambiguous\n");
+            WriteNotes("Command is ambiguous\n");
             return 1;
         }
     }
@@ -405,20 +418,12 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     m.color = goban->color;
     if (terms == 0 || !ValidateInput(goban, &m.p, tokens[0]))
     {
-        if (goban->notes)
-        {
-            WriteNotes(goban, "Invalid Input: %s\n", tokens[0]);
-        }
-        else
-            printf("Invalid Input: %s\n", tokens[0]);
+        WriteNotes("Invalid Input: %s\n", tokens[0]);
         return 1;
     }
     if (!ValidateMove(goban, m))
     {
-        if (goban->notes)
-            WriteNotes(goban, "Invalid Move\n");
-        else
-            printf("Invalid Move\n");
+        WriteNotes("Invalid Move\n");
     }
     if (GetViewIndex() != (HistorySize() - 1))
         ViewHistory(goban, HistorySize() - 1);
