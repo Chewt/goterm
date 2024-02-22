@@ -7,12 +7,13 @@
 #include "sgf.h"
 #include "display.h"
 #include "gameinfo.h"
+#include "gametree.h"
 #include "go.h"
 
 char* CreateSGF()
 {
     GameInfo* gameInfo = GetGameInfo();
-    if (HistorySize() <= 1)
+    if (GetHistorySize() <= 1)
         return NULL;
     time_t rawtime = time(NULL);
     struct tm* ptm = localtime(&rawtime);
@@ -48,7 +49,7 @@ char* CreateSGF()
     index += sprintf(sgf + index, "\n");
 
     int i;
-    for (i = 1; i < HistorySize(); ++i)
+    for (i = 1; i < GetHistorySize(); ++i)
     {
         current = GetHistory(i);
         Move lm = current->lastmove;

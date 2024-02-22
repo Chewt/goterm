@@ -4,6 +4,7 @@
 #include <strings.h>
 #include <wchar.h>
 #include "commands.h"
+#include "gametree.h"
 #include "go.h"
 #include "sgf.h"
 #include "gameinfo.h"
@@ -88,7 +89,7 @@ int UndoCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
     {
         int n = 1;
         if (!strcmp(tokens[1], "here"))
-            n = HistorySize() - (GetViewIndex() + 1);
+            n = GetHistorySize() - (GetViewIndex() + 1);
         else
             n = strtol(tokens[1], NULL, 10);
         UndoHistory(goban, n);
@@ -106,7 +107,7 @@ int GotoCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
         if (!strcmp(tokens[1], "start"))
             n = 0;
         else if (!strcmp(tokens[1], "end"))
-            n = HistorySize() - 1;
+            n = GetHistorySize() - 1;
         else
             n = strtol(tokens[1], NULL, 10);
         n = (n >= 0) ? n : GetViewIndex();
@@ -421,11 +422,11 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
         WriteNotes("Invalid Input: %s\n", tokens[0]);
         return 1;
     }
+    if (GetViewIndex() != (GetHistorySize() - 1))
+        ViewHistory(goban, GetHistorySize() - 1);
     if (!ValidateMove(goban, m))
     {
         WriteNotes("Invalid Move\n");
     }
-    if (GetViewIndex() != (HistorySize() - 1))
-        ViewHistory(goban, HistorySize() - 1);
     return 1;
 }

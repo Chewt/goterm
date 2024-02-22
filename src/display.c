@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include "display.h"
 #include "gameinfo.h"
+#include "gametree.h"
 #include "go.h"
 
 char screen_notes[NOTES_LENGTH];
@@ -202,7 +203,7 @@ void PrintBoardw(Goban* goban)
     if (gameInfo->result[0] != '\0')
         mvprintw(2, gameInfo->boardSize * 4 + 4 + start_xpos, "Result: %s", gameInfo->result);
     char lastmove[10] = { 0 };
-    if (HistorySize() > 1)
+    if (GetHistorySize() > 1)
     {
         int idx = snprintf(lastmove, 10, "%d. ", GetViewIndex());
         if (goban->lastmove.p.col == -1)
@@ -432,7 +433,7 @@ void PrintBoard(Goban* goban)
                         if (i == 2)
                         {
                             char lastmove[5] = { 0 };
-                            if (HistorySize() >= 1)
+                            if (GetHistorySize() >= 1)
                             {
                                 if (goban->lastmove.p.col == -1)
                                     snprintf(lastmove, 5, "Pass");

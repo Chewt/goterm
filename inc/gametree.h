@@ -19,5 +19,14 @@ GameNode* NewNode(Goban* goban);
 GameNode* AddMainline(GameNode* node, Goban* goban);
 GameNode* RetrieveNode(int idx);
 void FreeTree(GameNode* root);
+void NewTree(Goban* goban);
+
+int GetHistorySize();
+int GetViewIndex();
+GameNode* GetRootNode();
+Goban* GetHistory(int i);
+void AddHistory(Goban* goban);
+void UndoHistory(Goban* goban, int n);
+void ViewHistory(Goban* goban, int n);
 
 #endif

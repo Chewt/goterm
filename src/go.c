@@ -2,12 +2,9 @@
 #include <string.h>
 #include "go.h"
 #include "gameinfo.h"
+#include "gametree.h"
 #include "stack.h"
 #include "commands.h"
-
-Goban history[500];
-int h_counter = 0;
-int view_idx = 0;
 
 // Return 0 if input isn't in move format, else returns 1 and populates p
 int ValidateInput(Goban* goban, Point* p, char input[256])
@@ -44,49 +41,6 @@ int ValidateInput(Goban* goban, Point* p, char input[256])
     return 1;
 }
 
-void AddHistory(Goban* goban)
-{
-    memcpy(history + h_counter, goban, sizeof(Goban));
-    h_counter++;
-    view_idx = h_counter - 1;
-}
-
-void UndoHistory(Goban* goban, int n)
-{
-    if (h_counter - n > 0)
-    {
-        h_counter -= n;
-        view_idx = h_counter - 1;
-        memcpy(goban, history + h_counter - 1, sizeof(Goban));
-    }
-}
-
-void ViewHistory(Goban* goban, int n)
-{
-    if (HistorySize() == 0)
-        return;
-    if (n >= HistorySize())
-        n = HistorySize() - 1;
-    if (n < 0)
-        n = 0;
-    view_idx = n;
-    memcpy(goban, history + n, sizeof(Goban));
-}
-
-
-Goban* GetHistory(int i)
-{
-    return history + i;
-}
-
-int GetViewIndex()
-{
-    return view_idx;
-}
-int HistorySize()
-{
-    return h_counter;
-}
 
 void ResetGoban(Goban* goban)
 {
@@ -105,8 +59,7 @@ void ResetGoban(Goban* goban)
     gameInfo->boardSize = (gameInfo->boardSize) ? gameInfo->boardSize : 19;
     strcpy(gameInfo->blackName, "Black");
     strcpy(gameInfo->whiteName, "White");
-    h_counter = 0;
-    AddHistory(goban);
+    NewTree(goban);
 }
 
 void ClearBoard(Goban* goban)
@@ -553,11 +506,11 @@ int IsEqual(Goban* a, Goban* b)
 // Checks if the current board has appeared before. Used for ko checking
 int IsRepeat(Goban* goban)
 {
-    if (h_counter == 0)
+    if (GetHistorySize() == 0)
         return 0;
     int i;
-    for (i = 0; i < h_counter; ++i)
-        if (IsEqual(goban, history + i))
+    for (i = 0; i < GetHistorySize(); ++i)
+        if (IsEqual(goban, GetHistory(i)))
             return 1;
     return 0;
 }

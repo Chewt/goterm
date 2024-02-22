@@ -7,6 +7,7 @@
 #include <ncurses.h>
 #include <locale.h>
 #include "gameinfo.h"
+#include "gametree.h"
 #include "go.h"
 #include "commands.h"
 #include "gtp.h"
@@ -313,11 +314,11 @@ int main(int argc, char** argv)
         PrintBoardw(&goban);
         PrintNotesw(&goban);
         refresh();
-        if (e.pid >= 0 && goban.color == e_col)  // Engine's turn
+        if (e.pid >= 0 && (opponents_turn == 1))  // Engine's turn
         {
             char** response = AllocateResponse();
 
-            if (HistorySize() == 1)
+            if (GetHistorySize() == 1)
             {
                 SendClearBoard(e.write, 1);
                 if (!GetResponse(e.read, response, 1))
@@ -342,13 +343,16 @@ int main(int argc, char** argv)
                 fprintf(stderr, "Couldn't get response from engine\n");
             running = ProcessCommand(&goban, e_col, response[1]);
             if (running == MOVE)
+            {
                 SubmitMove(&goban, response[1]);
+                opponents_turn = 0;
+            }
 
             FreeResponse(response);
         } 
         else if ((host >= 0) || (client >= 0)) // If game is over network
         {
-            if (HistorySize() == 1)
+            if (GetHistorySize() == 1)
             {
                 if (host >= 0)
                     opponents_turn = (goban.color == host_col) ? 1 : 0;
@@ -440,7 +444,10 @@ int main(int argc, char** argv)
 
             running = ProcessCommand(&goban, goban.color, input);
             if (running == MOVE)
+            {
                 SubmitMove(&goban, input);
+                opponents_turn = 1;
+            }
             input[0] = '\0';
         }
 
@@ -458,6 +465,7 @@ int main(int argc, char** argv)
         }
     }
     endwin();
+    FreeTree(GetRootNode());
 
     // Clean up
     if (host >= 0)
