@@ -21,7 +21,7 @@ char* CreateSGF()
     char* sgf = malloc(4096);
     int index = 0;
     
-    Goban* current = GetHistory(0);
+    GameNode* current = GetHistory(0);
 
 #ifdef VERSION
     const char* version = VERSION;
@@ -49,16 +49,23 @@ char* CreateSGF()
     index += sprintf(sgf + index, "\n");
 
     int i;
+    int inARow = 0;
     for (i = 1; i < GetHistorySize(); ++i)
     {
         current = GetHistory(i);
-        Move lm = current->lastmove;
+        Move lm = current->goban.lastmove;
         if (lm.p.col != -1)
         {
             index += sprintf(sgf + index, ";%c[%c%c]",
                     lm.color - 32, 'a' + lm.p.col, 'a' + lm.p.row);
+            inARow++;
+            if (current->comment[0] != '\0')
+            {
+                index += sprintf(sgf + index, "C[%s]", current->comment);
+                inARow = 0;
+            }
         }
-        if (i % 10 == 0)
+        if (inARow % 10 == 0)
             index += sprintf(sgf + index, "\n");
     }
     index += sprintf(sgf + index, ")");
@@ -84,7 +91,7 @@ char* ReadSGFFile(char* filename)
     char c;
     while ((c = fgetc(f)) != EOF)
     {
-        if (c != '\n')
+        //if (c != '\n')
             sgf[i++] = c;
     }
 
@@ -217,6 +224,12 @@ void LoadSGF(Goban* goban, char* sgf)
                   m.p.row = label[3] - 'a';
                   ValidateMove(goban, m);
               }
+          }
+          else if (!strncmp(label, "C", label_end - label))
+          {
+              GameNode* node = GetViewedNode();
+              bzero(gameInfo->result, 10);
+              CopyTagContents(node->comment, label_end + 1, COMMENT_LENGTH);
           }
           label = FindNextLabel(label);
           label_end = FindNextTag(label);

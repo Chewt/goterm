@@ -510,7 +510,7 @@ int IsRepeat(Goban* goban)
         return 0;
     int i;
     for (i = 0; i < GetHistorySize(); ++i)
-        if (IsEqual(goban, GetHistory(i)))
+        if (IsEqual(goban, &(GetHistory(i)->goban)))
             return 1;
     return 0;
 }

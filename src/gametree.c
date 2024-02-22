@@ -106,13 +106,13 @@ void ViewHistory(Goban* goban, int n)
     view_index = n;
 }
 
-Goban* GetHistory(int idx)
+GameNode* GetHistory(int idx)
 {
     GameNode* n = GetRootNode();
     int i;
     for (i = 0; i < idx; ++i)
         n = n->mainline_next;
-    return &(n->goban);
+    return n;
 }
 
 int GetViewIndex()
