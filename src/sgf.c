@@ -17,11 +17,17 @@ char* CreateSGF()
         return NULL;
     time_t rawtime = time(NULL);
     struct tm* ptm = localtime(&rawtime);
-
-    char* sgf = malloc(4096);
-    int index = 0;
     
     GameNode* current = GetHistory(0);
+    int fileSize = 4096;
+    while (current != NULL)
+    {
+        fileSize += strlen(current->comment);
+        current = current->mainline_next;
+    }
+
+    char* sgf = malloc(fileSize);
+    int index = 0;
 
 #ifdef VERSION
     const char* version = VERSION;
@@ -90,10 +96,7 @@ char* ReadSGFFile(char* filename)
     int i = 0;
     char c;
     while ((c = fgetc(f)) != EOF)
-    {
-        //if (c != '\n')
-            sgf[i++] = c;
-    }
+        sgf[i++] = c;
 
     fclose(f);
     return sgf;
@@ -121,9 +124,10 @@ char* FindTagEnd(char* src)
 char* CopyTagContents(char* dst, char* src, int n)
 {
     char* c = FindTagEnd(src);
+    char temp = *c;
     *c = '\0';
     strncpy(dst, src, n - 1);
-    *c = ']';
+    *c = temp;
     return c + 1;
 }
 
@@ -131,14 +135,16 @@ char* CopyTagContents(char* dst, char* src, int n)
 char* FindNextLabel(char* src)
 {
     char* c = FindTagEnd(src);
-    return c + 1;
+    while ((*c == '\n') || (*c == ']'))
+        c++;
+    return c;
 }
 
 // Return a pointer to the opening '[' of a tag
 char* FindNextTag(char* src)
 {
     char* c = src;
-    while ((*c != '[') && (*c != '\0'))
+    while ((*c != '[') && (*c != '\0') && (*c != '\n')&& (*c != ' '))
         c++;
     return c;
 }
