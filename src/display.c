@@ -1,10 +1,21 @@
 #include <ncurses.h>
+#include <string.h>
 #include "display.h"
 #include "gameinfo.h"
 #include "gametree.h"
 #include "go.h"
 
 char screen_notes[NOTES_LENGTH];
+
+DisplayConfig displayConfig  = { .centerBoard  = 1,
+                                 .showBoard    = 1,
+                                 .showInfo     = 1,
+                                 .showComments = 1};
+
+DisplayConfig* GetDisplayConfig()
+{
+    return &displayConfig;
+}
 
 char* GetNotes()
 {
@@ -34,6 +45,40 @@ int BoardFitsScreen(Goban* goban)
 }
 
 
+
+void PrintInfo(Goban* goban)
+{
+    GameInfo* gameInfo = GetGameInfo();
+    DisplayConfig* displayConfig = GetDisplayConfig();
+
+    // Determine where to put the game info, accounting for whether or not the
+    // board in centered
+    int start_xpos = (gameInfo->boardSize + 1) * 4;
+    if (displayConfig->centerBoard)
+        start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
+    start_xpos += 2;
+
+    // Print Info
+    mvprintw(0,start_xpos, "B[%s]: %d", gameInfo->blackName, goban->bpris);
+    mvprintw(1,start_xpos, "W[%s]: %d", gameInfo->whiteName, goban->wpris);
+    if (gameInfo->result[0] != '\0')
+        mvprintw(2,start_xpos, "Result: %s", gameInfo->result);
+    char lastmove[10] = { 0 };
+    if (GetHistorySize() > 1)
+    {
+        int idx = snprintf(lastmove, 10, "%d. ", GetViewIndex());
+        if (goban->lastmove.p.col == -1)
+            snprintf(lastmove + idx, 10, "Pass");
+        else
+        {
+            snprintf(lastmove + idx, 10, "%c%d",
+                    coords[goban->lastmove.p.col],
+                    gameInfo->boardSize - goban->lastmove.p.row);
+        }
+    }
+    mvprintw(4,start_xpos, "%s", lastmove);
+}
+
 // Print board to ncurses screen
 void PrintBoardw(Goban* goban)
 {
@@ -46,11 +91,15 @@ void PrintBoardw(Goban* goban)
 
     // Determine where the board should be placed on screen
     GameInfo* gameInfo = GetGameInfo();
-    int width_needed = gameInfo->boardSize * 4 + 11;
+    DisplayConfig* displayConfig = GetDisplayConfig();
     int start_xpos = 0;
-    int max_x = getmaxx(stdscr);
-    if ((max_x / 2) >= (width_needed / 2))
-        start_xpos = (max_x / 2) - (width_needed / 2);
+    if (displayConfig->centerBoard == 1)
+    {
+        int width_needed = gameInfo->boardSize * 4;
+        int max_x = getmaxx(stdscr);
+        if ((max_x / 2) >= (width_needed / 2))
+            start_xpos = (max_x / 2) - (width_needed / 2);
+    }
 
     clear(); // Set screen to blank
 
@@ -196,28 +245,6 @@ void PrintBoardw(Goban* goban)
         y_pos += 2;
     }
 
-    // Game info
-    attroff(COLOR_PAIR(BLACK_STONE_COLOR));
-    mvprintw(0, gameInfo->boardSize * 4 + 4 + start_xpos, "B[%s]: %d", gameInfo->blackName, goban->bpris);
-    mvprintw(1, gameInfo->boardSize * 4 + 4 + start_xpos, "W[%s]: %d", gameInfo->whiteName, goban->wpris);
-    if (gameInfo->result[0] != '\0')
-        mvprintw(2, gameInfo->boardSize * 4 + 4 + start_xpos, "Result: %s", gameInfo->result);
-    char lastmove[10] = { 0 };
-    if (GetHistorySize() > 1)
-    {
-        int idx = snprintf(lastmove, 10, "%d. ", GetViewIndex());
-        if (goban->lastmove.p.col == -1)
-            snprintf(lastmove + idx, 10, "Pass");
-        else
-        {
-            snprintf(lastmove + idx, 10, "%c%d",
-                    coords[goban->lastmove.p.col],
-                    gameInfo->boardSize - goban->lastmove.p.row);
-        }
-    }
-    mvprintw(4, gameInfo->boardSize * 4 + 4 + start_xpos, "%s", lastmove);
-    attron(COLOR_PAIR(BLACK_STONE_COLOR));
-
     // Place stones
     for (i = 0; i < gameInfo->boardSize; ++i)
     {
@@ -241,8 +268,63 @@ void PrintBoardw(Goban* goban)
             }
         }
     }
-    move(gameInfo->boardSize * 2 + 1, start_xpos);
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+}
+
+int WordSize(char* buf)
+{
+    int i = 0;
+    int count = 0;
+    char c;
+    while (((c = buf[i++]) != ' ') && (c != '\0') && (c != '\n'))
+        count++;
+    return count;
+}
+
+void PrintComments()
+{
+    GameInfo* gameInfo = GetGameInfo();
+    DisplayConfig* displayConfig = GetDisplayConfig();
+
+    // Determine where to put the comments, accounting for whether or not the
+    // board in centered
+    int start_ypos = 6;
+    int screen_end = getmaxx(stdscr);
+    int start_xpos = (gameInfo->boardSize + 1) * 4;
+    if (displayConfig->centerBoard)
+        start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
+    start_xpos += 2;
+
+    GameNode* current_node = GetViewedNode();
+    char c;
+    int i = 0;
+    int x = start_xpos;
+    int y = start_ypos;
+    while ((c = current_node->comment[i++]) != '\0')
+    {
+        if (c == '\n')
+        {
+            move(++y, x = start_xpos);
+            continue;
+        }
+        else if ((x + WordSize(current_node->comment + i - 1)) > screen_end)
+            move(++y, x = start_xpos);
+        mvaddch(y, x++, c);
+    }
+}
+
+void PrintDisplay(Goban* goban)
+{
+    DisplayConfig* displayConfig = GetDisplayConfig();
+    GameInfo* gameInfo = GetGameInfo();
+    clear();
+    if (displayConfig->showBoard)
+        PrintBoardw(goban);
+    if (displayConfig->showInfo)
+        PrintInfo(goban);
+    if (displayConfig->showComments)
+        PrintComments();
+    move(gameInfo->boardSize * 2 + 1, 0);
 }
 
 void PrintNotesw(Goban* goban)

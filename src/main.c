@@ -251,20 +251,20 @@ int main(int argc, char** argv)
                 getnstr(resp, 256);
                 if (!RemoveDeadGroups(&tempgoban, resp))
                 {
-                    PrintBoardw(&goban);
+                    PrintDisplay(&goban);
                     continue;
                 }
                 else
                 {
                     ScoreBoard(&tempgoban);
-                    PrintBoardw(&tempgoban);
+                    PrintDisplay(&tempgoban);
                     char resp[COMMAND_LENGTH];
                     mvprintw(getcury(stdscr), 0, "Does this look right?[Y/n]\n: ");
                     refresh();
                     getnstr(resp, 256);
                     if (resp[0] == 'n' || resp[0] == 'N')
                     {
-                        PrintBoardw(&goban);
+                        PrintDisplay(&goban);
                         continue;
                     }
                     memcpy(&goban, &tempgoban, sizeof(Goban));
@@ -307,11 +307,11 @@ int main(int argc, char** argv)
                 }
             }
             AddHistory(&goban);
-            PrintBoardw(&goban);
+            PrintDisplay(&goban);
             running = 1;
         }
 
-        PrintBoardw(&goban);
+        PrintDisplay(&goban);
         PrintNotesw(&goban);
         refresh();
         if (e.pid >= 0 && (opponents_turn == 1))  // Engine's turn

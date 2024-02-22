@@ -12,6 +12,11 @@ GameNode* GetRootNode()
     return root_node;
 }
 
+GameNode* GetViewedNode()
+{
+    return viewed_node;
+}
+
 GameNode* NewNode(Goban* goban)
 {
     GameNode* root = malloc(sizeof(struct GameNode));

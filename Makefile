@@ -15,7 +15,7 @@ all: CFLAGS += -DVERSION=$(VERSION)
 all: $(TARGET)
 
 .PHONY: debug
-debug: CFLAGS += -g
+debug: CFLAGS += -g -DDEBUG
 debug: clean all
 
 $(TARGET): $(OBJECTS)

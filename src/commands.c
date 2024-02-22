@@ -251,14 +251,29 @@ int SayCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
     if (n_tokens <= 1)
         return -1;
     GameInfo* gameInfo = GetGameInfo();
+    GameNode* current_node = GetViewedNode();
     int i;
-    WriteNotes("%s: \"", (player == 'b') ? gameInfo->blackName : gameInfo->whiteName);
+    AppendComment(current_node, "%s: \"", (player == 'b') ? gameInfo->blackName : gameInfo->whiteName);
     for (i = 1; i < n_tokens - 1; ++i)
     {
-        AppendNotes("%s ", tokens[i]);
+        AppendComment(current_node, "%s ", tokens[i]);
     }
-    AppendNotes("%s", tokens[i]);
-    AppendNotes("\"\n");
+    AppendComment(current_node, "%s", tokens[i]);
+    AppendComment(current_node, "\"\n");
+    return 1;
+}
+
+/* DEBUG COMMANDS */
+int ToggleBoardCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
+{
+    DisplayConfig* dc = GetDisplayConfig();
+    dc->showBoard ^= 1;
+    return 1;
+}
+int ToggleInfoCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
+{
+    DisplayConfig* dc = GetDisplayConfig();
+    dc->showInfo ^= 1;
     return 1;
 }
 
@@ -313,6 +328,10 @@ struct GoCommand commands[] = {
     {"back", BackCommand, 0, "Shows the previous move"},
     {"goto", GotoCommand, 0, "Go to a specific move in the game"},
     {"exit", ExitCommand, 0, "Exit program"},
+#ifdef DEBUG
+    {"toggle_board", ToggleBoardCommand, 0, "Toggle board visibility"},
+    {"toggle_info", ToggleInfoCommand, 0, "Toggle info visibility"},
+#endif
     { 0 }
 };
 
