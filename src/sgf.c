@@ -134,17 +134,23 @@ char* CopyTagContents(char* dst, char* src, int n)
 // Return a pointer to the beginning of a label following a tag
 char* FindNextLabel(char* src)
 {
-    char* c = FindTagEnd(src);
-    while ((*c == '\n') || (*c == ']'))
-        c++;
+    char* c = src;
+    do 
+    {
+        c = FindTagEnd(c);
+        while ((*c == '\n') || (*c == ']'))
+            c++;
+    } while (*c == '[');
     return c;
 }
 
 // Return a pointer to the opening '[' of a tag
 char* FindNextTag(char* src)
 {
+    if (!src)
+        return src;
     char* c = src;
-    while ((*c != '[') && (*c != '\0') && (*c != '\n')&& (*c != ' '))
+    while ((*c != '[') && (*c != '\0'))
         c++;
     return c;
 }
@@ -154,6 +160,7 @@ void LoadSGF(Goban* goban, char* sgf)
     // Start from clean state
     GameInfo* gameInfo = GetGameInfo();
     ResetGoban(goban);
+    NewTree(goban);
     char* token;
     char* save_ptr;
     token = strtok_r(sgf, ";", &save_ptr); // First token always '(' 
@@ -177,28 +184,31 @@ void LoadSGF(Goban* goban, char* sgf)
         else if (!strncmp(label, "KM", label_end - label))
         {
             char* tag_end = FindTagEnd(label_end);
+            char temp = *tag_end;
             *tag_end = '\0';
             gameInfo->komi = strtof(label_end + 1, NULL);
-            *tag_end = ']';
+            *tag_end = temp;
         }
         else if (!strncmp(label, "SZ", label_end - label))
         {
             char* tag_end = FindTagEnd(label_end);
+            char temp = *tag_end;
             *tag_end = '\0';
             gameInfo->boardSize = strtod(label_end + 1, NULL);
-            *tag_end = ']';
+            *tag_end = temp;
         }
         else if (!strncmp(label, "HA", label_end - label))
         {
             char* tag_end = FindTagEnd(label_end);
+            char temp = *tag_end;
             *tag_end = '\0';
             SetHandicap(goban, strtod(label_end + 1, NULL));
-            *tag_end = ']';
+            *tag_end = temp;
         }
         else if (!strncmp(label, "RE", label_end - label))
         {
-            bzero(gameInfo->result, 10);
-            CopyTagContents(gameInfo->result, label_end + 1, 10);
+            bzero(gameInfo->result, RESULT_LENGTH);
+            CopyTagContents(gameInfo->result, label_end + 1, RESULT_LENGTH);
         }
         label = FindNextLabel(label_end);
         label_end = FindNextTag(label);
@@ -209,37 +219,46 @@ void LoadSGF(Goban* goban, char* sgf)
     {
         label = token;
         label_end = FindNextTag(label);
+
+        // This is to hard cut-off adding moves until I have a proper branch system
+        int end_of_branch = 0;
         while (label[0] != '\0')
         {
-          if (!strncmp(label, "W", label_end - label) ||
-              !strncmp(label, "B", label_end - label))
-          {
-              Move m;
-              m.color = (label[0] == 'B') ? 'b' : 'w';
-              if ((label[1] == '[') && (label[2] == ']')) // Pass
-              {
-                  goban->lastmove.p.col = -1;
-                  goban->lastmove.p.row = -1;
-                  goban->lastmove.color = m.color;
-                  goban->color = (goban->color == 'b') ? 'w' : 'b';
-                  AddHistory(goban);
-              }
-              else // Real move
-              {
-                  m.p.col = label[2] - 'a';
-                  m.p.row = label[3] - 'a';
-                  ValidateMove(goban, m);
-              }
-          }
-          else if (!strncmp(label, "C", label_end - label))
-          {
-              GameNode* node = GetViewedNode();
-              bzero(gameInfo->result, 10);
-              CopyTagContents(node->comment, label_end + 1, COMMENT_LENGTH);
-          }
-          label = FindNextLabel(label);
-          label_end = FindNextTag(label);
+            if (label[0] == ')')
+            {
+                end_of_branch = 1;
+                break;
+            }
+            if (!strncmp(label, "W", label_end - label) ||
+                !strncmp(label, "B", label_end - label))
+            {
+                Move m;
+                m.color = (label[0] == 'B') ? 'b' : 'w';
+                if ((label[1] == '[') && (label[2] == ']')) // Pass
+                {
+                    goban->lastmove.p.col = -1;
+                    goban->lastmove.p.row = -1;
+                    goban->lastmove.color = m.color;
+                    goban->color = (goban->color == 'b') ? 'w' : 'b';
+                    AddHistory(goban);
+                }
+                else // Real move
+                {
+                    m.p.col = label[2] - 'a';
+                    m.p.row = label[3] - 'a';
+                    ValidateMove(goban, m);
+                }
+            }
+            else if (!strncmp(label, "C", label_end - label))
+            {
+                GameNode* node = GetViewedNode();
+                CopyTagContents(node->comment, label_end + 1, COMMENT_LENGTH);
+            }
+            label = FindNextLabel(label);
+            label_end = FindNextTag(label);
         }
+        if (end_of_branch)
+            break;
     }
     WriteNotes("Loaded game from sgf...\n");
 }

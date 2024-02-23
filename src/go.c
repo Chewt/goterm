@@ -528,7 +528,7 @@ int ValidateMove(Goban* goban, Move move)
     tempgoban.lastmove = move;
     tempgoban.color = (move.color == 'b') ? 'w' : 'b';
     char search[19][19];
-    memset(search, 0, 361);
+    memset(search, ' ', 361);
     int i, j;
     for (i = 0; i < gameInfo->boardSize; ++i)
     {

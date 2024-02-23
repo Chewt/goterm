@@ -210,11 +210,6 @@ int main(int argc, char** argv)
 
     int running = 1;
 
-    if (flags.sgf)
-    {
-        LoadSGF(&goban, flags.sgf);
-        free(flags.sgf);
-    }
 
     // Make sure board can fit screen
     if (!BoardFitsScreen(&goban)) 
@@ -227,6 +222,13 @@ int main(int argc, char** argv)
                  gameInfo->boardSize);
         gameInfo->boardSize = flags.size;
     }
+
+    if (flags.sgf)
+    {
+        LoadSGF(&goban, flags.sgf);
+        free(flags.sgf);
+    }
+
     // Main loop
     while (running)
     {
