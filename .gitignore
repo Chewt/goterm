@@ -6,3 +6,4 @@ vgcore*
 *.json
 *.sgf
 *.txt
+*.sh
