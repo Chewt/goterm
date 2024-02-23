@@ -214,11 +214,32 @@ void LoadSGF(Goban* goban, char* sgf)
         label_end = FindNextTag(label);
     } 
 
+    // While reading tags it is possible for a comment to have a ; in it, so lets capture that
+    int partialComment = 0;
+
     // Read Moves
     while ((token = strtok_r(NULL, ";", &save_ptr)) != NULL)
     {
         label = token;
         label_end = FindNextTag(label);
+
+        // Resume copy if partial comment was found before
+        if (partialComment)
+        {
+            label--;
+            *label = ';';
+            partialComment = 0;
+            GameNode* node = GetViewedNode();
+            char* tagEnd = FindTagEnd(label);
+            CopyTagContents(node->comment + strlen(node->comment), label,
+                            COMMENT_LENGTH - strlen(node->comment));
+            *label = '\0';
+            if (*tagEnd != ']')
+            {
+                partialComment = 1;
+                continue;
+            }
+        }
 
         // This is to hard cut-off adding moves until I have a proper branch system
         int end_of_branch = 0;
@@ -252,6 +273,9 @@ void LoadSGF(Goban* goban, char* sgf)
             else if (!strncmp(label, "C", label_end - label))
             {
                 GameNode* node = GetViewedNode();
+                char* tagEnd = FindTagEnd(label);
+                if (*tagEnd != ']')
+                    partialComment = 1;
                 CopyTagContents(node->comment, label_end + 1, COMMENT_LENGTH);
             }
             label = FindNextLabel(label);
