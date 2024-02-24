@@ -39,10 +39,6 @@ GameNode* AddMainline(GameNode* node, Goban* goban)
 }
 GameNode* AddVariation(GameNode* node, Goban* goban)
 {
-    if (node->n_alts == MAX_BRANCHES)
-    {
-        return NULL;
-    }
     int i;
     GameNode* existing_node = NULL;
     for (i = 0; i < node->n_alts; ++i)
@@ -55,6 +51,10 @@ GameNode* AddVariation(GameNode* node, Goban* goban)
     }
     if (existing_node != NULL)
         return existing_node;
+
+    if (node->n_alts == MAX_BRANCHES)
+        return NULL;
+
     WriteComment(node, "Branches: %d", node->n_alts + 1);
     node->alts[node->n_alts] = NewNode(goban);
     node->alts[node->n_alts]->mainline_prev = node;
