@@ -446,7 +446,7 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
         ViewHistory(goban, GetHistorySize() - 1);
     if (!ValidateMove(goban, m))
     {
-        WriteNotes("Invalid Move\n");
+        AppendNotes("Invalid Move\n");
     }
     return 1;
 }

@@ -548,8 +548,9 @@ int ValidateMove(Goban* goban, Move move)
         return 0;
     else
     {
+        if (!AddHistory(&tempgoban))
+            return 0;
         memcpy(goban, &tempgoban, sizeof(Goban));
-        AddHistory(goban);
         return 1;
     }
 }

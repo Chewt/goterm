@@ -22,13 +22,13 @@ GameNode* GetViewedNode()
 
 GameNode* NewNode(Goban* goban)
 {
-    GameNode* root = malloc(sizeof(struct GameNode));
-    memcpy(&(root->goban), goban, sizeof(Goban));
-    root->mainline_prev = NULL;
-    root->mainline_next = NULL;
-    root->n_alts = 0;
-    root->comment[0] = '\0';
-    return root;
+    GameNode* node = malloc(sizeof(struct GameNode));
+    memcpy(&(node->goban), goban, sizeof(Goban));
+    node->mainline_prev = NULL;
+    node->mainline_next = NULL;
+    node->n_alts = 0;
+    node->comment[0] = '\0';
+    return node;
 }
 
 GameNode* AddMainline(GameNode* node, Goban* goban)
@@ -39,8 +39,10 @@ GameNode* AddMainline(GameNode* node, Goban* goban)
 }
 GameNode* AddVariation(GameNode* node, Goban* goban)
 {
-    if (node->n_alts >= MAX_BRANCHES)
+    if (node->n_alts == MAX_BRANCHES)
+    {
         return NULL;
+    }
     int i;
     GameNode* existing_node = NULL;
     for (i = 0; i < node->n_alts; ++i)
@@ -56,7 +58,8 @@ GameNode* AddVariation(GameNode* node, Goban* goban)
     WriteComment(node, "Branches: %d", node->n_alts + 1);
     node->alts[node->n_alts] = NewNode(goban);
     node->alts[node->n_alts]->mainline_prev = node;
-    return node->alts[node->n_alts++];
+    node->n_alts++;
+    return node->alts[node->n_alts - 1];
 }
 
 GameNode* RetrieveNode(int idx)
@@ -91,16 +94,18 @@ int FreeTree(GameNode* root)
     return nodes_removed + 1;
 }
 
-void AddHistory(Goban* goban)
+int AddHistory(Goban* goban)
 {
     if (viewed_node->mainline_next != NULL)
     {
-        viewed_node = AddVariation(viewed_node, goban);
-        if (viewed_node == NULL)
+        GameNode* new_node = AddVariation(viewed_node, goban); 
+        if (new_node == NULL)
         {
-            WriteNotes("Too many branches\n");
-            return;
+
+            AppendNotes("Too many branches\n");
+            return 0;
         }
+        viewed_node = new_node;
     }
     else
     {
@@ -108,6 +113,7 @@ void AddHistory(Goban* goban)
         node_counter++;
     }
     view_index++;
+    return 1;
 }
 
 void UndoHistory(Goban* goban, int n)

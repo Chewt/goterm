@@ -28,7 +28,7 @@ int GetViewIndex();
 GameNode* GetRootNode();
 GameNode* GetViewedNode();
 GameNode* GetHistory(int i);
-void AddHistory(Goban* goban);
+int AddHistory(Goban* goban);
 void UndoHistory(Goban* goban, int n);
 void ViewHistory(Goban* goban, int n);
 void SlideHistory(Goban* goban, int n);
