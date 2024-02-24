@@ -12,8 +12,10 @@ typedef struct
     float komi;
     int handicap;
     char result[RESULT_LENGTH];
+    int can_edit;
 } GameInfo;
 
 GameInfo* GetGameInfo();
+void SetGameInfoDefaults();
 
 #endif 

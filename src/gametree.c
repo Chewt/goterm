@@ -1,6 +1,9 @@
 #include "gametree.h"
+#include "display.h"
+#include "go.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 GameNode* root_node = NULL;
 GameNode* viewed_node = NULL;
@@ -34,6 +37,27 @@ GameNode* AddMainline(GameNode* node, Goban* goban)
     node->mainline_next->mainline_prev = node;
     return node->mainline_next;
 }
+GameNode* AddVariation(GameNode* node, Goban* goban)
+{
+    if (node->n_alts >= MAX_BRANCHES)
+        return NULL;
+    int i;
+    GameNode* existing_node = NULL;
+    for (i = 0; i < node->n_alts; ++i)
+    {
+        if (IsEqual(goban, &(node->alts[i]->goban)))
+        {
+            existing_node = node->alts[i];
+            break;
+        }
+    }
+    if (existing_node != NULL)
+        return existing_node;
+    WriteComment(node, "Branches: %d", node->n_alts + 1);
+    node->alts[node->n_alts] = NewNode(goban);
+    node->alts[node->n_alts]->mainline_prev = node;
+    return node->alts[node->n_alts++];
+}
 
 GameNode* RetrieveNode(int idx)
 {
@@ -54,34 +78,47 @@ void NewTree(Goban* goban)
     view_index = 0;
 }
 
-void FreeTree(GameNode* root)
+int FreeTree(GameNode* root)
 {
     int i;
+    int nodes_removed = 0;
     for (i = 0; i < root->n_alts; ++i)
-        FreeTree(root->alts[i]);
+        nodes_removed += FreeTree(root->alts[i]);
     if (root->mainline_next != NULL)
-        FreeTree(root->mainline_next);
+        nodes_removed += FreeTree(root->mainline_next);
     free(root);
     root = NULL;
+    return nodes_removed + 1;
 }
 
 void AddHistory(Goban* goban)
 {
-    viewed_node = AddMainline(viewed_node, goban);
+    if (viewed_node->mainline_next != NULL)
+    {
+        viewed_node = AddVariation(viewed_node, goban);
+        if (viewed_node == NULL)
+        {
+            WriteNotes("Too many branches\n");
+            return;
+        }
+    }
+    else
+    {
+        viewed_node = AddMainline(viewed_node, goban);
+        node_counter++;
+    }
     view_index++;
-    node_counter++;
 }
 
 void UndoHistory(Goban* goban, int n)
 {
     if (node_counter - n > 0)
     {
-        node_counter -= n;
         int i;
-        for (i = 0; i < n; ++i)
+        for (i = 0; i < n && (viewed_node->mainline_prev != NULL); ++i)
             viewed_node = viewed_node->mainline_prev;
         memcpy(goban, &(viewed_node->goban), sizeof(Goban));
-        FreeTree(viewed_node->mainline_next);
+        node_counter -= FreeTree(viewed_node->mainline_next);
         viewed_node->mainline_next = NULL;
     }
 }
@@ -96,14 +133,37 @@ void ViewHistory(Goban* goban, int n)
         n = 0;
     int i;
     viewed_node = GetRootNode();
-    for (i = 0; i < n; ++i)
-    {
-        if (viewed_node->mainline_next == NULL)
-            break;
+
+    for (i = 0; i < n && viewed_node->mainline_next != NULL; ++i)
         viewed_node = viewed_node->mainline_next;
+
+    memcpy(goban, &(viewed_node->goban), sizeof(Goban));
+}
+
+void SlideHistory(Goban* goban, int n)
+{
+    int i;
+    if (n >= 0)
+    {
+        for (i = 0; i < n; ++i)
+        {
+            if (viewed_node->mainline_next == NULL)
+                break;
+            viewed_node = viewed_node->mainline_next;
+        }
+        view_index += i;
+    }
+    else if (n < 0)
+    {
+        for (i = 0; i < -n; ++i)
+        {
+            if (viewed_node->mainline_prev == NULL)
+                break;
+            viewed_node = viewed_node->mainline_prev;
+        }
+        view_index -= i;
     }
     memcpy(goban, &(viewed_node->goban), sizeof(Goban));
-    view_index = n;
 }
 
 GameNode* GetHistory(int idx)

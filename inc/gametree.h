@@ -20,7 +20,7 @@ typedef struct GameNode GameNode;
 GameNode* NewNode(Goban* goban);
 GameNode* AddMainline(GameNode* node, Goban* goban);
 GameNode* RetrieveNode(int idx);
-void FreeTree(GameNode* root);
+int FreeTree(GameNode* root);
 void NewTree(Goban* goban);
 
 int GetHistorySize();
@@ -31,5 +31,6 @@ GameNode* GetHistory(int i);
 void AddHistory(Goban* goban);
 void UndoHistory(Goban* goban, int n);
 void ViewHistory(Goban* goban, int n);
+void SlideHistory(Goban* goban, int n);
 
 #endif

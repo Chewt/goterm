@@ -90,12 +90,11 @@ int main(int argc, char** argv)
 
     // Board Setup
     srand(time(NULL));
+    SetGameInfoDefaults();
     GameInfo* gameInfo = GetGameInfo();
     Goban goban = {0};
     ResetGoban(&goban);
     goban.color = 'b';
-    strcpy(gameInfo->blackName, "Black");
-    strcpy(gameInfo->whiteName, "White");
 
     // argp parsing args
     struct argp_option options[] =

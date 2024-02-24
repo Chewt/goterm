@@ -44,7 +44,6 @@ int ValidateInput(Goban* goban, Point* p, char input[256])
 
 void ResetGoban(Goban* goban)
 {
-    GameInfo* gameInfo = GetGameInfo();
     ClearBoard(goban);
     goban->wpris = 0;
     goban->bpris = 0;
@@ -53,12 +52,6 @@ void ResetGoban(Goban* goban)
     goban->lastmove.p.col = -2;
     goban->lastmove.p.row = -2;
     goban->showscore = 0;
-    gameInfo->result[0] = '\0';
-    gameInfo->komi = 6.5;
-    gameInfo->handicap = 0;
-    gameInfo->boardSize = (gameInfo->boardSize) ? gameInfo->boardSize : 19;
-    strcpy(gameInfo->blackName, "Black");
-    strcpy(gameInfo->whiteName, "White");
     NewTree(goban);
 }
 

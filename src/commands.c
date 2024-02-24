@@ -121,11 +121,11 @@ int NextCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
     if (n_tokens == 1)
-        ViewHistory(goban, GetViewIndex() + 1);
+        SlideHistory(goban, 1);
     else if (n_tokens == 2)
     {
         int n = strtol(tokens[1], NULL, 10);
-        ViewHistory(goban, GetViewIndex() + n);
+        SlideHistory(goban, n);
     }
     return 1;
 }
@@ -135,11 +135,11 @@ int BackCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
     if (n_tokens != 1 && n_tokens != 2)
         return -1;
     if (n_tokens == 1)
-        ViewHistory(goban, GetViewIndex() - 1);
+        SlideHistory(goban, -1);
     else if (n_tokens == 2)
     {
         int n = strtol(tokens[1], NULL, 10);
-        ViewHistory(goban, GetViewIndex() - n);
+        SlideHistory(goban, -n);
     }
     return 1;
 }
@@ -441,7 +441,8 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
         WriteNotes("Invalid Input: %s\n", tokens[0]);
         return 1;
     }
-    if (GetViewIndex() != (GetHistorySize() - 1))
+    GameInfo* gameInfo = GetGameInfo();
+    if (!gameInfo->can_edit && GetViewIndex() != (GetHistorySize() - 1))
         ViewHistory(goban, GetHistorySize() - 1);
     if (!ValidateMove(goban, m))
     {
