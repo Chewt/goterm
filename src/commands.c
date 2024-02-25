@@ -443,7 +443,10 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     }
     GameInfo* gameInfo = GetGameInfo();
     if (!gameInfo->can_edit && GetViewIndex() != (GetHistorySize() - 1))
+    {
         ViewHistory(goban, GetHistorySize() - 1);
+        m.color = (m.color == 'b') ? 'w' : 'b';
+    }
     if (!ValidateMove(goban, m))
     {
         AppendNotes("Invalid Move\n");
