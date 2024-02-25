@@ -10,7 +10,7 @@ GameInfo* GetGameInfo()
 
 void SetGameInfoDefaults()
 {
-    gameInfo.can_edit = 0;
+    gameInfo.can_edit = 1;
     gameInfo.komi = 6.5f;
     gameInfo.boardSize = 19;
     gameInfo.handicap = 0;
