@@ -7,10 +7,11 @@
 
 char screen_notes[NOTES_LENGTH];
 
-DisplayConfig displayConfig  = { .centerBoard  = 1,
-                                 .showBoard    = 1,
-                                 .showInfo     = 1,
-                                 .showComments = 1};
+DisplayConfig displayConfig  = { .centerBoard   = 1,
+                                 .showBoard     = 1,
+                                 .showInfo      = 1,
+                                 .showNextMoves = 1,
+                                 .showComments  = 1};
 
 DisplayConfig* GetDisplayConfig()
 {
@@ -245,12 +246,30 @@ void PrintBoardw(Goban* goban)
         y_pos += 2;
     }
 
+    // Show next move / variations
+    if (displayConfig->showNextMoves)
+    {
+        GameNode* node = GetViewedNode();
+        if (node->mainline_next != NULL)
+        {
+            int col = node->mainline_next->goban.lastmove.p.col;
+            int row = node->mainline_next->goban.lastmove.p.row;
+            goban->board[row][col] = 'A';
+            for (i = 0; i < node->n_alts; ++i)
+            {
+                col = node->alts[i]->goban.lastmove.p.col;
+                row = node->alts[i]->goban.lastmove.p.row;
+                goban->board[row][col] = 'B' + i;
+            }
+        }
+    }
+
     // Place stones
     for (i = 0; i < gameInfo->boardSize; ++i)
     {
         for (j = 0; j < gameInfo->boardSize; ++j)
         {
-            if (goban->board[i][j] != ' ')
+            if (goban->board[i][j] == 'w' || goban->board[i][j] == 'b')
             {
                 move((i * 2) + 1, (j * 4) + 2 + start_xpos);
                 if (goban->board[i][j] == 'w')
@@ -266,9 +285,36 @@ void PrintBoardw(Goban* goban)
                 addstr("\u2588");
                 attrset(COLOR_PAIR(BLACK_STONE_COLOR));
             }
+            else if (goban->board[i][j] != ' ')
+            {
+                move((i * 2) + 1, (j * 4) + 2 + start_xpos);
+                attron(A_BOLD);
+                addch(ACS_HLINE);
+                addch(goban->board[i][j]);
+                addch(ACS_HLINE);
+                attroff(A_BOLD);
+            }
         }
     }
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+
+    // Remove next move / variations markup
+    if (displayConfig->showNextMoves)
+    {
+        GameNode* node = GetViewedNode();
+        if (node->mainline_next != NULL)
+        {
+            int col = node->mainline_next->goban.lastmove.p.col;
+            int row = node->mainline_next->goban.lastmove.p.row;
+            goban->board[row][col] = ' ';
+            for (i = 0; i < node->n_alts; ++i)
+            {
+                col = node->alts[i]->goban.lastmove.p.col;
+                row = node->alts[i]->goban.lastmove.p.row;
+                goban->board[row][col] = ' ';
+            }
+        }
+    }
 }
 
 int WordSize(char* buf)

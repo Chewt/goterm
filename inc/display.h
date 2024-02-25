@@ -20,6 +20,7 @@ typedef struct
     int showBoard;
     int showInfo;
     int showComments;
+    int showNextMoves;
 } DisplayConfig;
 
 // Is the current window size big enough to print the board

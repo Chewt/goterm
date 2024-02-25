@@ -501,10 +501,13 @@ int IsRepeat(Goban* goban)
 {
     if (GetHistorySize() == 0)
         return 0;
-    int i;
-    for (i = 0; i < GetHistorySize(); ++i)
-        if (IsEqual(goban, &(GetHistory(i)->goban)))
+    GameNode* node = GetViewedNode();
+    while (node->mainline_prev != NULL)
+    {
+        node = node->mainline_prev;
+        if (IsEqual(goban, &(node->goban)))
             return 1;
+    }
     return 0;
 }
 
