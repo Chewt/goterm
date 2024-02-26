@@ -145,6 +145,7 @@ void UndoHistory(Goban* goban, int n)
         if (toFree == viewed_node->mainline_next)
             viewed_node->mainline_next = NULL;
         memcpy(goban, &(viewed_node->goban), sizeof(Goban));
+        view_index -= n;
     }
 }
 
