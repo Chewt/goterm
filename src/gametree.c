@@ -146,6 +146,7 @@ void ViewHistory(Goban* goban, int n)
         viewed_node = viewed_node->mainline_next;
 
     memcpy(goban, &(viewed_node->goban), sizeof(Goban));
+    view_index = n;
 }
 
 void SlideHistory(Goban* goban, int n)

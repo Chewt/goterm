@@ -12,7 +12,7 @@ DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .showInfo      = 1,
                                  .showNextMoves = 1,
                                  .showTree      = 1,
-                                 .showComments  = 1};
+                                 .showComments  = 0};
 
 DisplayConfig* GetDisplayConfig()
 {
@@ -377,10 +377,13 @@ int CountBranches(GameNode* base, int limit)
     return count;
 }
 
-int PrintTree(GameNode* base, int limit)
+void PrintTree(GameNode* base, int skip, int limit)
 {
     if (base == NULL || limit == 0)
-        return 0;
+        return;
+
+    if (skip < 0)
+        skip = 0;
 
     GameNode* node = base;
     int x, y;
@@ -389,29 +392,36 @@ int PrintTree(GameNode* base, int limit)
 
     // Get number of branches past this point
     int branches_after = CountBranches(base->mainline_next, limit);
-    int branches_printed = 0;
+
+    if (!skip)
+        limit--;
 
     if (node->n_alts)
     {
         int i;
 
-        for (i = 0; i < branches_after; ++i)
+        for (i = 0; i < branches_after && !skip; ++i)
             mvaddch(y + i + 1, x, '|');
 
         for (i = 0; i < node->n_alts; ++i)
         {
-            mvaddch(y + branches_after + branches_printed + i + 1, x, '\\');
-            move(y + branches_after + branches_printed + i + 1, x + 1);
-            branches_printed += PrintTree(node->alts[i], limit - 1);
+            if (!skip)
+                mvaddch(y + branches_after + i + 1, x, '\\');
+
+            move(y + branches_after + i + 1, (!skip) ? x + 1 : x);
+            PrintTree(node->alts[i], skip - 1, limit);
         }
     }
-    if (node == GetViewedNode())
-        mvaddch(y, x, '%');
-    else
-        mvaddch(y, x, '-');
-    move(y, x + 1);
-    PrintTree(node->mainline_next, limit - 1);
-    return branches_printed;
+    if (!skip)
+    {
+        if (node == GetViewedNode())
+            mvaddch(y, x, '%');
+        else
+            mvaddch(y, x, '-');
+    }
+    move(y, (!skip) ? x + 1 : x);
+    PrintTree(node->mainline_next, skip - 1, limit);
+    return;
 }
 
 void PrintDisplay(Goban* goban)
@@ -430,7 +440,7 @@ void PrintDisplay(Goban* goban)
             start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
         start_xpos += 2;
         move(6, start_xpos);
-        PrintTree(GetRootNode(), 10);
+        PrintTree(GetRootNode(), GetViewIndex() - 5, 15);
     }
     if (displayConfig->showComments)
         PrintComments();
