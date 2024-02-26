@@ -123,11 +123,28 @@ void UndoHistory(Goban* goban, int n)
     if (node_counter - n > 0)
     {
         int i;
+        GameNode* base = viewed_node;
         for (i = 0; i < n && (viewed_node->mainline_prev != NULL); ++i)
             viewed_node = viewed_node->mainline_prev;
+        GameNode* toFree = viewed_node->mainline_next;
+
+        for (i = 0; i < viewed_node->n_alts; ++i)
+        {
+            if (viewed_node->alts[i] == base)
+            {
+                int j;
+                for (j = i + 1; j < viewed_node->n_alts; ++j)
+                    viewed_node->alts[j - 1] = viewed_node->alts[j];
+                viewed_node->alts[viewed_node->n_alts - 1] = NULL;
+                viewed_node->n_alts--;
+                toFree = base;
+                break;
+            }
+        }
+        node_counter -= FreeTree(toFree);
+        if (toFree == viewed_node->mainline_next)
+            viewed_node->mainline_next = NULL;
         memcpy(goban, &(viewed_node->goban), sizeof(Goban));
-        node_counter -= FreeTree(viewed_node->mainline_next);
-        viewed_node->mainline_next = NULL;
     }
 }
 
