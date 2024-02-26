@@ -379,16 +379,19 @@ int CountBranches(GameNode* base, int limit)
 
 void PrintTree(GameNode* base, int skip, int limit)
 {
-    if (base == NULL || limit == 0)
-        return;
 
     if (skip < 0)
         skip = 0;
-
     GameNode* node = base;
     int x, y;
     x = getcurx(stdscr);
     y = getcury(stdscr);
+
+    if (base == NULL || limit == 0)
+        return;
+
+    if (base == GetRootNode() && !skip)
+        mvaddch(y, x++, '<');
 
     // Get number of branches past this point
     int branches_after = CountBranches(base->mainline_next, limit);
@@ -420,6 +423,14 @@ void PrintTree(GameNode* base, int skip, int limit)
             mvaddch(y, x, '-');
     }
     move(y, (!skip) ? x + 1 : x);
+    if (node->mainline_next == NULL)
+    {
+        node = GetRootNode();
+        while (node->mainline_next != NULL)
+            node = node->mainline_next;
+        if (node == base)
+            mvaddch(y, x + 1, '>');
+    }
     PrintTree(node->mainline_next, skip - 1, limit);
     return;
 }
@@ -440,7 +451,7 @@ void PrintDisplay(Goban* goban)
             start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
         start_xpos += 2;
         move(6, start_xpos);
-        PrintTree(GetRootNode(), GetViewIndex() - 5, 15);
+        PrintTree(GetRootNode(), GetViewIndex() - 5, getmaxx(stdscr) - start_xpos - 1);
     }
     if (displayConfig->showComments)
         PrintComments();
