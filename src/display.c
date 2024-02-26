@@ -11,6 +11,7 @@ DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .showBoard     = 1,
                                  .showInfo      = 1,
                                  .showNextMoves = 1,
+                                 .showTree      = 1,
                                  .showComments  = 1};
 
 DisplayConfig* GetDisplayConfig()
@@ -359,6 +360,60 @@ void PrintComments()
     }
 }
 
+int CountBranches(GameNode* base, int limit)
+{
+    GameNode* node = base;
+    int count = 0;
+    int i, j;
+    for (i = 0; i < limit && node != NULL; ++i)
+    {
+        if (node->n_alts)
+        {
+            for (j = 0; j < node->n_alts; ++j)
+                count += CountBranches(node->alts[j], limit - i - 1) + 1;
+        }
+        node = node->mainline_next;
+    }
+    return count;
+}
+
+int PrintTree(GameNode* base, int limit)
+{
+    if (base == NULL || limit == 0)
+        return 0;
+
+    GameNode* node = base;
+    int x, y;
+    x = getcurx(stdscr);
+    y = getcury(stdscr);
+
+    // Get number of branches past this point
+    int branches_after = CountBranches(base->mainline_next, limit);
+    int branches_printed = 0;
+
+    if (node->n_alts)
+    {
+        int i;
+
+        for (i = 0; i < branches_after; ++i)
+            mvaddch(y + i + 1, x, '|');
+
+        for (i = 0; i < node->n_alts; ++i)
+        {
+            mvaddch(y + branches_after + branches_printed + i + 1, x, '\\');
+            move(y + branches_after + branches_printed + i + 1, x + 1);
+            branches_printed += PrintTree(node->alts[i], limit - 1);
+        }
+    }
+    if (node == GetViewedNode())
+        mvaddch(y, x, '%');
+    else
+        mvaddch(y, x, '-');
+    move(y, x + 1);
+    PrintTree(node->mainline_next, limit - 1);
+    return branches_printed;
+}
+
 void PrintDisplay(Goban* goban)
 {
     DisplayConfig* displayConfig = GetDisplayConfig();
@@ -368,6 +423,15 @@ void PrintDisplay(Goban* goban)
         PrintBoardw(goban);
     if (displayConfig->showInfo)
         PrintInfo(goban);
+    if (displayConfig->showTree)
+    {
+        int start_xpos = (gameInfo->boardSize + 1) * 4;
+        if (displayConfig->centerBoard)
+            start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
+        start_xpos += 2;
+        move(6, start_xpos);
+        PrintTree(GetRootNode(), 10);
+    }
     if (displayConfig->showComments)
         PrintComments();
     move(gameInfo->boardSize * 2 + 1, 0);
@@ -402,241 +466,4 @@ void PrintNotesw(Goban* goban)
 
     // Reset notes to empty
     screen_notes[0] = '\0';
-}
-
-// Print board to screen
-void PrintBoard(Goban* goban)
-{
-    GameInfo* gameInfo = GetGameInfo();
-    printf("\e[2J\e[H"); // Clear Screen and position cursor top left
-    int i, j;
-    printf("\e[30;43m ");
-    for (i = 0; i < gameInfo->boardSize; ++i)
-        printf("  %c ", coords[i]);
-    printf("  \e[0m B: %d\n", goban->bpris);
-    for (i = 0; i < (2 * gameInfo->boardSize) - 1; ++i)
-    {
-        for (j = 0; j < gameInfo->boardSize; ++j)
-        {
-            printf("\e[30;43m"); // Reset terminal colors
-            if (goban->board[i/2][j] == ' ' || (i & 0x1))
-            {
-                if (i & 0x1)
-                {
-                    if (j == 0)
-                        printf("  ");
-                    printf(" \u2502"); // │
-                    if (j == gameInfo->boardSize - 1)
-                        printf("   \e[0m\n");
-                    else
-                        printf("  ");
-                }
-                else if (i == 0)
-                {
-                    if (j == 0){
-                        printf("%2d \e[30;43m", gameInfo->boardSize);
-                        if (goban->showscore && ((goban->score[i][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))) 
-                        {
-                            if (goban->score[i/2][j] == 'w')
-                                printf("\e[97;43m");
-                            printf("\u254b"); // ╋
-                            printf("\e[30;43m");
-                        }
-                        else
-                            printf("\u250c"); // ┌
-                        printf("\u2500\u2500"); // ──
-                    }
-                    else if (j == gameInfo->boardSize - 1){ // 
-                        printf("\u2500"); // ─
-                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))) 
-                        {
-                            if (goban->score[i][j] == 'w')
-                                printf("\e[97;43m");
-                            printf("\u254b"); // ╋
-                            printf("\e[30;43m");
-                        }
-                        else
-                            printf("\u2510"); // ┐
-                        printf(" %2d\e[0m W: %d\n", gameInfo->boardSize,
-                                goban->wpris);
-                    }
-                    else
-                    {
-                        printf("\u2500"); // ─
-                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))) 
-                        {
-                            if (goban->score[i/2][j] == 'w')
-                                printf("\e[97;43m");
-                            printf("\u254b"); // ╋
-                            printf("\e[30;43m");
-                        }
-                        else
-                            printf("\u252c"); // ┬
-                        printf("\u2500\u2500"); // ──
-                    }
-                }
-                else if (i == (2 * gameInfo->boardSize) - 2)
-                {
-                    if (j == 0) {
-
-                        printf(" 1\e[30;43m ");
-                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))) 
-                        {
-                            if (goban->score[i/2][j] == 'w')
-                                printf("\e[97;43m");
-                            printf("\u254b"); // ╋
-                            printf("\e[30;43m");
-                        }
-                        else
-                            printf("\u2514"); // └
-                        printf("\u2500\u2500"); //──
-                    }
-                    else if (j == gameInfo->boardSize - 1)
-                    {
-                        printf("\u2500"); // ─
-                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))) 
-                        {
-                            if (goban->score[i/2][j] == 'w')
-                                printf("\e[97;43m");
-                            printf("\u254b"); // ╋
-                            printf("\e[30;43m");
-                        }
-                        else
-                            printf("\u2518"); // ┘
-                        printf("  1\e[0m\n"); 
-                        i++;
-                    }
-                    else
-                    {
-                        printf("\u2500"); // ─
-                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))) 
-                        {
-                            if (goban->score[i/2][j] == 'w')
-                                printf("\e[97;43m");
-                            printf("\u254b"); // ╋
-                            printf("\e[30;43m");
-                        }
-                        else
-                            printf("\u2534"); // ┴
-                        printf("\u2500\u2500"); // ──
-                    }
-                }
-                else
-                {
-                    if (j == 0)
-                    {
-                        printf("%2d \e[30;43m", gameInfo->boardSize - (i / 2));
-                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))) 
-                        {
-                            if (goban->score[i/2][j] == 'w')
-                                printf("\e[97;43m");
-                            printf("\u254b"); // ╋
-                            printf("\e[30;43m");
-                        }
-                        else
-                            printf("\u251c"); // ├
-                        printf("\u2500\u2500"); // ──
-                    }
-                    else if (j == gameInfo->boardSize - 1)
-                    {
-                        printf("\u2500"); // ─
-                        if (goban->showscore && ((goban->score[i/2][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))) 
-                        {
-                            if (goban->score[i/2][j] == 'w')
-                                printf("\e[97;43m");
-                            printf("\u254b"); // ╋
-                            printf("\e[30;43m");
-                        }
-                        else
-                            printf("\u2524"); // ┤
-                        printf(" %2d\e[0m", gameInfo->boardSize - (i / 2));
-                        if (i == 2)
-                        {
-                            char lastmove[5] = { 0 };
-                            if (GetHistorySize() >= 1)
-                            {
-                                if (goban->lastmove.p.col == -1)
-                                    snprintf(lastmove, 5, "Pass");
-                                else
-                                {
-                                    snprintf(lastmove, 5, "%c%d",
-                                            coords[goban->lastmove.p.col],
-                                            gameInfo->boardSize - goban->lastmove.p.row);
-                                }
-                            }
-                            printf(" %s", lastmove);
-                        }
-                        printf("\n");
-                    }
-                    else
-                    {
-                        printf("\u2500"); // ─
-                        if (goban->showscore == 0)
-                        {
-                            if (gameInfo->boardSize == 19 &&
-                                    (i == 6 || i == 18 || i == 30) &&
-                                    (j == 3 || j == 9  || j == 15))
-                                printf("\u254b"); // ╋
-                            else if (gameInfo->boardSize == 13 && 
-                                    (i == 6 || i == 12 || i == 18) &&
-                                    (j == 3 || j == 6  || j == 9 ))
-                                printf("\u254b"); // ╋
-                            else if (gameInfo->boardSize == 9 && 
-                                    (i == 4 || i == 12) &&
-                                    (j == 2 || j == 6))
-                                printf("\u254b"); // ╋
-                            else printf("\u253c"); // ┼
-                        }
-                        else
-                        {
-                            if ((goban->score[i/2][j] == 'w') ||
-                                    (goban->score[i/2][j] == 'b'))
-                            {
-                                if (goban->score[i/2][j] == 'w')
-                                    printf("\e[97;43m");
-                                printf("\u254b"); // ╋
-                                printf("\e[30;43m");
-                            }
-                            else
-                                printf("\u253c"); // ┼
-                        }
-                        printf("\u2500\u2500"); // ──
-                    }
-                }
-            }
-            else
-            {
-                if (j == 0)
-                    printf("%2d", gameInfo->boardSize - (i/2));
-                if (goban->board[i/2][j] == 'w')
-                    printf("\e[97;43m");
-                printf("\u2588\u2588"); // █
-                if (goban->lastmove.p.col == j && goban->lastmove.p.row == i/2)
-                    printf("\e[36m");
-                printf("\u2588");
-                if (j == gameInfo->boardSize - 1)
-                {
-                    printf("\e[30;43m%2d\e[0m ", gameInfo->boardSize - (i/2));
-                    if (i == 0)
-                        printf("W: %d", goban->wpris);
-                    printf("\n");
-                }
-                else
-                    printf("\e[0m\e[30;43m\u2500");
-            }
-        }
-    }
-    printf("\e[30;43m ");
-    for (i = 0; i < gameInfo->boardSize; ++i)
-        printf("  %c ", coords[i]);
-    goban->showscore = 0;
-    printf("  \e[0m\n");
 }
