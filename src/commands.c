@@ -38,6 +38,21 @@ struct GoCommand
     char* help;
 };
 
+int JumpCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
+{
+    if (n_tokens < 2)
+        return -1;
+    char* direction = to_lowercase(tokens[1]);
+    if (!strcmp(direction, "up"))
+        JumpBranch(goban, -1);
+    else if (!strcmp(direction, "down"))
+        JumpBranch(goban, 1);
+    else 
+        return -1;
+
+    return 1;
+}
+
 int RenameCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens < 3)
@@ -326,12 +341,9 @@ struct GoCommand commands[] = {
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
     {"next", NextCommand, 0, "Shows the next move"},
     {"back", BackCommand, 0, "Shows the previous move"},
+    {"jump", JumpCommand, 0, "Jump up/down a branch"},
     {"goto", GotoCommand, 0, "Go to a specific move in the game"},
     {"exit", ExitCommand, 0, "Exit program"},
-#ifdef DEBUG
-    {"toggle_board", ToggleBoardCommand, 0, "Toggle board visibility"},
-    {"toggle_info", ToggleInfoCommand, 0, "Toggle info visibility"},
-#endif
     { 0 }
 };
 

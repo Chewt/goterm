@@ -32,5 +32,6 @@ int AddHistory(Goban* goban);
 void UndoHistory(Goban* goban, int n);
 void ViewHistory(Goban* goban, int n);
 void SlideHistory(Goban* goban, int n);
+void JumpBranch(Goban* goban, int direction);
 
 #endif

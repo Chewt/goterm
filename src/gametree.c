@@ -206,7 +206,52 @@ int GetViewIndex()
 {
     return view_index;
 }
+
 int GetHistorySize()
 {
     return node_counter;
+}
+
+/* if Direction < 0  jump up (alts - 1)
+ * if Direction >= 0 jump down (alts + 1)
+ */
+void JumpBranch(Goban* goban, int direction)
+{
+    int count = 0;
+
+    // Find branch point
+    GameNode* current = GetViewedNode();
+    while (current->mainline_prev != NULL && !current->mainline_prev->n_alts)
+    {
+        current = current->mainline_prev;
+        count++;
+    }
+
+    int i;
+    for (i = 0; i < current->mainline_prev->n_alts; ++i)
+    {
+        if (current->mainline_prev->alts[i] == current)
+            break;
+    }
+
+    if (direction < 0) // Up
+    {
+        if (i == 0) // Up to mainline
+            current = current->mainline_prev->mainline_next;
+        else if (direction < 0) // Up
+            current = current->mainline_prev->alts[i - 1];
+    }
+    else // Down
+    {
+        if (i < current->mainline_prev->n_alts - 1) 
+            current = current->mainline_prev->alts[i + 1];
+        else if (i == current->mainline_prev->n_alts)
+            current = current->mainline_prev->alts[0];
+    }
+
+    for (i = 0; i < count && current->mainline_next; ++i)
+        current = current->mainline_next;
+
+    viewed_node = current;
+    memcpy(goban, &(viewed_node->goban), sizeof(Goban));
 }
