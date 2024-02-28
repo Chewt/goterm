@@ -40,13 +40,11 @@ enum
 int BoardFitsScreen(Goban* goban)
 {
     GameInfo* gameInfo = GetGameInfo();
-    int width_needed = gameInfo->boardSize * 4 + 11;
+    int width_needed = gameInfo->boardSize * 4;
     int height_needed = gameInfo->boardSize * 2 + 2;
     return (getmaxx(stdscr) >= width_needed) &&
            (getmaxy(stdscr) >= height_needed);
 }
-
-
 
 void PrintInfo(Goban* goban)
 {
