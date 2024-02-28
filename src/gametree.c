@@ -255,3 +255,38 @@ void JumpBranch(Goban* goban, int direction)
     viewed_node = current;
     memcpy(goban, &(viewed_node->goban), sizeof(Goban));
 }
+
+int CountBranches(GameNode* base, int limit)
+{
+    GameNode* node = base;
+    int count = 0;
+    int i, j;
+    for (i = 0; i < limit && node != NULL; ++i)
+    {
+        if (node->n_alts)
+        {
+            for (j = 0; j < node->n_alts; ++j)
+                count += CountBranches(node->alts[j], limit - i - 1) + 1;
+        }
+        node = node->mainline_next;
+    }
+    return count;
+}
+
+int CountNodes(GameNode* base)
+{
+    GameNode* node = base;
+    int count = 1;
+    int i;
+    while (node->mainline_next)
+    {
+        count++;
+        if (node->n_alts)
+        {
+            for (i = 0; i < node->n_alts; ++i)
+                count += CountNodes(node->alts[i]);
+        }
+        node = node->mainline_next;
+    }
+    return count;
+}

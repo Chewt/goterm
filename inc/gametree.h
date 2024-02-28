@@ -33,5 +33,7 @@ void UndoHistory(Goban* goban, int n);
 void ViewHistory(Goban* goban, int n);
 void SlideHistory(Goban* goban, int n);
 void JumpBranch(Goban* goban, int direction);
+int CountBranches(GameNode* base, int limit);
+int CountNodes(GameNode* base);
 
 #endif

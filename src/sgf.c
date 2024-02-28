@@ -9,6 +9,48 @@
 #include "gameinfo.h"
 #include "gametree.h"
 #include "go.h"
+#include "stack.h"
+
+// Return size in bytes of all comments in game tree
+unsigned int TreeCommentSize(GameNode* base)
+{
+    if (base == NULL)
+        return 0;
+    unsigned int count = 0;
+    while (base)
+    {
+        count += strlen(base->comment);
+        if (base->n_alts)
+        {
+            int i;
+            for (i = 0; i < base->n_alts; ++i)
+                count += TreeCommentSize(base->alts[i]);
+        }
+        base = base->mainline_next;
+    }
+    return count;
+}
+
+void WriteMoves(char* sgf, NodeStack* stack, GameNode* base)
+{
+    unsigned int index = 0;
+    while (base != NULL)
+    {
+        Move lm = base->goban.lastmove;
+        if (lm.p.col != -1)
+        {
+            index += sprintf(sgf + index, ";%c[%c%c]",
+                    lm.color - 32, 'a' + lm.p.col, 'a' + lm.p.row);
+            if (base->comment[0] != '\0')
+            {
+                index += sprintf(sgf + index, "C[%s]", base->comment);
+            }
+        }
+        base = base->mainline_next;
+    }
+    index += sprintf(sgf + index, ")");
+
+}
 
 char* CreateSGF()
 {
@@ -18,13 +60,10 @@ char* CreateSGF()
     time_t rawtime = time(NULL);
     struct tm* ptm = localtime(&rawtime);
     
-    GameNode* current = GetHistory(0);
-    int fileSize = 4096;
-    while (current != NULL)
-    {
-        fileSize += strlen(current->comment);
-        current = current->mainline_next;
-    }
+    // Determine filesize
+    GameNode* current = GetRootNode();
+    unsigned int fileSize = 4096;
+    fileSize += TreeCommentSize(current);
 
     char* sgf = malloc(fileSize);
     int index = 0;
@@ -54,11 +93,12 @@ char* CreateSGF()
     }
     index += sprintf(sgf + index, "\n");
 
-    int i;
     int inARow = 0;
-    for (i = 1; i < GetHistorySize(); ++i)
+    NodeStack stack;
+    ClearNStack(&stack);
+    current = GetRootNode()->mainline_next;
+    while (current != NULL)
     {
-        current = GetHistory(i);
         Move lm = current->goban.lastmove;
         if (lm.p.col != -1)
         {
@@ -73,6 +113,7 @@ char* CreateSGF()
         }
         if (inARow % 10 == 0)
             index += sprintf(sgf + index, "\n");
+        current = current->mainline_next;
     }
     index += sprintf(sgf + index, ")");
     sgf[index] = '\0';

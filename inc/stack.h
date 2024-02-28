@@ -2,17 +2,36 @@
 #define STACK_H
 
 #include "go.h"
+#include "gametree.h"
 #define STACK_SIZE 361
 
 typedef struct
 {
     Point data[STACK_SIZE];
     int sp;
-} Stack;
+} PointStack;
 
-void ClearStack(Stack* stack);
-Point PopStack(Stack* stack);
-void PushStack(Stack* stack, Point point);
-int StackSize(Stack* stack);
+typedef struct
+{
+    GameNode* data[STACK_SIZE];
+    int sp;
+} NodeStack;
 
+typedef struct
+{
+    int front;
+    int back;
+    int count;
+    GameNode* data[STACK_SIZE];
+} NodeQueue;
+
+void ClearPStack(PointStack* stack);
+Point PopPStack(PointStack* stack);
+void PushPStack(PointStack* stack, Point point);
+int PStackSize(PointStack* stack);
+
+void ClearNStack(NodeStack* stack);
+GameNode* PopNStack(NodeStack* stack);
+void PushNStack(NodeStack* stack, GameNode* node);
+int NStackSize(NodeStack* stack);
 #endif

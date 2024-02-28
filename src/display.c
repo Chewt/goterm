@@ -358,23 +358,6 @@ void PrintComments()
     }
 }
 
-int CountBranches(GameNode* base, int limit)
-{
-    GameNode* node = base;
-    int count = 0;
-    int i, j;
-    for (i = 0; i < limit && node != NULL; ++i)
-    {
-        if (node->n_alts)
-        {
-            for (j = 0; j < node->n_alts; ++j)
-                count += CountBranches(node->alts[j], limit - i - 1) + 1;
-        }
-        node = node->mainline_next;
-    }
-    return count;
-}
-
 void PrintTree(GameNode* base, int skip, int limit)
 {
 

@@ -152,7 +152,7 @@ int IsSeen(Point seen[361], int nseen, Point p)
 
 int CountLiberties(Goban* goban, Point start, char searched[19][19])
 {
-    Stack stack;
+    PointStack stack;
     Point seen[361];
     int seenSize = 0;
     int liberties = 0;
@@ -160,11 +160,11 @@ int CountLiberties(Goban* goban, Point start, char searched[19][19])
 
     GameInfo* gameInfo = GetGameInfo();
     memset(seen, -1, sizeof(Point) * 361);
-    ClearStack(&stack);
-    PushStack(&stack, start);
-    while (StackSize(&stack) > 0)
+    ClearPStack(&stack);
+    PushPStack(&stack, start);
+    while (PStackSize(&stack) > 0)
     {
-        Point currentPoint = PopStack(&stack);
+        Point currentPoint = PopPStack(&stack);
         Point tempPoint = currentPoint;
         seen[seenSize++] = currentPoint;
 
@@ -175,7 +175,7 @@ int CountLiberties(Goban* goban, Point start, char searched[19][19])
             if (goban->board[tempPoint.row][tempPoint.col] == color &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
             }
             else if (goban->board[currentPoint.row - 1][currentPoint.col] == ' ')
                 liberties++;
@@ -187,7 +187,7 @@ int CountLiberties(Goban* goban, Point start, char searched[19][19])
             if (goban->board[tempPoint.row][tempPoint.col] == color &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
             }
             else if (goban->board[currentPoint.row + 1][currentPoint.col] == ' ')
                 liberties++;
@@ -199,7 +199,7 @@ int CountLiberties(Goban* goban, Point start, char searched[19][19])
             if (goban->board[tempPoint.row][tempPoint.col] == color &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
             }
             else if (goban->board[currentPoint.row][currentPoint.col - 1] == ' ')
                 liberties++;
@@ -211,7 +211,7 @@ int CountLiberties(Goban* goban, Point start, char searched[19][19])
             if (goban->board[tempPoint.row][tempPoint.col] == color &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
             }
             else if (goban->board[currentPoint.row][currentPoint.col + 1] == ' ')
                 liberties++;
@@ -231,18 +231,18 @@ int CountLiberties(Goban* goban, Point start, char searched[19][19])
 int RemoveGroup(Goban* goban, Point start)
 {
     GameInfo* gameInfo = GetGameInfo();
-    Stack stack;
+    PointStack stack;
     Point seen[361];
     int seenSize = 0;
     char color = goban->board[start.row][start.col];
 
     memset(seen, ' ', sizeof(Point) * 361);
-    ClearStack(&stack);
-    PushStack(&stack, start);
+    ClearPStack(&stack);
+    PushPStack(&stack, start);
     seen[seenSize++] = start;
-    while (StackSize(&stack) > 0)
+    while (PStackSize(&stack) > 0)
     {
-        Point currentPoint = PopStack(&stack);
+        Point currentPoint = PopPStack(&stack);
         Point tempPoint = currentPoint;
 
         if (currentPoint.row > 0)
@@ -252,7 +252,7 @@ int RemoveGroup(Goban* goban, Point start)
             if (goban->board[tempPoint.row][tempPoint.col] == color &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
                 seen[seenSize++] = tempPoint;
             }
         }
@@ -263,7 +263,7 @@ int RemoveGroup(Goban* goban, Point start)
             if (goban->board[tempPoint.row][tempPoint.col] == color &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
                 seen[seenSize++] = tempPoint;
             }
         }
@@ -274,7 +274,7 @@ int RemoveGroup(Goban* goban, Point start)
             if (goban->board[tempPoint.row][tempPoint.col] == color &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
                 seen[seenSize++] = tempPoint;
             }
         }
@@ -285,7 +285,7 @@ int RemoveGroup(Goban* goban, Point start)
             if (goban->board[tempPoint.row][tempPoint.col] == color &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
                 seen[seenSize++] = tempPoint;
             }
         }
@@ -331,18 +331,18 @@ char FindBelongsTo(Goban* goban, Point start)
 
 int ScoreArea(Goban* goban, Point start, char searched[19][19])
 {
-    Stack stack;
+    PointStack stack;
     Point seen[361];
     int seenSize = 0;
     char belongs_to = FindBelongsTo(goban, start);
 
     GameInfo* gameInfo = GetGameInfo();
     memset(seen, -1, sizeof(Point) * 361);
-    ClearStack(&stack);
-    PushStack(&stack, start);
-    while (StackSize(&stack) > 0)
+    ClearPStack(&stack);
+    PushPStack(&stack, start);
+    while (PStackSize(&stack) > 0)
     {
-        Point currentPoint = PopStack(&stack);
+        Point currentPoint = PopPStack(&stack);
         Point tempPoint = currentPoint;
         seen[seenSize++] = currentPoint;
 
@@ -353,7 +353,7 @@ int ScoreArea(Goban* goban, Point start, char searched[19][19])
             if (goban->board[tempPoint.row][tempPoint.col] == ' ' &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
             }
             else if (goban->board[tempPoint.row][tempPoint.col] != ' ' &&
                     goban->board[tempPoint.row][tempPoint.col] != belongs_to)
@@ -366,7 +366,7 @@ int ScoreArea(Goban* goban, Point start, char searched[19][19])
             if (goban->board[tempPoint.row][tempPoint.col] == ' ' &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
             }
             else if (goban->board[tempPoint.row][tempPoint.col] != ' ' &&
                     goban->board[tempPoint.row][tempPoint.col] != belongs_to)
@@ -379,7 +379,7 @@ int ScoreArea(Goban* goban, Point start, char searched[19][19])
             if (goban->board[tempPoint.row][tempPoint.col] == ' ' &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
             }
             else if (goban->board[tempPoint.row][tempPoint.col] != ' ' &&
                     goban->board[tempPoint.row][tempPoint.col] != belongs_to)
@@ -392,7 +392,7 @@ int ScoreArea(Goban* goban, Point start, char searched[19][19])
             if (goban->board[tempPoint.row][tempPoint.col] == ' ' &&
                     !IsSeen(seen, seenSize, tempPoint))
             {
-                PushStack(&stack, tempPoint);
+                PushPStack(&stack, tempPoint);
             }
             else if (goban->board[tempPoint.row][tempPoint.col] != ' ' &&
                     goban->board[tempPoint.row][tempPoint.col] != belongs_to)
