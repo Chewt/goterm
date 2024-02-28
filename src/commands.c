@@ -47,6 +47,28 @@ int JumpCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
         JumpBranch(goban, -1);
     else if (!strcmp(direction, "down"))
         JumpBranch(goban, 1);
+    else if (!strcmp(direction, "next"))
+    {
+        int i = 0;
+        GameNode* node = GetViewedNode();
+        while (!node->n_alts && node->mainline_next)
+        {
+            node = node->mainline_next;
+            i++;
+        }
+        SlideHistory(goban, i);
+    }
+    else if (!strcmp(direction, "back"))
+    {
+        int i = 0;
+        GameNode* node = GetViewedNode();
+        while (!node->n_alts && node->mainline_prev)
+        {
+            node = node->mainline_prev;
+            i++;
+        }
+        SlideHistory(goban, -i);
+    }
     else 
         return -1;
 
@@ -341,7 +363,7 @@ struct GoCommand commands[] = {
     {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
     {"next", NextCommand, 0, "Shows the next move"},
     {"back", BackCommand, 0, "Shows the previous move"},
-    {"jump", JumpCommand, 0, "Jump up/down a branch"},
+    {"jump", JumpCommand, 0, "Jump between branches. Options are [up|down|next|back]"},
     {"goto", GotoCommand, 0, "Go to a specific move in the game"},
     {"exit", ExitCommand, 0, "Exit program"},
     { 0 }
