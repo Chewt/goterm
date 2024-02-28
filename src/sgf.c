@@ -31,10 +31,10 @@ unsigned int TreeCommentSize(GameNode* base)
     return count;
 }
 
-void WriteMoves(char* sgf, NodeStack* stack, GameNode* base)
+int WriteMoves(char* sgf, GameNode* base)
 {
     unsigned int index = 0;
-    while (base != NULL)
+    while (base && !base->n_alts)
     {
         Move lm = base->goban.lastmove;
         if (lm.p.col != -1)
@@ -48,8 +48,29 @@ void WriteMoves(char* sgf, NodeStack* stack, GameNode* base)
         }
         base = base->mainline_next;
     }
+    if (base)
+    {
+        Move lm = base->goban.lastmove;
+        if (lm.p.col != -1)
+        {
+            index += sprintf(sgf + index, ";%c[%c%c]",
+                    lm.color - 32, 'a' + lm.p.col, 'a' + lm.p.row);
+            if (base->comment[0] != '\0')
+            {
+                index += sprintf(sgf + index, "C[%s]", base->comment);
+            }
+        }
+        index += sprintf(sgf + index, "(");
+        index += WriteMoves(sgf + index, base->mainline_next);
+        int i;
+        for (i = 0; base && i < base->n_alts; ++i)
+        {
+            index += sprintf(sgf + index, "(");
+            index += WriteMoves(sgf + index, base->alts[i]);
+        }
+    }
     index += sprintf(sgf + index, ")");
-
+    return index;
 }
 
 char* CreateSGF()
@@ -93,29 +114,7 @@ char* CreateSGF()
     }
     index += sprintf(sgf + index, "\n");
 
-    int inARow = 0;
-    NodeStack stack;
-    ClearNStack(&stack);
-    current = GetRootNode()->mainline_next;
-    while (current != NULL)
-    {
-        Move lm = current->goban.lastmove;
-        if (lm.p.col != -1)
-        {
-            index += sprintf(sgf + index, ";%c[%c%c]",
-                    lm.color - 32, 'a' + lm.p.col, 'a' + lm.p.row);
-            inARow++;
-            if (current->comment[0] != '\0')
-            {
-                index += sprintf(sgf + index, "C[%s]", current->comment);
-                inARow = 0;
-            }
-        }
-        if (inARow % 10 == 0)
-            index += sprintf(sgf + index, "\n");
-        current = current->mainline_next;
-    }
-    index += sprintf(sgf + index, ")");
+    index += WriteMoves(sgf + index, GetRootNode()->mainline_next);
     sgf[index] = '\0';
     return sgf;
 }
