@@ -333,7 +333,7 @@ void PrintComments()
 
     // Determine where to put the comments, accounting for whether or not the
     // board in centered
-    int start_ypos = 15;
+    int start_ypos = 6;
     int screen_end = getmaxx(stdscr);
     int start_xpos = (gameInfo->boardSize + 1) * 4;
     if (displayConfig->centerBoard)
@@ -477,18 +477,12 @@ void PrintDisplay(Goban* goban)
         PrintInfo(goban);
     if (displayConfig->showTree)
     {
-        //int start_xpos = (gameInfo->boardSize + 1) * 4;
-        //int tree_width = getmaxx(stdscr) - start_xpos - 1;
-        //if (displayConfig->centerBoard)
-            //start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
-        //start_xpos += 2;
-
         int start_xpos = 0;
         int tree_width = (getmaxx(stdscr) / 2) - ((gameInfo->boardSize * 4) / 2) - 1;
         if (!displayConfig->centerBoard)
             tree_width = 0;
 
-        move(6, start_xpos);
+        move(4, start_xpos);
         PrintTree(GetRootNode(), GetViewIndex() - (tree_width / 4), tree_width);
     }
     if (displayConfig->showComments)
