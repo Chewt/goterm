@@ -123,6 +123,8 @@ char* ReadSGFFile(char* filename)
 {
     // Open file
     FILE* f = fopen(filename, "r");
+    if (f == NULL)
+        return NULL;
 
     // Get size of file
     fseek(f, 0, SEEK_END);
