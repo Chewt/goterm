@@ -104,7 +104,7 @@ int AddHistory(Goban* goban)
         if (new_node == NULL)
         {
 
-            //AppendNotes("Too many branches\n");
+            AppendNotes("Too many branches\n");
             return 0;
         }
         viewed_node = new_node;
@@ -226,6 +226,9 @@ void JumpBranch(Goban* goban, int direction)
         current = current->mainline_prev;
         count++;
     }
+
+    if (current->mainline_prev == NULL)
+        return;
 
     int i;
     for (i = 0; i < current->mainline_prev->n_alts; ++i)
