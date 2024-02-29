@@ -130,14 +130,14 @@ char* ReadSGFFile(char* filename)
     rewind(f);
 
     // Make buffer to store file contents
-    char* sgf = malloc(f_size);
+    char* sgf = malloc(f_size + 1);
 
     // Read contents into buffer
     int i = 0;
     char c;
     while ((c = fgetc(f)) != EOF)
         sgf[i++] = c;
-
+    sgf[i] = '\0';
     fclose(f);
     return sgf;
 }
@@ -151,6 +151,8 @@ char* FindTagEnd(char* src)
             return c;
         if (*c == '\\') // Skip sequence '\]'
             c++;
+        if (*c == '\0') // if we find a null char this isn't a tag
+            return c;
         c++;
     }
     return c;
@@ -168,13 +170,17 @@ char* CopyTagContents(char* dst, char* src, int n)
     *c = '\0';
     strncpy(dst, src, n - 1);
     *c = temp;
-    return c + 1;
+    if (*c != '\0')
+        c++;
+    return c;
 }
 
 // Return a pointer to the beginning of a label following a tag
 char* FindNextLabel(char* src)
 {
     char* c = src;
+    if (*c == '\0')
+        return c;
     do 
     {
         c = FindTagEnd(c);
@@ -187,7 +193,7 @@ char* FindNextLabel(char* src)
 // Return a pointer to the opening '[' of a tag
 char* FindNextTag(char* src)
 {
-    if (!src)
+    if (*src == '\0')
         return src;
     char* c = src;
     while ((*c != '[') && (*c != '\0'))
@@ -296,16 +302,10 @@ void LoadSGF(Goban* goban, char* sgf)
             }
         }
 
-        // This is to hard cut-off adding moves until I have a proper branch system
         while (label[0] != '\0')
         {
-
-            int stack_size = NStackSize(&stack);
             if (IsStartingNewBranch(label))
                 PushNStack(&stack, GetViewedNode());
-
-            if (NStackSize(&stack) > stack_size)
-                AppendComment(GetViewedNode(), "%d\n", NStackSize(&stack));
 
             if ((label[0] == ')') && NStackSize(&stack))
                     SetViewedNode(goban, PopNStack(&stack));

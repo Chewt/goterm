@@ -358,6 +358,56 @@ void PrintComments()
     }
 }
 
+int CountLongestBranch(GameNode* node)
+{
+    int longest_branch_count = 0;
+    int i;
+    for (i = 0; i < node->n_alts; ++i)
+    {
+        int count = CountNodes(node->alts[i]);
+        if (count > longest_branch_count)
+            longest_branch_count = count;
+    }
+    return longest_branch_count;
+}
+
+int CountUntilNextBranch(GameNode* node)
+{
+    int until_next_branch = 1;
+    while (node->mainline_next && !node->mainline_next->n_alts)
+    {
+        node = node->mainline_next;
+        until_next_branch++;
+    }
+    return until_next_branch;
+}
+
+GameNode* FindNextBranch(GameNode* base)
+{
+    GameNode* node = base; 
+    while (node->mainline_next && !node->mainline_next->n_alts)
+    {
+        node = node->mainline_next;
+    }
+    return node->mainline_next;
+}
+
+int DetermineBranchPrintHeight(GameNode* base, int limit)
+{
+    if (!base || limit <= 0)
+        return 0;
+    int longest_branch_count = CountLongestBranch(base);
+    int until_next_branch = CountUntilNextBranch(base);
+    if (longest_branch_count < until_next_branch)
+        return 0;
+    GameNode* next_branch = FindNextBranch(base);
+    if (!next_branch)
+        return 0;
+    int height = next_branch->n_alts;
+    height += DetermineBranchPrintHeight(next_branch, limit - until_next_branch);
+    return height;
+}
+
 void PrintTree(GameNode* base, int skip, int limit)
 {
 
@@ -375,7 +425,7 @@ void PrintTree(GameNode* base, int skip, int limit)
         mvaddch(y, x++, '<');
 
     // Get number of branches past this point
-    int branches_after = CountBranches(base->mainline_next, limit);
+    //int branches_after = CountBranches(base->mainline_next, limit);
 
     if (!skip)
         limit--;
@@ -383,16 +433,16 @@ void PrintTree(GameNode* base, int skip, int limit)
     if (node->n_alts)
     {
         int i;
-
-        for (i = 0; i < branches_after && !skip; ++i)
+        int branch_height = DetermineBranchPrintHeight(node, limit);
+        for (i = 0; i < branch_height && !skip; ++i)
             mvaddch(y + i + 1, x, '|');
 
         for (i = 0; i < node->n_alts; ++i)
         {
             if (!skip)
-                mvaddch(y + branches_after + i + 1, x, '\\');
+                mvaddch(y + branch_height + i + 1, x, '\\');
 
-            move(y + branches_after + i + 1, (!skip) ? x + 1 : x);
+            move(y + branch_height + i + 1, (!skip) ? x + 1 : x);
             PrintTree(node->alts[i], skip - 1, limit);
         }
     }

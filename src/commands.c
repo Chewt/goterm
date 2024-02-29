@@ -49,29 +49,36 @@ int JumpCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
         JumpBranch(goban, 1);
     else if (!strcmp(direction, "next"))
     {
-        int i = 0;
-        GameNode* node = GetViewedNode();
-        while (!node->n_alts && node->mainline_next)
+        int i = 1;
+        GameNode* node = GetViewedNode()->mainline_next;
+        while (node && !node->n_alts)
         {
             node = node->mainline_next;
             i++;
         }
+        if (!node)
+            i--;
         SlideHistory(goban, i);
     }
     else if (!strcmp(direction, "back"))
     {
-        int i = 0;
-        GameNode* node = GetViewedNode();
-        while (!node->n_alts && node->mainline_prev)
+        int i = 1;
+        GameNode* node = GetViewedNode()->mainline_prev;
+        while (node && !node->n_alts)
         {
             node = node->mainline_prev;
             i++;
         }
+        if (!node)
+            i--;
         SlideHistory(goban, -i);
     }
     else 
+    {
+        free(direction);
         return -1;
-
+    }
+    free(direction);
     return 1;
 }
 
