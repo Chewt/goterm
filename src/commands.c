@@ -10,6 +10,7 @@
 #include "gameinfo.h"
 #include "display.h"
 
+
 char* to_lowercase(char* s)
 {
     if (!s)
@@ -29,14 +30,6 @@ char* to_lowercase(char* s)
     ns[pos] = '\0';
     return ns;
 }
-
-struct GoCommand
-{
-    char* name;
-    int (*func)(Goban* goban, char player, int n_tokens, char tokens[][256]);
-    int is_networked;
-    char* help;
-};
 
 int JumpCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
@@ -355,24 +348,34 @@ int tokenize_command(char input[COMMAND_LENGTH], char tokens[][256])
     return terms;
 }
 
+struct GoCommand
+{
+    char* name;
+    int (*func)(Goban* goban, char player, int n_tokens, char tokens[][256]);
+    int is_networked;
+    int is_repeatable;
+    char* help;
+};
+
+// name, function, is_networked, is_repeatable, help
 struct GoCommand commands[] = {
-    {"undo", UndoCommand, 1, "Undo last move.\nOptionally you can supply a number of moves to undo, or the word \"here\" to undo to the board state currently in view"},
-    {"reset", ResetCommand, 1, "Reset board to empty"},
-    {"size", SizeCommand, 1, "Change size of board. eg: size 19"},
-    {"pass", PassCommand, 1, "Pass your turn"},
-    {"swap", SwapCommand, 1, "Swap colors with opponent"},
-    {"score", ScoreCommand, 0, "Show current score on board"},
-    {"komi", KomiCommand, 1, "Show current komi or set new komi"},
-    {"say", SayCommand, 1, "Send a message to other player"},
-    {"handicap", HandicapCommand, 1, "Set handicap on board."},
-    {"rename", RenameCommand, 1, "Change the name of black or white player\nUsage: rename black|white NAME"},
-    {"resign", ResignCommand, 1, "Resign"},
-    {"sgf", SGFCommand, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
-    {"next", NextCommand, 0, "Shows the next move"},
-    {"back", BackCommand, 0, "Shows the previous move"},
-    {"jump", JumpCommand, 0, "Jump between branches. Options are [up|down|next|back]"},
-    {"goto", GotoCommand, 0, "Go to a specific move in the game"},
-    {"exit", ExitCommand, 0, "Exit program"},
+    {"undo", UndoCommand, 1, 0, "Undo last move.\nOptionally you can supply a number of moves to undo, or the word \"here\" to undo to the board state currently in view"},
+    {"reset", ResetCommand, 1, 0, "Reset board to empty"},
+    {"size", SizeCommand, 1, 0, "Change size of board. eg: size 19"},
+    {"pass", PassCommand, 1, 0, "Pass your turn"},
+    {"swap", SwapCommand, 1, 0, "Swap colors with opponent"},
+    {"score", ScoreCommand, 0, 0, "Show current score on board"},
+    {"komi", KomiCommand, 1, 0, "Show current komi or set new komi"},
+    {"say", SayCommand, 1, 0, "Send a message to other player"},
+    {"handicap", HandicapCommand, 1, 0, "Set handicap on board."},
+    {"rename", RenameCommand, 1, 0, "Change the name of black or white player\nUsage: rename black|white NAME"},
+    {"resign", ResignCommand, 1, 0, "Resign"},
+    {"sgf", SGFCommand, 0, 0, "Saves the current sgf to a file\nUsage: sgf FILENAME"},
+    {"next", NextCommand, 0, 1, "Shows the next move"},
+    {"back", BackCommand, 0, 1, "Shows the previous move"},
+    {"jump", JumpCommand, 0, 1, "Jump between branches. Options are [up|down|next|back]"},
+    {"goto", GotoCommand, 0, 0, "Go to a specific move in the game"},
+    {"exit", ExitCommand, 0, 0, "Exit program"},
     { 0 }
 };
 
@@ -420,10 +423,18 @@ int IsNetworkedCommand(char input[COMMAND_LENGTH])
     return 1;
 }
 
+char last_command[COMMAND_LENGTH];
+
 int ProcessCommand(Goban* goban, char player, char input[COMMAND_LENGTH])
 {
     char input_copy[COMMAND_LENGTH];
-    memcpy(input_copy, input, COMMAND_LENGTH);
+    if (input[0] != '\0')
+        memcpy(input_copy, input, COMMAND_LENGTH);
+    else
+    {
+        memcpy(input, last_command, COMMAND_LENGTH);
+        memcpy(input_copy, last_command, COMMAND_LENGTH);
+    }
     int terms = 0;
     char tokens[256][256];
     terms = tokenize_command(input_copy, tokens);
@@ -459,6 +470,8 @@ int ProcessCommand(Goban* goban, char player, char input[COMMAND_LENGTH])
                 WriteNotes("Invalid usage of command %s\n", commands[i].name);
                 return 1;
             }
+            if (commands[i].is_repeatable)
+                memcpy(last_command, input, COMMAND_LENGTH);
             return return_val;
         }
         else if (i == -2)
