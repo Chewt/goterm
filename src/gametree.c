@@ -120,33 +120,31 @@ int AddHistory(Goban* goban)
 
 void UndoHistory(Goban* goban, int n)
 {
-    if (node_counter - n > 0)
-    {
-        int i;
-        GameNode* base = viewed_node;
-        for (i = 0; i < n && (viewed_node->mainline_prev != NULL); ++i)
-            viewed_node = viewed_node->mainline_prev;
-        GameNode* toFree = viewed_node->mainline_next;
+    int i;
+    GameNode* base = viewed_node;
+    for (i = 0; i < n && (viewed_node->mainline_prev != NULL); ++i)
+        viewed_node = viewed_node->mainline_prev;
+    GameNode* toFree = viewed_node->mainline_next;
+    n = i;
 
-        for (i = 0; i < viewed_node->n_alts; ++i)
+    for (i = 0; i < viewed_node->n_alts; ++i)
+    {
+        if (viewed_node->alts[i] == base)
         {
-            if (viewed_node->alts[i] == base)
-            {
-                int j;
-                for (j = i + 1; j < viewed_node->n_alts; ++j)
-                    viewed_node->alts[j - 1] = viewed_node->alts[j];
-                viewed_node->alts[viewed_node->n_alts - 1] = NULL;
-                viewed_node->n_alts--;
-                toFree = base;
-                break;
-            }
+            int j;
+            for (j = i + 1; j < viewed_node->n_alts; ++j)
+                viewed_node->alts[j - 1] = viewed_node->alts[j];
+            viewed_node->alts[viewed_node->n_alts - 1] = NULL;
+            viewed_node->n_alts--;
+            toFree = base;
+            break;
         }
-        node_counter -= FreeTree(toFree);
-        if (toFree == viewed_node->mainline_next)
-            viewed_node->mainline_next = NULL;
-        memcpy(goban, &(viewed_node->goban), sizeof(Goban));
-        view_index -= n;
     }
+    node_counter -= FreeTree(toFree);
+    if (toFree == viewed_node->mainline_next)
+        viewed_node->mainline_next = NULL;
+    memcpy(goban, &(viewed_node->goban), sizeof(Goban));
+    view_index -= n;
 }
 
 void ViewHistory(Goban* goban, int n)
@@ -209,7 +207,14 @@ int GetViewIndex()
 
 int GetHistorySize()
 {
-    return node_counter;
+    int count = 1;
+    GameNode* node = GetRootNode();
+    while (node->mainline_next)
+    {
+        count++;
+        node = node->mainline_next;
+    }
+    return count;
 }
 
 /* if Direction < 0  jump up (alts - 1)
@@ -221,7 +226,18 @@ void JumpBranch(Goban* goban, int direction)
 
     // Find branch point
     GameNode* current = GetViewedNode();
-    while (current->mainline_prev != NULL && !current->mainline_prev->n_alts)
+
+
+    // Special case
+    if (current->n_alts && direction >= 0)
+    {
+        view_index++;
+        viewed_node = current->alts[0];
+        memcpy(goban, &(viewed_node->goban), sizeof(Goban));
+        return;
+    }
+
+    while (current->mainline_prev && !current->mainline_prev->n_alts)
     {
         current = current->mainline_prev;
         count++;
