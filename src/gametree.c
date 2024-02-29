@@ -104,7 +104,7 @@ int AddHistory(Goban* goban)
         if (new_node == NULL)
         {
 
-            AppendNotes("Too many branches\n");
+            //AppendNotes("Too many branches\n");
             return 0;
         }
         viewed_node = new_node;
@@ -289,4 +289,10 @@ int CountNodes(GameNode* base)
         node = node->mainline_next;
     }
     return count;
+}
+
+void SetViewedNode(Goban* goban, GameNode* node)
+{
+    viewed_node = node;
+    memcpy(goban, &(viewed_node->goban), sizeof(Goban));
 }

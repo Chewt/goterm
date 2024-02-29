@@ -195,6 +195,18 @@ char* FindNextTag(char* src)
     return c;
 }
 
+int IsStartingNewBranch(char* src)
+{
+    if (*src != '(')
+        return 0;
+    src--;
+    while ((*src == '\n') || (*src == ' '))
+        src--;
+    if (*src == ')')
+        return 0;
+    return 1;
+}
+
 void LoadSGF(Goban* goban, char* sgf)
 {
     // Start from clean state
@@ -257,7 +269,10 @@ void LoadSGF(Goban* goban, char* sgf)
     // While reading tags it is possible for a comment to have a ; in it, so lets capture that
     int partialComment = 0;
 
+
     // Read Moves
+    NodeStack stack;
+    ClearNStack(&stack);
     while ((token = strtok_r(NULL, ";", &save_ptr)) != NULL)
     {
         label = token;
@@ -282,14 +297,19 @@ void LoadSGF(Goban* goban, char* sgf)
         }
 
         // This is to hard cut-off adding moves until I have a proper branch system
-        int end_of_branch = 0;
         while (label[0] != '\0')
         {
-            if (label[0] == ')')
-            {
-                end_of_branch = 1;
-                break;
-            }
+
+            int stack_size = NStackSize(&stack);
+            if (IsStartingNewBranch(label))
+                PushNStack(&stack, GetViewedNode());
+
+            if (NStackSize(&stack) > stack_size)
+                AppendComment(GetViewedNode(), "%d\n", NStackSize(&stack));
+
+            if ((label[0] == ')') && NStackSize(&stack))
+                    SetViewedNode(goban, PopNStack(&stack));
+
             if (!strncmp(label, "W", label_end - label) ||
                 !strncmp(label, "B", label_end - label))
             {
@@ -321,8 +341,6 @@ void LoadSGF(Goban* goban, char* sgf)
             label = FindNextLabel(label);
             label_end = FindNextTag(label);
         }
-        if (end_of_branch)
-            break;
     }
     WriteNotes("Loaded game from sgf...\n");
 }

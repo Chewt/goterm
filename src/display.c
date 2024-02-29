@@ -12,7 +12,7 @@ DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .showInfo      = 1,
                                  .showNextMoves = 1,
                                  .showTree      = 1,
-                                 .showComments  = 0};
+                                 .showComments  = 1};
 
 DisplayConfig* GetDisplayConfig()
 {
@@ -333,7 +333,7 @@ void PrintComments()
 
     // Determine where to put the comments, accounting for whether or not the
     // board in centered
-    int start_ypos = 6;
+    int start_ypos = 15;
     int screen_end = getmaxx(stdscr);
     int start_xpos = (gameInfo->boardSize + 1) * 4;
     if (displayConfig->centerBoard)

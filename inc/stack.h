@@ -17,14 +17,6 @@ typedef struct
     int sp;
 } NodeStack;
 
-typedef struct
-{
-    int front;
-    int back;
-    int count;
-    GameNode* data[STACK_SIZE];
-} NodeQueue;
-
 void ClearPStack(PointStack* stack);
 Point PopPStack(PointStack* stack);
 void PushPStack(PointStack* stack, Point point);

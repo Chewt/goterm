@@ -20,6 +20,7 @@ typedef struct GameNode GameNode;
 GameNode* NewNode(Goban* goban);
 GameNode* AddMainline(GameNode* node, Goban* goban);
 GameNode* RetrieveNode(int idx);
+void SetViewedNode(Goban* goban, GameNode* node);
 int FreeTree(GameNode* root);
 void NewTree(Goban* goban);
 

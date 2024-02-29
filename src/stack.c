@@ -1,5 +1,4 @@
 #include "stack.h"
-#include "stdlib.h"
 
 void ClearPStack(PointStack* stack)
 {
@@ -43,33 +42,4 @@ GameNode* PopNStack(NodeStack* stack)
 int NStackSize(NodeStack* stack)
 {
     return stack->sp;
-}
-
-void ClearNQueue(NodeQueue* queue)
-{
-    queue->front = 0;
-    queue->back = 0;
-    queue->count = 0;
-}
-
-void PushNQueue(NodeQueue* queue, GameNode* node)
-{
-    if (queue->count == STACK_SIZE)
-        return;
-    queue->data[queue->back++] = node;
-    queue->count++;
-}
-
-GameNode* PopNQueue(NodeQueue* queue)
-{
-    if (queue->count == 0)
-        return NULL;
-    GameNode* node = queue->data[queue->front++];
-    queue->count--;
-    return node;
-}
-
-int NQueueSize(NodeQueue* queue)
-{
-    return queue->count;
 }
