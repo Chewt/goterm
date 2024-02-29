@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <stdio.h>
 #include <string.h>
 #include "display.h"
 #include "gameinfo.h"
@@ -59,10 +60,13 @@ void PrintInfo(Goban* goban)
     start_xpos += 2;
 
     // Print Info
-    mvprintw(0,start_xpos, "B[%s]: %d", gameInfo->blackName, goban->bpris);
-    mvprintw(1,start_xpos, "W[%s]: %d", gameInfo->whiteName, goban->wpris);
+    int y = 0;
+    mvprintw(y++,start_xpos, "B[%s %s]", gameInfo->blackName, gameInfo->blackRank);
+    mvprintw(y++,start_xpos, "Prisoners: %d", goban->bpris);
+    mvprintw(y++,start_xpos, "W[%s %s]", gameInfo->whiteName, gameInfo->whiteRank);
+    mvprintw(y++,start_xpos, "Prisoners: %d", goban->wpris);
     if (gameInfo->result[0] != '\0')
-        mvprintw(2,start_xpos, "Result: %s", gameInfo->result);
+        mvprintw(++y,start_xpos, "Result: %s", gameInfo->result);
     char lastmove[10] = { 0 };
     if (GetHistorySize() > 1)
     {
@@ -76,7 +80,8 @@ void PrintInfo(Goban* goban)
                     gameInfo->boardSize - goban->lastmove.p.row);
         }
     }
-    mvprintw(4,start_xpos, "%s", lastmove);
+    y += 2;
+    mvprintw(y,start_xpos, "%s", lastmove);
 }
 
 // Print board to ncurses screen
@@ -333,16 +338,28 @@ void PrintComments()
 
     // Determine where to put the comments, accounting for whether or not the
     // board in centered
-    int start_ypos = 6;
+    int start_ypos = 10;
     int screen_end = getmaxx(stdscr);
     int start_xpos = (gameInfo->boardSize + 1) * 4;
     if (displayConfig->centerBoard)
         start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
     start_xpos += 2;
 
+    int label_placement = start_xpos + ((screen_end - start_xpos) / 2) - (strlen("Comment") / 2);
+
+    int i;
+    attron(A_BOLD);
+    mvaddch(start_ypos - 1, start_xpos - 1, ACS_ULCORNER);
+    for (i = start_xpos; i < label_placement; ++i)
+        mvaddch(start_ypos - 1, i, ACS_HLINE);
+    mvaddstr(start_ypos - 1, label_placement, "Comment");
+    for (i = label_placement + strlen("Comment"); i < screen_end; ++i)
+        mvaddch(start_ypos - 1, i, ACS_HLINE);
+    attroff(A_BOLD);
+
     GameNode* current_node = GetViewedNode();
     char c;
-    int i = 0;
+    i = 0;
     int x = start_xpos;
     int y = start_ypos;
     while ((c = current_node->comment[i++]) != '\0')
@@ -422,7 +439,17 @@ void PrintTree(GameNode* base, int skip, int limit)
         return;
 
     if (base == GetRootNode() && !skip)
+    {
+        limit--;
         mvaddch(y, x++, '<');
+    }
+
+    int count = 0;
+    while (node->mainline_next)
+    {
+        count++;
+        node = node->mainline_next;
+    }
 
     // Get number of branches past this point
     //int branches_after = CountBranches(base->mainline_next, limit);
@@ -430,6 +457,7 @@ void PrintTree(GameNode* base, int skip, int limit)
     if (!skip)
         limit--;
 
+    node = base;
     if (node->n_alts)
     {
         int i;
@@ -454,7 +482,7 @@ void PrintTree(GameNode* base, int skip, int limit)
             mvaddch(y, x, '-');
     }
     move(y, (!skip) ? x + 1 : x);
-    if (node->mainline_next == NULL)
+    if (node->mainline_next == NULL && (count < limit))
     {
         node = GetRootNode();
         while (node->mainline_next != NULL)
@@ -464,6 +492,31 @@ void PrintTree(GameNode* base, int skip, int limit)
     }
     PrintTree(node->mainline_next, skip - 1, limit);
     return;
+}
+
+void PrintTreeModule()
+{
+    GameInfo* gameInfo = GetGameInfo();
+    DisplayConfig* displayConfig = GetDisplayConfig();
+    int start_xpos = 0;
+    int tree_width = (getmaxx(stdscr) / 2) - ((gameInfo->boardSize * 4) / 2) - 1;
+    if (!displayConfig->centerBoard)
+        tree_width = 0;
+    int start_ypos = 10;
+    char move_number[10];
+    snprintf(move_number, 10, "Move %d", GetViewIndex());
+    int move_placement = start_xpos + ((tree_width / 2) - (strlen(move_number) / 2));
+    int i;
+    attron(A_BOLD);
+    for (i = start_xpos; i <= move_placement; ++i)
+        mvaddch(start_ypos - 1, start_xpos + i, ACS_HLINE);
+    mvaddstr(start_ypos - 1, move_placement, move_number);
+    for (i = move_placement + strlen(move_number); i < tree_width; ++i)
+        mvaddch(start_ypos - 1, start_xpos + i, ACS_HLINE);
+    mvaddch(start_ypos - 1, start_xpos + i, ACS_URCORNER);
+    attroff(A_BOLD);
+    move(start_ypos, start_xpos);
+    PrintTree(GetRootNode(), GetViewIndex() - (tree_width / 4), tree_width);
 }
 
 void PrintDisplay(Goban* goban)
@@ -476,15 +529,7 @@ void PrintDisplay(Goban* goban)
     if (displayConfig->showInfo)
         PrintInfo(goban);
     if (displayConfig->showTree)
-    {
-        int start_xpos = 0;
-        int tree_width = (getmaxx(stdscr) / 2) - ((gameInfo->boardSize * 4) / 2) - 1;
-        if (!displayConfig->centerBoard)
-            tree_width = 0;
-
-        move(4, start_xpos);
-        PrintTree(GetRootNode(), GetViewIndex() - (tree_width / 4), tree_width);
-    }
+        PrintTreeModule();
     if (displayConfig->showComments)
         PrintComments();
     move(gameInfo->boardSize * 2 + 1, 0);

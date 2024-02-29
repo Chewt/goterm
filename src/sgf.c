@@ -241,6 +241,16 @@ void LoadSGF(Goban* goban, char* sgf)
             bzero(gameInfo->blackName, NAME_LENGTH);
             CopyTagContents(gameInfo->blackName, label_end + 1, NAME_LENGTH);
         }
+        else if (!strncmp(label, "BR", label_end - label))
+        {
+            bzero(gameInfo->blackRank, RANK_LENGTH);
+            CopyTagContents(gameInfo->blackRank, label_end + 1, RANK_LENGTH);
+        }
+        else if (!strncmp(label, "WR", label_end - label))
+        {
+            bzero(gameInfo->whiteRank, RANK_LENGTH);
+            CopyTagContents(gameInfo->whiteRank, label_end + 1, RANK_LENGTH);
+        }
         else if (!strncmp(label, "KM", label_end - label))
         {
             char* tag_end = FindTagEnd(label_end);

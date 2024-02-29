@@ -15,6 +15,8 @@ void SetGameInfoDefaults()
     gameInfo.boardSize = 19;
     gameInfo.handicap = 0;
     gameInfo.result[0] = '\0';
+    gameInfo.blackRank[0] = '\0';
+    gameInfo.whiteRank[0] = '\0';
     strcpy(gameInfo.blackName, "Black");
     strcpy(gameInfo.whiteName, "White");
 }
