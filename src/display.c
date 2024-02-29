@@ -477,12 +477,19 @@ void PrintDisplay(Goban* goban)
         PrintInfo(goban);
     if (displayConfig->showTree)
     {
-        int start_xpos = (gameInfo->boardSize + 1) * 4;
-        if (displayConfig->centerBoard)
-            start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
-        start_xpos += 2;
+        //int start_xpos = (gameInfo->boardSize + 1) * 4;
+        //int tree_width = getmaxx(stdscr) - start_xpos - 1;
+        //if (displayConfig->centerBoard)
+            //start_xpos += (getmaxx(stdscr) / 2) - (start_xpos / 2);
+        //start_xpos += 2;
+
+        int start_xpos = 0;
+        int tree_width = (getmaxx(stdscr) / 2) - ((gameInfo->boardSize * 4) / 2) - 1;
+        if (!displayConfig->centerBoard)
+            tree_width = 0;
+
         move(6, start_xpos);
-        PrintTree(GetRootNode(), GetViewIndex() - 5, getmaxx(stdscr) - start_xpos - 1);
+        PrintTree(GetRootNode(), GetViewIndex() - (tree_width / 4), tree_width);
     }
     if (displayConfig->showComments)
         PrintComments();

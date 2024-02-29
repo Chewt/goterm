@@ -83,7 +83,7 @@ char* CreateSGF()
     
     // Determine filesize
     GameNode* current = GetRootNode();
-    unsigned int fileSize = 4096;
+    unsigned int fileSize = 1024 + (CountNodes(current) * 9);
     fileSize += TreeCommentSize(current);
 
     char* sgf = malloc(fileSize);
