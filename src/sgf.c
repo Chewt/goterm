@@ -342,5 +342,6 @@ void LoadSGF(Goban* goban, char* sgf)
             label_end = FindNextTag(label);
         }
     }
+    ViewHistory(goban, 0);
     WriteNotes("Loaded game from sgf...\n");
 }
