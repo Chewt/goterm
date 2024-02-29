@@ -61,18 +61,37 @@ void PrintInfo(Goban* goban)
 
     // Print Info
     int y = 0;
-    mvprintw(y++,start_xpos, "B[%s %s]", gameInfo->blackName, gameInfo->blackRank);
+    char name_and_rank[NAME_LENGTH + RANK_LENGTH + 4];
+
+    // Set up black name
+    int idx = snprintf(name_and_rank, NAME_LENGTH, "B[%s", gameInfo->blackName);
+    if (gameInfo->blackRank[0])
+        idx += snprintf(name_and_rank + idx, RANK_LENGTH, " %s", gameInfo->blackRank);
+    snprintf(name_and_rank + idx, 2, "]");
+
+    // Print black name and prisoners
+    mvprintw(y++,start_xpos, "%s", name_and_rank);
     mvprintw(y++,start_xpos, "Prisoners: %d", goban->bpris);
-    mvprintw(y++,start_xpos, "W[%s %s]", gameInfo->whiteName, gameInfo->whiteRank);
+
+    // Set up white name
+    idx = snprintf(name_and_rank, NAME_LENGTH, "W[%s", gameInfo->whiteName);
+    if (gameInfo->whiteRank[0])
+        idx += snprintf(name_and_rank + idx, RANK_LENGTH, " %s", gameInfo->whiteRank);
+    snprintf(name_and_rank + idx, 2, "]");
+
+    // Print white name and prisoners
+    mvprintw(y++,start_xpos, "%s", name_and_rank);
     mvprintw(y++,start_xpos, "Prisoners: %d", goban->wpris);
+
+    // Write result
     if (gameInfo->result[0] != '\0')
         mvprintw(++y,start_xpos, "Result: %s", gameInfo->result);
-    char lastmove[10] = { 0 };
+    char lastmove[16] = { 0 };
     if (GetHistorySize() > 1)
     {
-        int idx = snprintf(lastmove, 10, "%d. ", GetViewIndex());
+        int idx = snprintf(lastmove, 16, "Last: ");
         if (goban->lastmove.p.col == -1)
-            snprintf(lastmove + idx, 10, "Pass");
+            snprintf(lastmove + idx, 16, "Pass");
         else
         {
             snprintf(lastmove + idx, 10, "%c%d",
@@ -337,7 +356,7 @@ void PrintComments()
     DisplayConfig* displayConfig = GetDisplayConfig();
 
     // Determine where to put the comments, accounting for whether or not the
-    // board in centered
+    // board is centered
     int start_ypos = 10;
     int screen_end = getmaxx(stdscr);
     int start_xpos = (gameInfo->boardSize + 1) * 4;
