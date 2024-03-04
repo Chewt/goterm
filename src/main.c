@@ -14,6 +14,7 @@
 #include "sgf.h"
 #include "networking.h"
 #include "display.h"
+#include "keys.h"
 
 
 // argp struct
@@ -438,11 +439,7 @@ int main(int argc, char** argv)
         else // Playing alone
         {
             char input[COMMAND_LENGTH];
-            mvprintw(getcury(stdscr), 0, ": ");
-            refresh();
-            getnstr(input, COMMAND_LENGTH);
-            input[strcspn(input, "\n")] = 0;
-
+            ProcessKeys(&goban, input);
             running = ProcessCommand(&goban, goban.color, input);
             if (running == MOVE)
             {
