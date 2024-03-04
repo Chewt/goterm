@@ -423,18 +423,10 @@ int IsNetworkedCommand(char input[COMMAND_LENGTH])
     return 1;
 }
 
-char last_command[COMMAND_LENGTH];
-
 int ProcessCommand(Goban* goban, char player, char input[COMMAND_LENGTH])
 {
     char input_copy[COMMAND_LENGTH];
-    if (input[0] != '\0')
-        memcpy(input_copy, input, COMMAND_LENGTH);
-    else
-    {
-        memcpy(input, last_command, COMMAND_LENGTH);
-        memcpy(input_copy, last_command, COMMAND_LENGTH);
-    }
+    memcpy(input_copy, input, COMMAND_LENGTH);
     int terms = 0;
     char tokens[256][256];
     terms = tokenize_command(input_copy, tokens);
@@ -470,8 +462,6 @@ int ProcessCommand(Goban* goban, char player, char input[COMMAND_LENGTH])
                 WriteNotes("Invalid usage of command %s\n", commands[i].name);
                 return 1;
             }
-            if (commands[i].is_repeatable)
-                memcpy(last_command, input, COMMAND_LENGTH);
             return return_val;
         }
         else if (i == -2)
