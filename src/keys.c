@@ -21,8 +21,6 @@ struct Keybind keybinds[] = {
 
 int ProcessKeys(Goban* goban, char* command)
 {
-    noecho();
-
     *command = '\0';
     int key = getch();
     if (key == ':')

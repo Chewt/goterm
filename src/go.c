@@ -454,11 +454,11 @@ void UpdateResult(Goban* goban)
     if (diff < 0)
     {
         diff *= -1;
-        idx += snprintf(gameInfo->result, 256, "B+");
+        idx += snprintf(gameInfo->result, RESULT_LENGTH, "B+");
     }
     else if (diff > 0)
-        idx += snprintf(gameInfo->result, 256, "W+");
-    snprintf(gameInfo->result + idx, 256, "%.1f", diff);
+        idx += snprintf(gameInfo->result, RESULT_LENGTH, "W+");
+    snprintf(gameInfo->result + idx, RESULT_LENGTH, "%.1f", diff);
 }
 
 void ScoreBoard(Goban* goban)
