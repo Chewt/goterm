@@ -13,7 +13,42 @@ DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .showInfo      = 1,
                                  .showNextMoves = 1,
                                  .showTree      = 1,
+                                 .showCursor    = 1,
                                  .showComments  = 1};
+
+Point cursor;
+
+void MoveCursor(int x, int y)
+{
+    int boardSize = GetGameInfo()->boardSize;
+    cursor.col += x;
+    cursor.row += y;
+
+    if (cursor.col >= boardSize)
+        cursor.col = boardSize - 1;
+    if (cursor.col < 0)
+        cursor.col = 0;
+    if (cursor.row >= boardSize)
+        cursor.row = boardSize - 1;
+    if (cursor.row < 0)
+        cursor.row = 0;
+}
+
+void SetCursor(int x, int y)
+{
+    int boardSize = GetGameInfo()->boardSize;
+    cursor.col = x;
+    cursor.row = y;
+
+    if (cursor.col >= boardSize)
+        cursor.col = boardSize - 1;
+    if (cursor.col < 0)
+        cursor.col = 0;
+    if (cursor.row >= boardSize)
+        cursor.row = boardSize - 1;
+    if (cursor.row < 0)
+        cursor.row = 0;
+}
 
 DisplayConfig* GetDisplayConfig()
 {
@@ -37,6 +72,38 @@ enum
     WHITE_STONE_COLOR = 2,
     LAST_STONE_COLOR = 3,
 };
+
+void PrintCursor(Goban* goban)
+{
+    DisplayConfig* displayConfig = GetDisplayConfig();
+    GameInfo* gameInfo = GetGameInfo();
+    int start_xpos = 0;
+    if (displayConfig->centerBoard == 1)
+    {
+        int width_needed = gameInfo->boardSize * 4;
+        int max_x = getmaxx(stdscr);
+        if ((max_x / 2) >= (width_needed / 2))
+            start_xpos = (max_x / 2) - (width_needed / 2);
+    }
+    move((cursor.row * 2) + 1, (cursor.col * 4) + 2 + start_xpos);
+    if (goban->color == 'w')
+    {
+        attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+        attrset(COLOR_PAIR(WHITE_STONE_COLOR));
+        attron(A_BOLD);
+    }
+    addch(ACS_CKBOARD); 
+    addch(ACS_CKBOARD); 
+    addch(ACS_CKBOARD); 
+
+    attrset(COLOR_PAIR(BLACK_STONE_COLOR));
+    attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+}
+
+Point* GetCursor()
+{
+    return &cursor;
+}
 
 int BoardFitsScreen(Goban* goban)
 {
@@ -551,6 +618,8 @@ void PrintDisplay(Goban* goban)
         PrintTreeModule();
     if (displayConfig->showComments)
         PrintComments();
+    if (displayConfig->showCursor)
+        PrintCursor(goban);
     move(gameInfo->boardSize * 2 + 1, 0);
 }
 

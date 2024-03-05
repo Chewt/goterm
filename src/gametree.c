@@ -255,7 +255,7 @@ void JumpBranch(Goban* goban, int direction)
 
     if (direction < 0) // Up
     {
-        if (i == 0) // Up to mainline
+        if (i == 0 || current == current->mainline_prev->mainline_next) // Up to mainline
             current = current->mainline_prev->mainline_next;
         else if (direction < 0) // Up
             current = current->mainline_prev->alts[i - 1];

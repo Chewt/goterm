@@ -14,8 +14,18 @@ struct Keybind keybinds[] = {
     {"b", "back"},
     {"N", "jump next"},
     {"B", "jump back"},
-    {"J", "jump down"},
-    {"K", "jump up"},
+    {",", "jump up"},
+    {".", "jump down"},
+    {"l", "cursor right"},
+    {"h", "cursor left"},
+    {"k", "cursor up"},
+    {"j", "cursor down"},
+    {"L", "cursor star right"},
+    {"H", "cursor star left"},
+    {"J", "cursor star down"},
+    {"K", "cursor star up"},
+    {" ", "cursor place"},
+    {"u", "undo"},
     { 0 }
 };
 

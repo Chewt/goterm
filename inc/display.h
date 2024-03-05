@@ -22,6 +22,7 @@ typedef struct
     int showComments;
     int showNextMoves;
     int showTree;
+    int showCursor;
 } DisplayConfig;
 
 // Is the current window size big enough to print the board
@@ -32,6 +33,10 @@ void PrintBoard(Goban* goban);
 void PrintBoardw(Goban* goban);
 void PrintNotesw(Goban* goban);
 void PrintDisplay(Goban* goban);
+
+void MoveCursor(int x, int y);
+void SetCursor(int x, int y);
+Point* GetCursor();
 
 /* Get buffer to raw notes */
 char* GetNotes();

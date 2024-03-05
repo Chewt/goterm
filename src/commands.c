@@ -31,6 +31,93 @@ char* to_lowercase(char* s)
     return ns;
 }
 
+int CursorCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
+{
+    if (n_tokens < 2)
+        return -1;
+    if (n_tokens == 2)
+    {
+        if (!strcmp("left", tokens[1]))
+            MoveCursor(-1, 0);
+        else if (!strcmp("right", tokens[1]))
+            MoveCursor(1, 0);
+        else if (!strcmp("up", tokens[1]))
+            MoveCursor(0, -1);
+        else if (!strcmp("down", tokens[1]))
+            MoveCursor(0, 1);
+        else if (!strcmp("place", tokens[1]))
+        {
+            Point* cursor = GetCursor();
+            Move m;
+            m.p.col = cursor->col;
+            m.p.row = cursor->row;
+            m.color = goban->color;
+            ValidateMove(goban, m);
+        }
+        else
+            return -1;
+        return 1;
+    }
+    if (n_tokens < 3)
+        return -1;
+    if (!strcmp("star", tokens[1]))
+    {
+        GameInfo* gameInfo = GetGameInfo();
+        Point* cursor = GetCursor();
+        if (!strcmp("left", tokens[2]))
+        {
+            if (cursor->col <= ((gameInfo->boardSize - 1) / 2))
+                SetCursor(3, cursor->row);
+            else if (cursor->col > (gameInfo->boardSize - 4))
+                SetCursor(gameInfo->boardSize - 4, cursor->row);
+            else
+                SetCursor((gameInfo->boardSize - 1) / 2, cursor->row);
+        }
+        else if (!strcmp("right", tokens[2]))
+        {
+            if (cursor->col >= ((gameInfo->boardSize - 1) / 2))
+                SetCursor(gameInfo->boardSize - 4, cursor->row);
+            else if (cursor->col >= 3)
+                SetCursor((gameInfo->boardSize - 1) / 2, cursor->row);
+            else
+                SetCursor( 3, cursor->row);
+        }
+        else if (!strcmp("up", tokens[2]))
+        {
+            if (cursor->row <= ((gameInfo->boardSize - 1) / 2))
+                SetCursor(cursor->col, 3);
+            else if (cursor->row > (gameInfo->boardSize - 4))
+                SetCursor(cursor->col, gameInfo->boardSize - 4);
+            else
+                SetCursor(cursor->col, (gameInfo->boardSize - 1) / 2);
+        }
+        else if (!strcmp("down", tokens[2]))
+        {
+            if (cursor->row >= ((gameInfo->boardSize - 1) / 2))
+                SetCursor(cursor->col, gameInfo->boardSize - 4);
+            else if (cursor->row >= 3)
+                SetCursor(cursor->col, (gameInfo->boardSize - 1) / 2);
+            else
+                SetCursor(cursor->col, 3);
+        }
+        else
+            return -1;
+        return 1;
+    }
+    if (n_tokens < 4)
+        return -1;
+    if (!strcmp("set", tokens[1]))
+    {
+        int x, y;
+        x = strtol(tokens[2], NULL, 10);
+        y = strtol(tokens[3], NULL, 10);
+        SetCursor(x, y);
+    }
+    else
+        return -1;
+    return 1;
+}
+
 int JumpCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens < 2)
@@ -375,6 +462,7 @@ struct GoCommand commands[] = {
     {"back", BackCommand, 0, 1, "Shows the previous move"},
     {"jump", JumpCommand, 0, 1, "Jump between branches. Options are [up|down|next|back]"},
     {"goto", GotoCommand, 0, 0, "Go to a specific move in the game"},
+    {"cursor", CursorCommand, 0, 0, "Move the cursor. Options are [up|down|left|right|set] where set takes a column and a row"},
     {"exit", ExitCommand, 0, 0, "Exit program"},
     { 0 }
 };
