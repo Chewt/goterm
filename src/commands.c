@@ -53,6 +53,7 @@ int CursorCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
             m.p.row = cursor->row;
             m.color = goban->color;
             ValidateMove(goban, m);
+            return MOVE;
         }
         else
             return -1;
