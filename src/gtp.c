@@ -73,7 +73,7 @@ char* GetMessage(int fd)
 
 char** AllocateResponse()
 {
-    return calloc(sizeof(char*), 256);
+    return calloc(256, sizeof(char*));
 }
 
 void CleanResponse(char** resp)
@@ -169,7 +169,7 @@ void StartEngine(Engine* engine, char* engine_exc)
         dup2(ENGINE_WRITE, 1);
         close(CONTROLLER_READ);
         close(CONTROLLER_WRITE);
-        char** args = calloc(sizeof(char*), 100);
+        char** args = calloc(100, sizeof(char*));
 
         int i = 0;
         char* save_ptr;
