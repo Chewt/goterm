@@ -118,10 +118,14 @@ int main(int argc, char** argv)
         fprintf(stderr, "Error parsing arguments\n");
         exit(-1);
     }
+    int opponents_turn = 0;
     gameInfo->boardSize = flags.size;
     SetHandicap(&goban, flags.handicap);
     if (flags.handicap)
+    {
         goban.color = 'w';
+        opponents_turn = 1;
+    }
 
     // apply gnugo shortcut
     if (flags.g == 1)
@@ -147,7 +151,6 @@ int main(int argc, char** argv)
     int host = -1;
     char host_col = 'w';
     char client_col = 'b';
-    int opponents_turn = 0;
     if (flags.is_server && flags.port)
     {
         client = SetupServer(flags.port);
