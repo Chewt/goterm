@@ -69,9 +69,9 @@ void PrintInfo(Goban* goban)
         idx += snprintf(name_and_rank + idx, RANK_LENGTH, " %s", gameInfo->blackRank);
     snprintf(name_and_rank + idx, 2, "]");
 
-    // Print black name and prisoners
+    // Print black name and captures
     mvprintw(y++,start_xpos, "%s", name_and_rank);
-    mvprintw(y++,start_xpos, "Prisoners: %d", goban->bpris);
+    mvprintw(y++,start_xpos, "Captures: %d", goban->wpris);
 
     // Set up white name
     idx = snprintf(name_and_rank, NAME_LENGTH, "W[%s", gameInfo->whiteName);
@@ -79,9 +79,9 @@ void PrintInfo(Goban* goban)
         idx += snprintf(name_and_rank + idx, RANK_LENGTH, " %s", gameInfo->whiteRank);
     snprintf(name_and_rank + idx, 2, "]");
 
-    // Print white name and prisoners
+    // Print white name and captures
     mvprintw(y++,start_xpos, "%s", name_and_rank);
-    mvprintw(y++,start_xpos, "Prisoners: %d", goban->wpris);
+    mvprintw(y++,start_xpos, "Captures: %d", goban->bpris);
 
     // Write result
     if (gameInfo->result[0] != '\0')

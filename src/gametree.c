@@ -20,10 +20,14 @@ GameNode* GetViewedNode()
     return viewed_node;
 }
 
-GameNode* NewNode(Goban* goban)
+void NodeAddGoban(GameNode* node, Goban* goban)
+{
+    memcpy(&(node->goban), goban, sizeof(Goban));
+}
+
+GameNode* NewNode()
 {
     GameNode* node = malloc(sizeof(struct GameNode));
-    memcpy(&(node->goban), goban, sizeof(Goban));
     node->mainline_prev = NULL;
     node->mainline_next = NULL;
     node->n_alts = 0;
@@ -31,9 +35,10 @@ GameNode* NewNode(Goban* goban)
     return node;
 }
 
-GameNode* AddMainline(GameNode* node, Goban* goban)
+GameNode* AddMainline(GameNode* node, Goban* goban) 
 {
-    node->mainline_next = NewNode(goban);
+    node->mainline_next = NewNode();
+    NodeAddGoban(node->mainline_next, goban);
     node->mainline_next->mainline_prev = node;
     return node->mainline_next;
 }
@@ -58,7 +63,8 @@ GameNode* AddVariation(GameNode* node, Goban* goban)
     if (node->n_alts == MAX_BRANCHES)
         return NULL;
 
-    node->alts[node->n_alts] = NewNode(goban);
+    node->alts[node->n_alts] = NewNode();
+    NodeAddGoban(node->alts[node->n_alts], goban);
     node->alts[node->n_alts]->mainline_prev = node;
     node->n_alts++;
     return node->alts[node->n_alts - 1];
@@ -77,7 +83,8 @@ void NewTree(Goban* goban)
 {
     if (root_node != NULL)
         FreeTree(root_node);
-    root_node = NewNode(goban);
+    root_node = NewNode();
+    NodeAddGoban(root_node, goban);
     viewed_node = root_node;
     node_counter = 1;
     view_index = 0;

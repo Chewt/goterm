@@ -9,7 +9,6 @@
 #include "gameinfo.h"
 #include "gametree.h"
 #include "go.h"
-#include "stack.h"
 
 // Return size in bytes of all comments in game tree
 unsigned int TreeCommentSize(GameNode* base)
@@ -144,216 +143,263 @@ char* ReadSGFFile(char* filename)
     return sgf;
 }
 
-char* FindTagEnd(char* src)
+void JumpToPropEnd(char** sgf)
 {
-    char* c = src;
-    while (*c != ']')
+    // Jump to end of property
+    while (**sgf != ']')
     {
-        if (*c == '\0') // if we find a null char this isn't a tag
-            return c;
-        if (*c == '\\') // Skip sequence '\]'
-            c++;
-        if (*c == '\0') // if we find a null char this isn't a tag
-            return c;
-        c++;
+        if (**sgf == '\\')
+            (*sgf)++;
+        (*sgf)++;
     }
-    return c;
 }
 
 /*  copy at most n chars of src to dst, up until the character ']' is found.
  *  Ignores sequence '\]'
  *
- *  Returns pointer to location in src right after ']'.
  */
-char* CopyTagContents(char* dst, char* src, int n)
+void CopyStringPropContents(char* dst, char** src, int n)
 {
-    char* c = FindTagEnd(src);
-    char temp = *c;
-    *c = '\0';
-    strncpy(dst, src, n - 1);
-    *c = temp;
-    if (*c != '\0')
-        c++;
-    return c;
-}
-
-// Return a pointer to the beginning of a label following a tag
-char* FindNextLabel(char* src)
-{
-    char* c = src;
-    if (*c == '\0')
-        return c;
-    do 
+    int idx = 0;
+    while (**src && **src != ']' && idx < n)
     {
-        c = FindTagEnd(c);
-        while ((*c == '\n') || (*c == ']'))
-            c++;
-    } while (*c == '[');
-    return c;
+        if (**src == '\\')
+            (*src)++;
+        dst[idx++] = **src;
+        (*src)++;
+    }
+    JumpToPropEnd(src);
 }
 
-// Return a pointer to the opening '[' of a tag
-char* FindNextTag(char* src)
+
+/*
+ * # SGF standard notes
+ * --------------------
+ * The following is the exact specification as taken from here:
+ * https://www.red-bean.com/sgf/sgf4.html
+ *
+ * ## Notation
+ * -----------
+ *  "..." : terminal symbols
+ *  [...] : option: occurs at most once
+ *  {...} : repetition: any number of times, including zero
+ *  (...) : grouping
+ *    |   : exclusive or
+ * italics: parameter explained at some other place
+ *
+ * ## Definitions
+ * --------------
+ *  Collection = GameTree { GameTree }
+ *  GameTree   = "(" Sequence { GameTree } ")"
+ *  Sequence   = Node { Node }
+ *  Node       = ";" { Property }
+ *  Property   = PropIdent PropValue { PropValue }
+ *  PropIdent  = UcLetter { UcLetter }
+ *  PropValue  = "[" CValueType "]"
+ *  CValueType = (ValueType | Compose)
+ *  ValueType  = (None | Number | Real | Double | Color | SimpleText |
+ *                Text | Point  | Move | Stone)
+ *
+ */
+
+void LoadProperty(GameNode* node, char** sgf)
 {
-    if (*src == '\0')
-        return src;
-    char* c = src;
-    while ((*c != '[') && (*c != '\0'))
-        c++;
-    return c;
+    GameInfo* gameInfo = GetGameInfo();
+    // Get property identifier string
+    char prop_ident[3] = {0};
+    prop_ident[0] = **sgf;
+    (*sgf)++;
+    if (**sgf >= 'A' && **sgf <= 'Z')
+        prop_ident[1] = **sgf;
+
+    // Go to next property value
+    while (**sgf != '[')
+        (*sgf)++;
+    (*sgf)++;
+
+    printf("found property %s\n", prop_ident);
+    fflush(stdout);
+
+    // Based on identifier, run appropriate property value processor function
+    // "B" or "W" is a move
+    if (!strncmp(prop_ident, "W", 2) || !strncmp(prop_ident, "B", 2))
+    {
+        Goban* goban = &(node->goban);
+        Move m;
+        m.color = (prop_ident[0] == 'B') ? 'b' : 'w';
+        if (**sgf == ']') // Pass
+        {
+            printf("move was pass\n");
+            goban->lastmove.p.col = -1;
+            goban->lastmove.p.row = -1;
+            goban->lastmove.color = m.color;
+            goban->color = (goban->color == 'b') ? 'w' : 'b';
+            AddHistory(goban);
+        }
+        else // Real move
+        {
+            printf("move was %c%c\n", (*sgf)[0], (*sgf)[1]);
+            m.p.col = (*sgf)[0] - 'a';
+            m.p.row = (*sgf)[1] - 'a';
+            AddMove(goban, m);
+        }
+        JumpToPropEnd(sgf);
+    }
+    // "C" is a comment
+    else if (!strncmp(prop_ident, "C", 2))
+    {
+        bzero(node->comment, COMMENT_LENGTH);
+        CopyStringPropContents(node->comment, sgf, COMMENT_LENGTH);
+    }
+    // "PW" is white players name
+    else if (!strncmp(prop_ident, "PW", 2))
+    {
+        bzero(gameInfo->whiteName, NAME_LENGTH);
+        CopyStringPropContents(gameInfo->whiteName, sgf, NAME_LENGTH);
+    }
+    // "PB" is black players name
+    else if (!strncmp(prop_ident, "PB", 2))
+    {
+        bzero(gameInfo->blackName, NAME_LENGTH);
+        CopyStringPropContents(gameInfo->blackName, sgf, NAME_LENGTH);
+    }
+    // "WR" is white rank
+    else if (!strncmp(prop_ident, "WR", 2))
+    {
+        bzero(gameInfo->whiteRank, RANK_LENGTH);
+        CopyStringPropContents(gameInfo->whiteRank, sgf, RANK_LENGTH);
+    }
+    // "BR" is black rank
+    else if (!strncmp(prop_ident, "BR", 2))
+    {
+        bzero(gameInfo->blackRank, RANK_LENGTH);
+        CopyStringPropContents(gameInfo->blackRank, sgf, RANK_LENGTH);
+    }
+    // "KM" is komi
+    else if (!strncmp(prop_ident, "KM", 2))
+    {
+        char* prop_end = *sgf;
+        while (*prop_end != ']')
+            prop_end++;
+        char temp = *prop_end;
+        *prop_end = '\0';
+        gameInfo->komi = strtof(*sgf , NULL);
+        *prop_end = temp;
+        JumpToPropEnd(sgf);
+    }
+    else if (!strncmp(prop_ident, "SZ", 2))
+    {
+        char* prop_end = *sgf;
+        while (*prop_end != ']')
+            prop_end++;
+        char temp = *prop_end;
+        *prop_end = '\0';
+        gameInfo->boardSize = strtod(*sgf , NULL);
+        *prop_end = temp;
+        JumpToPropEnd(sgf);
+    }
+    else if (!strncmp(prop_ident, "HA", 2))
+    {
+        char* prop_end = *sgf;
+        while (*prop_end != ']')
+            prop_end++;
+        char temp = *prop_end;
+        *prop_end = '\0';
+        SetHandicap(&node->goban, strtod(*sgf, NULL));
+        *prop_end = temp;
+        JumpToPropEnd(sgf);
+    }
+    else if (!strncmp(prop_ident, "RE", 2))
+    {
+        bzero(gameInfo->result, RESULT_LENGTH);
+        CopyStringPropContents(gameInfo->result, sgf, RESULT_LENGTH);
+    }
+    else
+    {
+        JumpToPropEnd(sgf);
+        while ((*sgf)[1] == '[')
+        {
+            (*sgf) += 2;
+            JumpToPropEnd(sgf);
+        }
+    }
 }
 
-int IsStartingNewBranch(char* src)
+void LoadGameNode(GameNode* node, char** sgf)
 {
-    if (*src != '(')
-        return 0;
-    src--;
-    while ((*src == '\n') || (*src == ' '))
-        src--;
-    if (*src == ')')
-        return 0;
-    return 1;
+    while (**sgf && **sgf != ';' && **sgf != ')' && **sgf != '(')
+    {
+        // apply each property seen to the passed node
+        if (**sgf >= 'A' && **sgf <= 'Z')
+        {
+            LoadProperty(node, sgf);
+        }
+        else
+            (*sgf)++;
+    }
+}
+
+void LoadGameTree(GameNode* root, char** sgf)
+{
+    GameNode* current_node = root;
+    while (**sgf && **sgf != ')')
+    {
+        // Found new gametree
+        if (**sgf == '(')
+        {
+            printf("Found new gametree\n");
+            (*sgf)++;
+            GameNode* new_branch;
+            if (current_node->mainline_next)
+            {
+                new_branch = NewNode();
+                NodeAddGoban(new_branch, &current_node->goban);
+                new_branch->mainline_prev = current_node;
+                current_node->alts[current_node->n_alts++] = new_branch;
+            }
+            else
+                new_branch = current_node;
+
+            LoadGameTree(new_branch, sgf);
+        }
+        // Found node
+        else if (**sgf == ';')
+        {
+            printf("Found node!\n");
+            fflush(stdout);
+            (*sgf)++;
+            LoadGameNode(current_node, sgf);
+            current_node->mainline_next = NewNode();
+            NodeAddGoban(current_node->mainline_next, &current_node->goban);
+            current_node->mainline_next->mainline_prev = current_node;
+            current_node = current_node->mainline_next;
+        }
+        else
+            (*sgf)++;
+        // Finishing gametree
+         if (**sgf == ')')
+            printf("finishing game tree\n");
+    }
+    (*sgf)++;
 }
 
 void LoadSGF(Goban* goban, char* sgf)
 {
+    printf("loading sgf\n");
     // Start from clean state
-    GameInfo* gameInfo = GetGameInfo();
     ResetGoban(goban);
-    NewTree(goban);
-    char* token;
-    char* save_ptr;
-    token = strtok_r(sgf, ";", &save_ptr); // First token always '(' 
 
-    // Get metadata
-    token = strtok_r(NULL, ";", &save_ptr);
-    char* label = token;
-    char* label_end = FindNextTag(label);
-    while (label[0] != '\0')
-    {
-        if (!strncmp(label, "PW", label_end - label))
-        {
-            bzero(gameInfo->whiteName, NAME_LENGTH);
-            CopyTagContents(gameInfo->whiteName, label_end + 1, NAME_LENGTH);
-        }
-        else if (!strncmp(label, "PB", label_end - label))
-        {
-            bzero(gameInfo->blackName, NAME_LENGTH);
-            CopyTagContents(gameInfo->blackName, label_end + 1, NAME_LENGTH);
-        }
-        else if (!strncmp(label, "BR", label_end - label))
-        {
-            bzero(gameInfo->blackRank, RANK_LENGTH);
-            CopyTagContents(gameInfo->blackRank, label_end + 1, RANK_LENGTH);
-        }
-        else if (!strncmp(label, "WR", label_end - label))
-        {
-            bzero(gameInfo->whiteRank, RANK_LENGTH);
-            CopyTagContents(gameInfo->whiteRank, label_end + 1, RANK_LENGTH);
-        }
-        else if (!strncmp(label, "KM", label_end - label))
-        {
-            char* tag_end = FindTagEnd(label_end);
-            char temp = *tag_end;
-            *tag_end = '\0';
-            gameInfo->komi = strtof(label_end + 1, NULL);
-            *tag_end = temp;
-        }
-        else if (!strncmp(label, "SZ", label_end - label))
-        {
-            char* tag_end = FindTagEnd(label_end);
-            char temp = *tag_end;
-            *tag_end = '\0';
-            gameInfo->boardSize = strtod(label_end + 1, NULL);
-            *tag_end = temp;
-        }
-        else if (!strncmp(label, "HA", label_end - label))
-        {
-            char* tag_end = FindTagEnd(label_end);
-            char temp = *tag_end;
-            *tag_end = '\0';
-            SetHandicap(goban, strtod(label_end + 1, NULL));
-            *tag_end = temp;
-        }
-        else if (!strncmp(label, "RE", label_end - label))
-        {
-            bzero(gameInfo->result, RESULT_LENGTH);
-            CopyTagContents(gameInfo->result, label_end + 1, RESULT_LENGTH);
-        }
-        label = FindNextLabel(label_end);
-        label_end = FindNextTag(label);
-    } 
+    printf("I'm here now\n");
+    
+    // First char is always "(", so lets skip that
+    sgf++;
 
-    // While reading tags it is possible for a comment to have a ; in it, so lets capture that
-    int partialComment = 0;
+    // Load the game tree
+    printf("Loading game tree!\n");
+    fflush(stdout);
+    LoadGameTree(GetRootNode(), &sgf);
 
-
-    // Read Moves
-    NodeStack stack;
-    ClearNStack(&stack);
-    while ((token = strtok_r(NULL, ";", &save_ptr)) != NULL)
-    {
-        label = token;
-        label_end = FindNextTag(label);
-
-        // Resume copy if partial comment was found before
-        if (partialComment)
-        {
-            label--;
-            *label = ';';
-            partialComment = 0;
-            GameNode* node = GetViewedNode();
-            char* tagEnd = FindTagEnd(label);
-            CopyTagContents(node->comment + strlen(node->comment), label,
-                            COMMENT_LENGTH - strlen(node->comment));
-            *label = '\0';
-            if (*tagEnd != ']')
-            {
-                partialComment = 1;
-                continue;
-            }
-        }
-
-        while (label[0] != '\0')
-        {
-            if (IsStartingNewBranch(label))
-                PushNStack(&stack, GetViewedNode());
-
-            if ((label[0] == ')') && NStackSize(&stack))
-                    SetViewedNode(goban, PopNStack(&stack));
-
-            if (!strncmp(label, "W", label_end - label) ||
-                !strncmp(label, "B", label_end - label))
-            {
-                Move m;
-                m.color = (label[0] == 'B') ? 'b' : 'w';
-                if ((label[1] == '[') && (label[2] == ']')) // Pass
-                {
-                    goban->lastmove.p.col = -1;
-                    goban->lastmove.p.row = -1;
-                    goban->lastmove.color = m.color;
-                    goban->color = (goban->color == 'b') ? 'w' : 'b';
-                    AddHistory(goban);
-                }
-                else // Real move
-                {
-                    m.p.col = label[2] - 'a';
-                    m.p.row = label[3] - 'a';
-                    ValidateMove(goban, m);
-                }
-            }
-            else if (!strncmp(label, "C", label_end - label))
-            {
-                GameNode* node = GetViewedNode();
-                char* tagEnd = FindTagEnd(label);
-                if (*tagEnd != ']')
-                    partialComment = 1;
-                CopyTagContents(node->comment, label_end + 1, COMMENT_LENGTH);
-            }
-            label = FindNextLabel(label);
-            label_end = FindNextTag(label);
-        }
-    }
+    // Set view to first node
     ViewHistory(goban, 0);
     WriteNotes("Loaded game from sgf...\n");
 }

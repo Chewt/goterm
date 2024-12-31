@@ -3,8 +3,8 @@
 
 #include "go.h"
 
-#define COMMENT_LENGTH 2048
-#define MAX_BRANCHES 10
+#define COMMENT_LENGTH 4096
+#define MAX_BRANCHES 256
 
 struct GameNode
 {
@@ -17,12 +17,13 @@ struct GameNode
 };
 typedef struct GameNode GameNode;
 
-GameNode* NewNode(Goban* goban);
+GameNode* NewNode();
 GameNode* AddMainline(GameNode* node, Goban* goban);
 GameNode* RetrieveNode(int idx);
 void SetViewedNode(Goban* goban, GameNode* node);
 int FreeTree(GameNode* root);
 void NewTree(Goban* goban);
+void NodeAddGoban(GameNode* node, Goban* goban);
 
 int GetHistorySize();
 int GetViewIndex();

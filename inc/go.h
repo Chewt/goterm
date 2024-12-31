@@ -35,6 +35,7 @@ void UpdateResult(Goban* goban);
 
 int ValidateInput(Goban* goban, Point* p, char input[INPUT_LENGTH]);
 int ValidateMove(Goban* goban, Move move);
+void AddMove(Goban* goban, Move move);
 
 int IsEqual(Goban* a, Goban* b);
 

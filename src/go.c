@@ -44,6 +44,7 @@ int ValidateInput(Goban* goban, Point* p, char input[256])
 
 void ResetGoban(Goban* goban)
 {
+    printf("clearing board\n");
     ClearBoard(goban);
     goban->wpris = 0;
     goban->bpris = 0;
@@ -52,7 +53,9 @@ void ResetGoban(Goban* goban)
     goban->lastmove.p.col = -2;
     goban->lastmove.p.row = -2;
     goban->showscore = 0;
+    printf("creating new tree \n");
     NewTree(goban);
+    printf("done creating new tree\n");
 }
 
 void ClearBoard(Goban* goban)
@@ -509,6 +512,39 @@ int IsRepeat(Goban* goban)
             return 1;
     }
     return 0;
+}
+
+/* Make a move without checking if it is legal, and do not update the history*/
+void AddMove(Goban* goban, Move move)
+{
+    GameInfo* gameInfo = GetGameInfo();
+    goban->board[move.p.row][move.p.col] = move.color;
+    goban->lastmove = move;
+    goban->color = (move.color == 'b') ? 'w' : 'b';
+    char search[19][19];
+    memset(search, ' ', 361);
+    int i, j;
+    for (i = 0; i < gameInfo->boardSize; ++i)
+    {
+        for (j = 0; j < gameInfo->boardSize; ++j)
+        {
+            if (search[i][j] == 'x')
+                continue;
+            if (goban->board[i][j] == goban->color)
+            {
+                Point p;
+                p.row = i;
+                p.col = j;
+                int captured = 0;
+                if (!CountLiberties(goban, p, search))
+                    captured = RemoveGroup(goban, p);
+                if (goban->color == 'w')
+                    goban->wpris += captured;
+                else if (goban->color == 'b')
+                    goban->bpris += captured;
+            }
+        }
+    }
 }
 
 

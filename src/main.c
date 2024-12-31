@@ -207,6 +207,12 @@ int main(int argc, char** argv)
         }
     }
 
+    if (flags.sgf)
+    {
+        LoadSGF(&goban, flags.sgf);
+        free(flags.sgf);
+    }
+
     setlocale(LC_ALL, "");
     initscr();
 
@@ -223,12 +229,6 @@ int main(int argc, char** argv)
                  "will fit is %d\n",
                  gameInfo->boardSize);
         gameInfo->boardSize = flags.size;
-    }
-
-    if (flags.sgf)
-    {
-        LoadSGF(&goban, flags.sgf);
-        free(flags.sgf);
     }
 
     // Main loop
