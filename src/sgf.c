@@ -349,18 +349,10 @@ void LoadGameTree(GameNode* root, char** sgf)
         {
             printf("Found new gametree\n");
             (*sgf)++;
-            GameNode* new_branch;
-            if (current_node->mainline_next)
-            {
-                new_branch = NewNode();
-                NodeAddGoban(new_branch, &current_node->goban);
-                new_branch->mainline_prev = current_node;
-                current_node->alts[current_node->n_alts++] = new_branch;
-            }
-            else
-                new_branch = current_node;
 
-            LoadGameTree(new_branch, sgf);
+            // Load new tree as main variation
+            LoadGameTree(current_node, sgf);
+            
         }
         // Found node
         else if (**sgf == ';')
@@ -368,17 +360,24 @@ void LoadGameTree(GameNode* root, char** sgf)
             printf("Found node!\n");
             fflush(stdout);
             (*sgf)++;
-            LoadGameNode(current_node, sgf);
-            current_node->mainline_next = NewNode();
-            NodeAddGoban(current_node->mainline_next, &current_node->goban);
-            current_node->mainline_next->mainline_prev = current_node;
-            current_node = current_node->mainline_next;
+            GameNode* new_branch = NewNode();
+            NodeAddGoban(new_branch, &current_node->goban);
+            new_branch->mainline_prev = current_node;
+            LoadGameNode(new_branch, sgf);
+            if (current_node->mainline_next)
+                current_node->alts[current_node->n_alts++] = new_branch;
+            else
+                current_node->mainline_next = new_branch;
+
+            current_node = new_branch;
         }
         else
             (*sgf)++;
         // Finishing gametree
-         if (**sgf == ')')
+        if (**sgf == ')')
+        {
             printf("finishing game tree\n");
+        }
     }
     (*sgf)++;
 }
@@ -392,7 +391,12 @@ void LoadSGF(Goban* goban, char* sgf)
     printf("I'm here now\n");
     
     // First char is always "(", so lets skip that
+    // Lets directly load the first node into the root
     sgf++;
+    while (*sgf != ';')
+        sgf++;
+    sgf++;
+    LoadGameNode(GetRootNode(), &sgf);
 
     // Load the game tree
     printf("Loading game tree!\n");
