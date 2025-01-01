@@ -217,8 +217,6 @@ void LoadProperty(GameNode* node, char** sgf)
         (*sgf)++;
     (*sgf)++;
 
-    fflush(stdout);
-
     // Based on identifier, run appropriate property value processor function
     // "B" or "W" is a move
     if (!strncmp(prop_ident, "W", 2) || !strncmp(prop_ident, "B", 2))
@@ -310,6 +308,18 @@ void LoadProperty(GameNode* node, char** sgf)
     {
         bzero(gameInfo->result, RESULT_LENGTH);
         CopyStringPropContents(gameInfo->result, sgf, RESULT_LENGTH);
+    }
+    else if (!strncmp(prop_ident, "LB", 2))
+    {
+      // Labels can technically be longer than one character, however displaying
+      // that would be difficult so I will just use the first character of the
+      // label for now.
+
+
+        char label = (*sgf)[3];
+        printf("LB %c\n", label);
+        node->labels[(*sgf)[1] - 'a'][(*sgf)[0] - 'a'] = label;
+        JumpToPropEnd(sgf);
     }
     else
     {

@@ -32,6 +32,7 @@ GameNode* NewNode()
     node->mainline_next = NULL;
     node->n_alts = 0;
     node->comment[0] = '\0';
+    memset(node->labels, ' ', 19 * 19);
     return node;
 }
 

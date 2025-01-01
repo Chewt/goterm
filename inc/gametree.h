@@ -14,6 +14,7 @@ struct GameNode
     struct GameNode* alts[MAX_BRANCHES];
     int n_alts;
     char comment[COMMENT_LENGTH];
+    char labels[19][19];
 };
 typedef struct GameNode GameNode;
 

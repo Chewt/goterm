@@ -22,6 +22,7 @@ typedef struct
     int showComments;
     int showNextMoves;
     int showTree;
+    int showLabels;
 } DisplayConfig;
 
 // Is the current window size big enough to print the board

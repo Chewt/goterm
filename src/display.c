@@ -11,9 +11,10 @@ char screen_notes[NOTES_LENGTH];
 DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .showBoard     = 1,
                                  .showInfo      = 1,
-                                 .showNextMoves = 1,
+                                 .showNextMoves = 0,
                                  .showTree      = 1,
-                                 .showComments  = 1};
+                                 .showComments  = 1,
+                                 .showLabels    = 1};
 
 DisplayConfig* GetDisplayConfig()
 {
@@ -285,6 +286,19 @@ void PrintBoardw(Goban* goban)
                 goban->board[row][col] = 'B' + i;
             }
         }
+    }
+
+    // Show labels
+    if (displayConfig->showLabels)
+    {
+        GameNode* node = GetViewedNode();
+        int i, j;
+        for (i = 0; i < 19; ++i)
+            for (j = 0; j < 19; ++j)
+            {
+                if (node->labels[i][j] != ' ')
+                    goban->board[i][j] = node->labels[i][j];
+            }
     }
 
     // Place stones
