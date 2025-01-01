@@ -217,7 +217,6 @@ void LoadProperty(GameNode* node, char** sgf)
         (*sgf)++;
     (*sgf)++;
 
-    printf("found property %s\n", prop_ident);
     fflush(stdout);
 
     // Based on identifier, run appropriate property value processor function
@@ -229,7 +228,6 @@ void LoadProperty(GameNode* node, char** sgf)
         m.color = (prop_ident[0] == 'B') ? 'b' : 'w';
         if (**sgf == ']') // Pass
         {
-            printf("move was pass\n");
             goban->lastmove.p.col = -1;
             goban->lastmove.p.row = -1;
             goban->lastmove.color = m.color;
@@ -238,7 +236,6 @@ void LoadProperty(GameNode* node, char** sgf)
         }
         else // Real move
         {
-            printf("move was %c%c\n", (*sgf)[0], (*sgf)[1]);
             m.p.col = (*sgf)[0] - 'a';
             m.p.row = (*sgf)[1] - 'a';
             AddMove(goban, m);
@@ -347,7 +344,6 @@ void LoadGameTree(GameNode* root, char** sgf)
         // Found new gametree
         if (**sgf == '(')
         {
-            printf("Found new gametree\n");
             (*sgf)++;
 
             // Load new tree as main variation
@@ -357,8 +353,6 @@ void LoadGameTree(GameNode* root, char** sgf)
         // Found node
         else if (**sgf == ';')
         {
-            printf("Found node!\n");
-            fflush(stdout);
             (*sgf)++;
             GameNode* new_branch = NewNode();
             NodeAddGoban(new_branch, &current_node->goban);
@@ -373,22 +367,15 @@ void LoadGameTree(GameNode* root, char** sgf)
         }
         else
             (*sgf)++;
-        // Finishing gametree
-        if (**sgf == ')')
-        {
-            printf("finishing game tree\n");
-        }
     }
     (*sgf)++;
 }
 
 void LoadSGF(Goban* goban, char* sgf)
 {
-    printf("loading sgf\n");
     // Start from clean state
     ResetGoban(goban);
 
-    printf("I'm here now\n");
     
     // First char is always "(", so lets skip that
     // Lets directly load the first node into the root
@@ -399,8 +386,6 @@ void LoadSGF(Goban* goban, char* sgf)
     LoadGameNode(GetRootNode(), &sgf);
 
     // Load the game tree
-    printf("Loading game tree!\n");
-    fflush(stdout);
     LoadGameTree(GetRootNode(), &sgf);
 
     // Set view to first node

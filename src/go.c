@@ -44,7 +44,6 @@ int ValidateInput(Goban* goban, Point* p, char input[256])
 
 void ResetGoban(Goban* goban)
 {
-    printf("clearing board\n");
     ClearBoard(goban);
     goban->wpris = 0;
     goban->bpris = 0;
@@ -53,9 +52,7 @@ void ResetGoban(Goban* goban)
     goban->lastmove.p.col = -2;
     goban->lastmove.p.row = -2;
     goban->showscore = 0;
-    printf("creating new tree \n");
     NewTree(goban);
-    printf("done creating new tree\n");
 }
 
 void ClearBoard(Goban* goban)
