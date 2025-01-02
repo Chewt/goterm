@@ -4,7 +4,7 @@
 #include "go.h"
 
 #define COMMENT_LENGTH 4096
-#define MAX_BRANCHES 256
+#define MAX_BRANCHES 50
 
 struct GameNode
 {

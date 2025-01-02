@@ -278,12 +278,15 @@ void PrintBoardw(Goban* goban)
         {
             int col = node->mainline_next->goban.lastmove.p.col;
             int row = node->mainline_next->goban.lastmove.p.row;
-            node->labels[row][col] = '+';
-            for (i = 0; i < node->n_alts; ++i)
+            if (node->labels[row][col] == ' ')
             {
-                col = node->alts[i]->goban.lastmove.p.col;
-                row = node->alts[i]->goban.lastmove.p.row;
-                node->labels[row][col] = '@';
+                node->labels[row][col] = '+';
+                for (i = 0; i < node->n_alts; ++i)
+                {
+                    col = node->alts[i]->goban.lastmove.p.col;
+                    row = node->alts[i]->goban.lastmove.p.row;
+                    node->labels[row][col] = '@';
+                }
             }
         }
     }
@@ -351,25 +354,7 @@ void PrintBoardw(Goban* goban)
                 }
             }
     }
-
-    // Remove next move / variations markup
     attroff(COLOR_PAIR(BLACK_STONE_COLOR));
-    if (displayConfig->showNextMoves)
-    {
-        GameNode* node = GetViewedNode();
-        if (node->mainline_next != NULL)
-        {
-            int col = node->mainline_next->goban.lastmove.p.col;
-            int row = node->mainline_next->goban.lastmove.p.row;
-            node->labels[row][col] = ' ';
-            for (i = 0; i < node->n_alts; ++i)
-            {
-                col = node->alts[i]->goban.lastmove.p.col;
-                row = node->alts[i]->goban.lastmove.p.row;
-                node->labels[row][col] = ' ';
-            }
-        }
-    }
 }
 
 int WordSize(char* buf)
