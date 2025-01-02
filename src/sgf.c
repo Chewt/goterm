@@ -315,11 +315,15 @@ void LoadProperty(GameNode* node, char** sgf)
       // that would be difficult so I will just use the first character of the
       // label for now.
 
-
-        char label = (*sgf)[3];
-        printf("LB %c\n", label);
-        node->labels[(*sgf)[1] - 'a'][(*sgf)[0] - 'a'] = label;
-        JumpToPropEnd(sgf);
+        *sgf -= 2;
+        while ((*sgf)[1] == '[')
+        {
+            *sgf += 2;
+            char label = (*sgf)[3];
+            printf("LB %c\n", label);
+            node->labels[(*sgf)[1] - 'a'][(*sgf)[0] - 'a'] = label;
+            JumpToPropEnd(sgf);
+        }
     }
     else
     {

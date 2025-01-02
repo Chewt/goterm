@@ -297,7 +297,14 @@ void PrintBoardw(Goban* goban)
             for (j = 0; j < 19; ++j)
             {
                 if (node->labels[i][j] != ' ')
-                    goban->board[i][j] = node->labels[i][j];
+                {
+                    move((i * 2) + 1, (j * 4) + 2 + start_xpos);
+                    attron(A_BOLD);
+                    addch(ACS_HLINE);
+                    addch(node->labels[i][j]);
+                    addch(ACS_HLINE);
+                    attroff(A_BOLD);
+                }
             }
     }
 
