@@ -11,7 +11,7 @@ char screen_notes[NOTES_LENGTH];
 DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .showBoard     = 1,
                                  .showInfo      = 1,
-                                 .showNextMoves = 0,
+                                 .showNextMoves = 1,
                                  .showTree      = 1,
                                  .showComments  = 1,
                                  .showLabels    = 1};
@@ -278,35 +278,16 @@ void PrintBoardw(Goban* goban)
         {
             int col = node->mainline_next->goban.lastmove.p.col;
             int row = node->mainline_next->goban.lastmove.p.row;
-            goban->board[row][col] = 'A';
+            node->labels[row][col] = '+';
             for (i = 0; i < node->n_alts; ++i)
             {
                 col = node->alts[i]->goban.lastmove.p.col;
                 row = node->alts[i]->goban.lastmove.p.row;
-                goban->board[row][col] = 'B' + i;
+                node->labels[row][col] = '@';
             }
         }
     }
 
-    // Show labels
-    if (displayConfig->showLabels)
-    {
-        GameNode* node = GetViewedNode();
-        int i, j;
-        for (i = 0; i < 19; ++i)
-            for (j = 0; j < 19; ++j)
-            {
-                if (node->labels[i][j] != ' ')
-                {
-                    move((i * 2) + 1, (j * 4) + 2 + start_xpos);
-                    attron(A_BOLD);
-                    addch(ACS_HLINE);
-                    addch(node->labels[i][j]);
-                    addch(ACS_HLINE);
-                    attroff(A_BOLD);
-                }
-            }
-    }
 
     // Place stones
     for (i = 0; i < gameInfo->boardSize; ++i)
@@ -329,20 +310,50 @@ void PrintBoardw(Goban* goban)
                 addstr("\u2588");
                 attrset(COLOR_PAIR(BLACK_STONE_COLOR));
             }
-            else if (goban->board[i][j] != ' ')
-            {
-                move((i * 2) + 1, (j * 4) + 2 + start_xpos);
-                attron(A_BOLD);
-                addch(ACS_HLINE);
-                addch(goban->board[i][j]);
-                addch(ACS_HLINE);
-                attroff(A_BOLD);
-            }
+            /*else if (goban->board[i][j] != ' ')*/
+            /*{*/
+            /*    move((i * 2) + 1, (j * 4) + 2 + start_xpos);*/
+            /*    attron(A_BOLD);*/
+            /*    addch(ACS_HLINE);*/
+            /*    addch(goban->board[i][j]);*/
+            /*    addch(ACS_HLINE);*/
+            /*    attroff(A_BOLD);*/
+            /*}*/
         }
     }
-    attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+
+    // Show labels
+    if (displayConfig->showLabels)
+    {
+        GameNode* node = GetViewedNode();
+        int i, j;
+        for (i = 0; i < 19; ++i)
+            for (j = 0; j < 19; ++j)
+            {
+                if (node->labels[i][j] != ' ')
+                {
+                    if (goban->board[i][j] == ' ')
+                    {
+                        move((i * 2) + 1, (j * 4) + 2 + start_xpos);
+                        attron(A_BOLD);
+                        addch(ACS_HLINE);
+                        addch(node->labels[i][j]);
+                        addch(ACS_HLINE);
+                        attroff(A_BOLD);
+                    }
+                    else
+                    {
+                        move((i * 2) + 1, (j * 4) + 2 + start_xpos + 1);
+                        attron(A_BOLD);
+                        addch(node->labels[i][j]);
+                        attroff(A_BOLD);
+                    }
+                }
+            }
+    }
 
     // Remove next move / variations markup
+    attroff(COLOR_PAIR(BLACK_STONE_COLOR));
     if (displayConfig->showNextMoves)
     {
         GameNode* node = GetViewedNode();
@@ -350,12 +361,12 @@ void PrintBoardw(Goban* goban)
         {
             int col = node->mainline_next->goban.lastmove.p.col;
             int row = node->mainline_next->goban.lastmove.p.row;
-            goban->board[row][col] = ' ';
+            node->labels[row][col] = ' ';
             for (i = 0; i < node->n_alts; ++i)
             {
                 col = node->alts[i]->goban.lastmove.p.col;
                 row = node->alts[i]->goban.lastmove.p.row;
-                goban->board[row][col] = ' ';
+                node->labels[row][col] = ' ';
             }
         }
     }
