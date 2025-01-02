@@ -320,7 +320,6 @@ void LoadProperty(GameNode* node, char** sgf)
         {
             *sgf += 2;
             char label = (*sgf)[3];
-            printf("LB %c\n", label);
             node->labels[(*sgf)[1] - 'a'][(*sgf)[0] - 'a'] = label;
             JumpToPropEnd(sgf);
         }
