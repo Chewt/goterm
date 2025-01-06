@@ -8,7 +8,7 @@ UNIDEPS =
 CFLAGS = -I$(INCLUDEDIR) -O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -lncursesw
 CC = gcc
 TARGET = goterm
-VERSION = \"v1.5.0\"
+VERSION = \"v1.6.0\"
 
 .PHONY: all 
 all: CFLAGS += -DVERSION=$(VERSION)
