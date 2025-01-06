@@ -11,7 +11,7 @@ char screen_notes[NOTES_LENGTH];
 DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .showBoard     = 1,
                                  .showInfo      = 1,
-                                 .showNextMoves = 1,
+                                 .showNextMoves = 0,
                                  .showTree      = 1,
                                  .showComments  = 1,
                                  .showLabels    = 1};
