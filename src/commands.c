@@ -75,6 +75,25 @@ int JumpCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
     return 1;
 }
 
+int MouseCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
+{
+    if (n_tokens < 2)
+        return -1;
+    char* direction = to_lowercase(tokens[1]);
+    DisplayConfig* displayConfig = GetDisplayConfig();
+    if (!strcmp(direction, "on"))
+        displayConfig->mouseEnabled = 1;
+    else if (!strcmp(direction, "off"))
+        displayConfig->mouseEnabled = 0;
+    else 
+    {
+        free(direction);
+        return -1;
+    }
+    free(direction);
+    return 1;
+}
+
 int RenameCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens < 3)
@@ -375,6 +394,7 @@ struct GoCommand commands[] = {
     {"back", BackCommand, 0, 1, "Shows the previous move"},
     {"jump", JumpCommand, 0, 1, "Jump between branches. Options are [up|down|next|back]"},
     {"goto", GotoCommand, 0, 0, "Go to a specific move in the game"},
+    {"mouse", MouseCommand, 0, 0, "Enable mouse support. Options are [on|off]"},
     {"exit", ExitCommand, 0, 0, "Exit program"},
     { 0 }
 };

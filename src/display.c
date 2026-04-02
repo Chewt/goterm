@@ -14,7 +14,9 @@ DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .showNextMoves = 0,
                                  .showTree      = 1,
                                  .showComments  = 1,
-                                 .showLabels    = 1};
+                                 .showLabels    = 1,
+                                 .mouseEnabled  = 0
+                               };
 
 DisplayConfig* GetDisplayConfig()
 {
@@ -127,6 +129,11 @@ int MouseCoordsToBoardLocation(int x, int y) {
 }
 
 void GetUserInputw(char* buffer, int maxSize) {
+    DisplayConfig* displayConfig = GetDisplayConfig();
+    if (!displayConfig->mouseEnabled) {
+        getnstr(buffer, maxSize);
+        return;
+    }
     int startx, starty;
     getyx(stdscr, starty, startx);
     keypad(stdscr, true);
@@ -138,29 +145,24 @@ void GetUserInputw(char* buffer, int maxSize) {
     static int lasty = -1;
     while (keycode != '\n' && keycode != '\r') {
         if (keycode == KEY_MOUSE) {
-            AppendNotes("Found mouse event!\n");
             MEVENT event = { 0 };
             int ok = getmouse(&event);
             if (ok == OK) {
-                if (event.bstate & BUTTON1_PRESSED) {
-                    AppendNotes("Mouse 1 pressed\n");
-                }
-                if (event.bstate & BUTTON1_RELEASED) {
-                    AppendNotes("Mouse 1 released\n");
-                }
-                AppendNotes("Mouse location was x:%d y:%d lastx:%d lasty:%d\n", event.x, event.y, lastx, lasty);
                 if (event.bstate & BUTTON1_DOUBLE_CLICKED || (event.x == lastx && event.y == lasty)) {
-                    GameInfo* gameInfo = GetGameInfo();
-                    AppendNotes("Double click!\n");
-                    lastx = -1;
-                    lasty = -1;
+
+                    // TODO: This acts as a "ceiling" function, so if you are
+                    // just one column to the left of the point you want to
+                    // click, it will select the next point over. Same with
+                    // clicking one row downward, it will select the point
+                    // below the desired point.
                     int index = MouseCoordsToBoardLocation(event.x, event.y);
+
+                    GameInfo* gameInfo = GetGameInfo();
                     idx = snprintf(buffer, 10, "%c%d\n",
                             coords[index % gameInfo->boardSize],
                             gameInfo->boardSize - (index / gameInfo->boardSize));
-                    AppendNotes("Move: %s", buffer);
                     break;
-                } else {
+                } else if (event.bstate & BUTTON1_CLICKED) {
                     lastx = event.x;
                     lasty = event.y;
                 }
