@@ -34,6 +34,9 @@ void PrintBoardw(Goban* goban);
 void PrintNotesw(Goban* goban);
 void PrintDisplay(Goban* goban);
 
+// Get user input
+void GetUserInputw(char* buffer, int maxSize);
+
 /* Get buffer to raw notes */
 char* GetNotes();
 DisplayConfig* GetDisplayConfig();

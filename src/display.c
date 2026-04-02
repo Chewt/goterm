@@ -104,6 +104,92 @@ void PrintInfo(Goban* goban)
     mvprintw(y,start_xpos, "%s", lastmove);
 }
 
+int MouseCoordsToBoardLocation(int x, int y) {
+    // Calculate bounds of board
+    GameInfo* gameInfo = GetGameInfo();
+    DisplayConfig* displayConfig = GetDisplayConfig();
+    int start_xpos = 0;
+    int width_needed = gameInfo->boardSize * 4;
+    if (displayConfig->centerBoard == 1)
+    {
+        int max_x = getmaxx(stdscr);
+        if ((max_x / 2) >= (width_needed / 2))
+            start_xpos = (max_x / 2) - (width_needed / 2);
+    }
+
+    // Mouse click not within board boundaries
+    if (x < start_xpos || x > start_xpos + width_needed || y > gameInfo->boardSize * 3)
+        return -1;
+
+    int boardx = (x - start_xpos) / 4;
+    int boardy = y / 2;
+    return boardy * gameInfo->boardSize + boardx;
+}
+
+void GetUserInputw(char* buffer, int maxSize) {
+    int startx, starty;
+    getyx(stdscr, starty, startx);
+    keypad(stdscr, true);
+    mmask_t old_mouse_mask;
+    mousemask(ALL_MOUSE_EVENTS, &old_mouse_mask); // Enable mouse
+    int keycode = getch();
+    int idx = 0;
+    static int lastx = -1;
+    static int lasty = -1;
+    while (keycode != '\n' && keycode != '\r') {
+        if (keycode == KEY_MOUSE) {
+            AppendNotes("Found mouse event!\n");
+            MEVENT event = { 0 };
+            int ok = getmouse(&event);
+            if (ok == OK) {
+                if (event.bstate & BUTTON1_PRESSED) {
+                    AppendNotes("Mouse 1 pressed\n");
+                }
+                if (event.bstate & BUTTON1_RELEASED) {
+                    AppendNotes("Mouse 1 released\n");
+                }
+                AppendNotes("Mouse location was x:%d y:%d lastx:%d lasty:%d\n", event.x, event.y, lastx, lasty);
+                if (event.bstate & BUTTON1_DOUBLE_CLICKED || (event.x == lastx && event.y == lasty)) {
+                    GameInfo* gameInfo = GetGameInfo();
+                    AppendNotes("Double click!\n");
+                    lastx = -1;
+                    lasty = -1;
+                    int index = MouseCoordsToBoardLocation(event.x, event.y);
+                    idx = snprintf(buffer, 10, "%c%d\n",
+                            coords[index % gameInfo->boardSize],
+                            gameInfo->boardSize - (index / gameInfo->boardSize));
+                    AppendNotes("Move: %s", buffer);
+                    break;
+                } else {
+                    lastx = event.x;
+                    lasty = event.y;
+                }
+            }
+            buffer[0] = '\n';
+            break;
+        } else if (keycode == KEY_BACKSPACE) {
+            int y, x;
+            getyx(stdscr, y, x);
+            if (y > starty || x >= startx) {
+                addch(' ');
+                move(y, x);
+                idx--;
+            } else if (y > starty && x < startx) {
+                move(y - 1, x);
+            } else {
+                move(starty, startx);
+            }
+        } else {
+            buffer[idx] = keycode;
+            idx++;
+        }
+        keycode = getch();
+    }
+    mousemask(old_mouse_mask, NULL); // Disable mouse
+    keypad(stdscr, false);
+    buffer[idx] = 0;
+}
+
 // Print board to ncurses screen
 void PrintBoardw(Goban* goban)
 {

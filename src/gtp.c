@@ -36,7 +36,7 @@ char* GetMessage(int fd)
 {
     struct dynarray* all_bytes = dynarray_create();
     int bytes_read = 0;
-    char lastTwo[2] = "00";
+    char lastTwo[2] = { 0, 0 };
     do 
     {
         char* curr_byte = malloc(1);

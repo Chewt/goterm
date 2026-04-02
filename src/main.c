@@ -443,7 +443,9 @@ int main(int argc, char** argv)
             char input[COMMAND_LENGTH];
             mvprintw(getcury(stdscr), 0, ": ");
             refresh();
-            getnstr(input, COMMAND_LENGTH);
+
+            // getnstr(input, COMMAND_LENGTH);
+            GetUserInputw(input, COMMAND_LENGTH);
             input[strcspn(input, "\n")] = 0;
 
             running = ProcessCommand(&goban, goban.color, input);
