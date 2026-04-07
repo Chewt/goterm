@@ -116,7 +116,7 @@ int MouseCoordsToBoardLocation(int x, int y) {
     {
         int max_x = getmaxx(stdscr);
         if ((max_x / 2) >= (width_needed / 2))
-            start_xpos = (max_x / 2) - (width_needed / 2);
+            start_xpos = (max_x / 2) - (width_needed / 2) + 3;
     }
 
     // Mouse click not within board boundaries
@@ -124,7 +124,15 @@ int MouseCoordsToBoardLocation(int x, int y) {
         return -1;
 
     int boardx = (x - start_xpos) / 4;
-    int boardy = y / 2;
+    int wigglex = (x - start_xpos) % 4;
+    if (wigglex == 2) // Perfectly between two points
+        return -1;
+    else if (wigglex == 3) // Closer to the next one
+        boardx += 1;
+    int boardy = (y - 1) / 2;
+    int wiggley = (y - 1) % 2;
+    if (wiggley == 1) // Perfectly between two points
+        return -1;
     return boardy * gameInfo->boardSize + boardx;
 }
 
@@ -149,14 +157,7 @@ void GetUserInputw(char* buffer, int maxSize) {
             int ok = getmouse(&event);
             if (ok == OK) {
                 if (event.bstate & BUTTON1_DOUBLE_CLICKED || (event.x == lastx && event.y == lasty)) {
-
-                    // TODO: This acts as a "ceiling" function, so if you are
-                    // just one column to the left of the point you want to
-                    // click, it will select the next point over. Same with
-                    // clicking one row downward, it will select the point
-                    // below the desired point.
                     int index = MouseCoordsToBoardLocation(event.x, event.y);
-
                     GameInfo* gameInfo = GetGameInfo();
                     idx = snprintf(buffer, 10, "%c%d\n",
                             coords[index % gameInfo->boardSize],
