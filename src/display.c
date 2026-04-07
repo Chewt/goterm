@@ -163,6 +163,10 @@ void GetUserInputw(char* buffer, int maxSize) {
                             gameInfo->boardSize - (index / gameInfo->boardSize));
                     break;
                 } else if (event.bstate & BUTTON1_CLICKED) {
+                    // TODO: This results in an empty command being sent, which
+                    // is the "repeat" command for repeating the last entered
+                    // command. Instead I should have a "highlight point"
+                    // command that highlights the given point.
                     lastx = event.x;
                     lasty = event.y;
                 }
