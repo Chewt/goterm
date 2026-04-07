@@ -348,8 +348,9 @@ int main(int argc, char** argv)
             running = ProcessCommand(&goban, e_col, response[1]);
             if (running == MOVE)
             {
-                SubmitMove(&goban, response[1]);
-                opponents_turn = 0;
+                int moveWasValid = SubmitMove(&goban, response[1]);
+                if (moveWasValid)
+                    opponents_turn = 0;
             }
 
             FreeResponse(response);
@@ -381,14 +382,18 @@ int main(int argc, char** argv)
                 if (inputs[0].revents & POLLIN) // input from STDIN
                 {
                     char input[COMMAND_LENGTH];
-                    getnstr(input, COMMAND_LENGTH);
+                    // TODO: For some reason I can't enable mouse in
+                    // multiplayer, probably due to my janky implementation of
+                    // user input when mouse support is enabled
+                    GetUserInputw(input, COMMAND_LENGTH);
                     input[strcspn(input, "\n")] = '\0';
 
                     running = ProcessCommand(&goban, (host >= 0) ? client_col : host_col, input);
                     if (running == MOVE && !opponents_turn)
                     {
-                        SubmitMove(&goban, input);
-                        opponents_turn = 1;
+                        int moveWasValid = SubmitMove(&goban, input);
+                        if (moveWasValid)
+                            opponents_turn = 1;
                     }
                     if (IsNetworkedCommand(input))
                     { // This is a hack and I'm not proud
@@ -424,8 +429,9 @@ int main(int argc, char** argv)
                     running = ProcessCommand(&goban, (host >= 0) ? host_col : client_col, response);
                     if (running == MOVE && opponents_turn)
                     {
-                        SubmitMove(&goban, response);
-                        opponents_turn = 0;
+                        int moveWasValid = SubmitMove(&goban, response);
+                        if (moveWasValid)
+                            opponents_turn = 0;
                     }
                     if (!strncmp(response, "undo", 4))
                     {
@@ -444,15 +450,15 @@ int main(int argc, char** argv)
             mvprintw(getcury(stdscr), 0, ": ");
             refresh();
 
-            // getnstr(input, COMMAND_LENGTH);
             GetUserInputw(input, COMMAND_LENGTH);
             input[strcspn(input, "\n")] = 0;
 
             running = ProcessCommand(&goban, goban.color, input);
             if (running == MOVE)
             {
-                SubmitMove(&goban, input);
-                opponents_turn = 1;
+                int moveWasValid = SubmitMove(&goban, input);
+                if (moveWasValid)
+                    opponents_turn = 1;
             }
             input[0] = '\0';
         }

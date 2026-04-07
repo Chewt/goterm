@@ -513,7 +513,7 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     if (terms == 0 || !ValidateInput(goban, &m.p, tokens[0]))
     {
         WriteNotes("Invalid Input: %s\n", tokens[0]);
-        return 1;
+        return 0;
     }
     GameInfo* gameInfo = GetGameInfo();
     if (!gameInfo->can_edit && GetViewIndex() != (GetHistorySize() - 1))
@@ -524,6 +524,7 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
     if (!ValidateMove(goban, m))
     {
         AppendNotes("Invalid Move\n");
+        return 0;
     }
     return 1;
 }
