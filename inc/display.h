@@ -37,6 +37,7 @@ void PrintDisplay(Goban* goban);
 
 // Get user input
 void GetUserInputw(char* buffer, int maxSize);
+void setCursor(Point p);
 
 /* Get buffer to raw notes */
 char* GetNotes();

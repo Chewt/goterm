@@ -94,6 +94,17 @@ int MouseCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
     return 1;
 }
 
+int HighlightCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
+{
+    if (n_tokens != 2)
+        return -1;
+    Point p;
+    if (!ValidateInput(goban, &p, tokens[1]))
+        return -1;
+    setCursor(p);
+    return 1;
+}
+
 int RenameCommand(Goban* goban, char player, int n_tokens, char tokens[][256])
 {
     if (n_tokens < 3)
@@ -395,6 +406,7 @@ struct GoCommand commands[] = {
     {"jump", JumpCommand, 0, 1, "Jump between branches. Options are [up|down|next|back]"},
     {"goto", GotoCommand, 0, 0, "Go to a specific move in the game"},
     {"mouse", MouseCommand, 0, 0, "Enable mouse support. Options are [on|off]"},
+    {"highlight", HighlightCommand, 0, 0, "Highlight a point on the board."},
     {"exit", ExitCommand, 0, 0, "Exit program"},
     { 0 }
 };
@@ -526,5 +538,6 @@ int SubmitMove(Goban* goban, char input[COMMAND_LENGTH])
         AppendNotes("Invalid Move\n");
         return 0;
     }
+    setCursor((Point){ -1, -1});
     return 1;
 }

@@ -18,6 +18,14 @@ DisplayConfig displayConfig  = { .centerBoard   = 1,
                                  .mouseEnabled  = 0
                                };
 
+static Point cursor = { -1, -1 };
+
+void setCursor(Point p)
+{
+    cursor.col = p.col;
+    cursor.row = p.row;
+}
+
 DisplayConfig* GetDisplayConfig()
 {
     return &displayConfig;
@@ -138,6 +146,7 @@ int MouseCoordsToBoardLocation(int x, int y) {
 
 void GetUserInputw(char* buffer, int maxSize) {
     DisplayConfig* displayConfig = GetDisplayConfig();
+    GameInfo* gameInfo = GetGameInfo();
     if (!displayConfig->mouseEnabled) {
         getnstr(buffer, maxSize);
         return;
@@ -158,18 +167,18 @@ void GetUserInputw(char* buffer, int maxSize) {
             if (ok == OK) {
                 if (event.bstate & BUTTON1_DOUBLE_CLICKED || (event.x == lastx && event.y == lasty)) {
                     int index = MouseCoordsToBoardLocation(event.x, event.y);
-                    GameInfo* gameInfo = GetGameInfo();
                     idx = snprintf(buffer, 10, "%c%d\n",
                             coords[index % gameInfo->boardSize],
                             gameInfo->boardSize - (index / gameInfo->boardSize));
                     break;
                 } else if (event.bstate & BUTTON1_CLICKED) {
-                    // TODO: This results in an empty command being sent, which
-                    // is the "repeat" command for repeating the last entered
-                    // command. Instead I should have a "highlight point"
-                    // command that highlights the given point.
                     lastx = event.x;
                     lasty = event.y;
+                    int index = MouseCoordsToBoardLocation(event.x, event.y);
+                    idx = snprintf(buffer, maxSize, "highlight %c%d\n",
+                            coords[index % gameInfo->boardSize],
+                            gameInfo->boardSize - (index / gameInfo->boardSize));
+                    break;
                 }
             }
             buffer[0] = '\n';
@@ -648,6 +657,36 @@ void PrintTreeModule()
     PrintTree(GetRootNode(), GetViewIndex() - (tree_width / 4), tree_width);
 }
 
+void PrintCursor(Goban* goban)
+{
+    if (cursor.col == -1 || cursor.row == -1)
+        return;
+    DisplayConfig* displayConfig = GetDisplayConfig();
+    GameInfo* gameInfo = GetGameInfo();
+    int start_xpos = 0;
+    if (displayConfig->centerBoard == 1)
+    {
+        int width_needed = gameInfo->boardSize * 4;
+        int max_x = getmaxx(stdscr);
+        if ((max_x / 2) >= (width_needed / 2))
+            start_xpos = (max_x / 2) - (width_needed / 2);
+    }
+    move((cursor.row * 2) + 1, (cursor.col * 4) + 2 + start_xpos);
+    if (goban->color == 'w')
+    {
+        attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+        attrset(COLOR_PAIR(WHITE_STONE_COLOR));
+        attron(A_BOLD);
+    }
+    addch(ACS_CKBOARD); 
+    addch(ACS_CKBOARD); 
+    addch(ACS_CKBOARD); 
+
+    attrset(COLOR_PAIR(BLACK_STONE_COLOR));
+    attroff(COLOR_PAIR(BLACK_STONE_COLOR));
+}
+
+
 void PrintDisplay(Goban* goban)
 {
     DisplayConfig* displayConfig = GetDisplayConfig();
@@ -661,6 +700,8 @@ void PrintDisplay(Goban* goban)
         PrintTreeModule();
     if (displayConfig->showComments)
         PrintComments();
+    if (displayConfig->mouseEnabled)
+        PrintCursor(goban);
     move(gameInfo->boardSize * 2 + 1, 0);
 }
 
