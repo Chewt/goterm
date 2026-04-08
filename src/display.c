@@ -163,26 +163,32 @@ void GetUserInputw(char* buffer, int maxSize) {
     while (keycode != '\n' && keycode != '\r') {
         if (keycode == KEY_MOUSE) {
             MEVENT event = { 0 };
-            int ok = getmouse(&event);
-            if (ok == OK) {
-                if (event.bstate & BUTTON1_DOUBLE_CLICKED || (event.x == lastx && event.y == lasty)) {
-                    int index = MouseCoordsToBoardLocation(event.x, event.y);
-                    idx = snprintf(buffer, 10, "%c%d\n",
+            if (getmouse(&event) == OK) {
+                int index = MouseCoordsToBoardLocation(event.x, event.y);
+                if (index == -1) 
+                {
+                    buffer[0] = ' ';
+                    buffer[1] = '\n';
+                    idx = 1;
+                    break;
+                }
+                if (event.bstate & BUTTON1_DOUBLE_CLICKED || 
+                        (event.bstate & BUTTON1_CLICKED && 
+                         event.x == lastx && event.y == lasty
+                        )){
+                    idx = snprintf(buffer, maxSize, "%c%d\n",
                             coords[index % gameInfo->boardSize],
                             gameInfo->boardSize - (index / gameInfo->boardSize));
                     break;
                 } else if (event.bstate & BUTTON1_CLICKED) {
                     lastx = event.x;
                     lasty = event.y;
-                    int index = MouseCoordsToBoardLocation(event.x, event.y);
                     idx = snprintf(buffer, maxSize, "highlight %c%d\n",
                             coords[index % gameInfo->boardSize],
                             gameInfo->boardSize - (index / gameInfo->boardSize));
                     break;
                 }
             }
-            buffer[0] = '\n';
-            break;
         } else if (keycode == KEY_BACKSPACE) {
             int y, x;
             getyx(stdscr, y, x);
