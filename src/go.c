@@ -34,7 +34,7 @@ int ValidateInput(Goban* goban, Point* p, char input[256])
         row = gameInfo->boardSize - row;
     else
         return 0;
-    if (col < 0 || col > gameInfo->boardSize)
+    if (col < 0 || col > gameInfo->boardSize - 1)
         return 0;
     p->row = row;
     p->col = col;
