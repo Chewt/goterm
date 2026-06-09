@@ -333,9 +333,11 @@ int main(int argc, char** argv)
                 SendKomi(e.write, 3, gameInfo->komi);
                 if (!GetResponse(e.read, response, 3))
                     fprintf(stderr, "Couldn't get response from engine\n");
-                SendHandicap(e.write, 4, gameInfo->komi);
-                if (!GetResponse(e.read, response, 4))
-                    fprintf(stderr, "Couldn't get response from engine\n");
+                if (gameInfo->handicap >= 2) {
+                    SendHandicap(e.write, 4, gameInfo->handicap);
+                    if (!GetResponse(e.read, response, 4))
+                        fprintf(stderr, "Couldn't get response from engine\n");
+                }
             }
 
             SendPlay(e.write, 2, goban.lastmove, gameInfo->boardSize);
