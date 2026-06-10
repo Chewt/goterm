@@ -322,7 +322,7 @@ int main(int argc, char** argv)
         {
             char** response = AllocateResponse();
 
-            if (GetHistorySize() == 1)
+            if (GetHistorySize() == 2)
             {
                 SendClearBoard(e.write, 1);
                 if (!GetResponse(e.read, response, 1))
