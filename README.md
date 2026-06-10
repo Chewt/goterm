@@ -9,7 +9,7 @@ Goterm currently has the following features:
  + Different board sizes
  
 Here is an example of how it looks in the terminal 
-![Imgur](https://imgur.com/a/ONY8aRT)
+![Imgur](https://i.imgur.com/5QJqO2W.png)
  
 # Install 
 Available on AUR [here](https://aur.archlinux.org/packages/goterm)  
