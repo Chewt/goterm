@@ -9,7 +9,7 @@ Goterm currently has the following features:
  + Different board sizes
  
 Here is an example of how it looks in the terminal 
-![Imgur](https://i.imgur.com/3MLY3fP.png)
+![Imgur](https://imgur.com/a/ONY8aRT)
  
 # Install 
 Available on AUR [here](https://aur.archlinux.org/packages/goterm)  
@@ -20,10 +20,13 @@ Install from source with `make install`
 Use `goterm --help` to see a list of command
 line arguments goterm accepts.
 
-You can also use the command `help` while running the program to see a list of available commands.
+You can also use the command `help` while running the program to see a list of available commands, and `help SUBCMD` to
+see information about a specific command.
 
 # Networking
-To play against someone on the network, simple have on player run goterm with the command `goterm -h` to act as the host, and the other player use the command `goterm -c IPADDRESS` to connect to the host. You can also use the machine's hostname instead of the IP address if your network supports hostname resolution.
+To play against someone on the network, simple have on player run goterm with the command `goterm -h` to act as the
+host, and the other player use the command `goterm -c IPADDRESS` to connect to the host. You can also use the machine's
+hostname instead of the IP address if your network supports hostname resolution.
 
 # Engines 
 Goterm uses the Go Text Protocol to communicate with go engines. You
