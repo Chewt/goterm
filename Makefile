@@ -10,7 +10,7 @@ DEBUGFLAGS = -ggdb -DDEBUG -Wall -Wextra -Wno-missing-field-initializers -Wno-un
 RELEASEFLAGS = -O3
 CC = gcc
 TARGET = goterm
-VERSION = \"v1.6.0\"
+VERSION = \"v1.7.0\"
 
 .PHONY: release
 release: CFLAGS += $(RELEASEFLAGS)
