@@ -24,7 +24,7 @@ You can also use the command `help` while running the program to see a list of a
 see information about a specific command.
 
 # Networking
-To play against someone on the network, simple have on player run goterm with the command `goterm -h` to act as the
+To play against someone on the network, simple have on player run goterm with the command `goterm --host` to act as the
 host, and the other player use the command `goterm -c IPADDRESS` to connect to the host. You can also use the machine's
 hostname instead of the IP address if your network supports hostname resolution.
 

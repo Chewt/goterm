@@ -90,7 +90,7 @@ char* CreateSGF()
 
 #ifdef VERSION
     const char* version = VERSION;
-#elif 
+#else
     const char* version = "debug";
 #endif
 
