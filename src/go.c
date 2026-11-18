@@ -69,6 +69,7 @@ void ClearBoard(Goban* goban)
 void SetHandicap(Goban* goban, int numStones)
 {
     GameInfo* gameInfo = GetGameInfo();
+    gameInfo->handicap = numStones;
     int line = (gameInfo->boardSize <= 9) ? 3 : 4;
     switch (numStones)
     {

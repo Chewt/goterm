@@ -322,7 +322,7 @@ int main(int argc, char** argv)
         {
             char** response = AllocateResponse();
 
-            if (GetHistorySize() == 2)
+            if (GetHistorySize() == 1)
             {
                 SendClearBoard(e.write, 1);
                 if (!GetResponse(e.read, response, 1))
@@ -351,8 +351,15 @@ int main(int argc, char** argv)
             if (running == MOVE)
             {
                 int moveWasValid = SubmitMove(&goban, response[1]);
-                if (moveWasValid)
+                if (moveWasValid) {
                     opponents_turn = 0;
+                } else {
+                    // Whatever the engine said wasn't something we expected.
+                    // Log it in the chat window for inspection.
+                    char message[1024] = {0};
+                    snprintf(message, 1024, "say Invalid engine response: %s", response[1]);
+                    ProcessCommand(&goban, e_col, message);
+                }
             }
 
             FreeResponse(response);
